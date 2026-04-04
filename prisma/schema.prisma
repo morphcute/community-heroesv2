@@ -1,0 +1,381 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  // Custom Fields
+  mlbbId String?
+  server String?
+  rank   String?
+  roles  PlayerRole[]
+  role   Role         @default(USER)
+
+  address     String?
+  phoneNumber String?
+  gender      String?
+
+  // Relations
+  teamMembers TeamMember[]
+  captainOf   Team[]
+
+  // Tournament Relations
+  participations  TournamentParticipant[]
+  adminOf         TournamentAdmin[]
+  handledAreas    Area[]                  @relation("AreaHandlers")
+  messages        Message[]
+  notifications   Notification[]
+  awards          Award[]
+  hostedScrims    Scrim[]                 @relation("ScrimHostedBy")
+  requestedScrims Scrim[]                 @relation("ScrimRequestedBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Team System
+model Team {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  logo        String?
+  description String?
+
+  captainId String
+  captain   User   @relation(fields: [captainId], references: [id])
+
+  members        TeamMember[]
+  participations TournamentParticipant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages     Message[]
+  hostedScrims Scrim[]   @relation("HostedScrim")
+  guestScrims  Scrim[]   @relation("GuestScrim")
+  scrimWins    Scrim[]   @relation("WonScrim")
+}
+
+model Scrim {
+  id                String      @id @default(cuid())
+  hostTeamId        String
+  guestTeamId       String?
+  hostedByUserId    String
+  requestedByUserId String?
+  status            ScrimStatus @default(OPEN)
+  scheduledAt       DateTime?
+  hostScore         Int?
+  guestScore        Int?
+  winnerTeamId      String?
+  notes             String?
+  acceptedAt        DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  hostTeam    Team  @relation("HostedScrim", fields: [hostTeamId], references: [id], onDelete: Cascade)
+  guestTeam   Team? @relation("GuestScrim", fields: [guestTeamId], references: [id], onDelete: SetNull)
+  hostedBy    User  @relation("ScrimHostedBy", fields: [hostedByUserId], references: [id], onDelete: Cascade)
+  requestedBy User? @relation("ScrimRequestedBy", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  winnerTeam  Team? @relation("WonScrim", fields: [winnerTeamId], references: [id], onDelete: SetNull)
+
+  @@index([hostTeamId, status, createdAt])
+  @@index([guestTeamId, status, createdAt])
+  @@index([status, createdAt])
+}
+
+model TeamMember {
+  id     String           @id @default(cuid())
+  teamId String
+  userId String
+  role   TeamRole         @default(MEMBER)
+  status TeamMemberStatus @default(PENDING)
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+enum TeamRole {
+  CAPTAIN
+  MEMBER
+}
+
+enum TeamMemberStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ScrimStatus {
+  OPEN
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELED
+}
+
+// Tournament System
+model Tournament {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  banner      String?
+
+  gameMode GameMode
+  format   TournamentFormat
+  status   TournamentStatus @default(UPCOMING)
+
+  startDate DateTime
+  endDate   DateTime?
+
+  prizePool           String?
+  entryFee            String? @default("Free")
+  maxTeams            Int
+  platform            String? @default("Mobile")
+  locationRestriction String?
+
+  // Relations
+  participants TournamentParticipant[]
+  admins       TournamentAdmin[]
+  messages     Message[]
+  matches      Match[]
+  awards       Award[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TournamentParticipant {
+  id           String @id @default(cuid())
+  tournamentId String
+
+  // Can be a solo user or a team
+  userId String?
+  teamId String?
+
+  status   ParticipationStatus @default(PENDING)
+  joinedAt DateTime            @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User?      @relation(fields: [userId], references: [id])
+  team       Team?      @relation(fields: [teamId], references: [id])
+
+  // Matches relation
+  matchesAsParticipant1 Match[] @relation("MatchParticipant1")
+  matchesAsParticipant2 Match[] @relation("MatchParticipant2")
+  matchesWon            Match[] @relation("MatchWinner")
+
+  @@unique([tournamentId, userId])
+  @@unique([tournamentId, teamId])
+}
+
+model TournamentAdmin {
+  id           String    @id @default(cuid())
+  tournamentId String
+  userId       String
+  role         AdminRole @default(MODERATOR)
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+}
+
+model Message {
+  id      String  @id @default(cuid())
+  content String  @db.Text
+  channel String? // e.g. "general", "lfg", null for team/tournament chats
+
+  tournamentId String?
+  teamId       String?
+  userId       String
+
+  createdAt DateTime @default(now())
+
+  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([channel, createdAt])
+  @@index([teamId, createdAt])
+  @@index([tournamentId, createdAt])
+}
+
+model Match {
+  id           String @id @default(cuid())
+  tournamentId String
+
+  round       Int // 1, 2, 3...
+  matchIndex  Int // Position within the round vertically
+  nextMatchId String? // The match to which the winner advances
+
+  status MatchStatus @default(PENDING)
+
+  participant1Id String?
+  participant2Id String?
+  score1         Int     @default(0)
+  score2         Int     @default(0)
+  winnerId       String?
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  participant1 TournamentParticipant? @relation("MatchParticipant1", fields: [participant1Id], references: [id])
+  participant2 TournamentParticipant? @relation("MatchParticipant2", fields: [participant2Id], references: [id])
+  winner       TournamentParticipant? @relation("MatchWinner", fields: [winnerId], references: [id])
+
+  nextMatch       Match?  @relation("NextMatch", fields: [nextMatchId], references: [id])
+  previousMatches Match[] @relation("NextMatch")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  MODERATOR
+  SUPERADMIN
+}
+
+enum MatchStatus {
+  PENDING
+  ONGOING
+  COMPLETED
+}
+
+enum PlayerRole {
+  TANK_SUPPORT
+  FIGHTER
+  JUNGLER
+  MAGE
+  MARKSMAN
+}
+
+enum GameMode {
+  SOLO_1V1
+  DUO_2V2
+  TRIO_3V3
+  TEAM_5V5
+}
+
+enum TournamentStatus {
+  UPCOMING
+  REGISTRATION_OPEN
+  REGISTRATION_CLOSED
+  ONGOING
+  COMPLETED
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  ROUND_ROBIN
+}
+
+enum ParticipationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ELIMINATED
+  DISQUALIFIED
+}
+
+enum AdminRole {
+  ADMIN
+  MODERATOR
+}
+
+model Area {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  type             String   @default("SOLO")
+  coveredLocations String[] @default([])
+  handlers         User[]   @relation("AreaHandlers")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Award {
+  id           String   @id @default(cuid())
+  userId       String
+  tournamentId String?
+  amount       Int
+  currency     Currency @default(DIAMONDS)
+  createdAt    DateTime @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+}
+
+enum Currency {
+  DIAMONDS
+  CASH
+}
