@@ -45,7 +45,7 @@ export default async function TournamentsPage() {
       game: t.gameMode === "SOLO_1V1" ? "MLBB 1v1" : t.gameMode === "DUO_2V2" ? "MLBB 2v2" : t.gameMode === "TRIO_3V3" ? "MLBB 3v3" : "MLBB 5v5",
       status: t.status === "ONGOING" ? "Live" : t.status === "REGISTRATION_OPEN" ? "Open" : t.status === "COMPLETED" ? "Completed" : "Upcoming",
       format: t.format.replace('_', ' '),
-      type: t.format,
+      type: t.locationRestriction ? t.locationRestriction.toUpperCase() : "ONLINE",
       platform: t.platform || "Mobile",
       color: generateGradient(t.id),
       banner: t.banner || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop",
