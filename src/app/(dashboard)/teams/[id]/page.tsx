@@ -1,8 +1,8 @@
-import { Trophy, Shield, Users, Sword, History, UserPlus, MessageSquare, Send, Check, X, Clock } from "lucide-react";
+import { Trophy, Shield, Users, Sword, History, UserPlus, UserX, MessageSquare, Send, Check, X, Clock } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { sendMessage, joinTeam, leaveTeam, approveMember, rejectMember, requestScrim } from "../actions";
+import { sendMessage, joinTeam, leaveTeam, approveMember, rejectMember, requestScrim, kickMember } from "../actions";
 import { auth } from "@/auth";
 
 export default async function TeamDetailPage({
@@ -243,28 +243,39 @@ export default async function TeamDetailPage({
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {activeMembers.map((member) => (
-                <div key={member.id} className="bg-card border border-border p-4 rounded-xl flex items-center gap-4 hover:border-primary/30 transition-colors group">
-                  <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-lg font-bold text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors overflow-hidden">
-                    {member.user.image ? (
-                      <img src={member.user.image} alt={member.user.name || "User"} className="w-full h-full object-cover" />
-                    ) : (
-                      (member.user.name || "U").charAt(0)
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-bold group-hover:text-primary transition-colors">{member.user.name || "Unknown User"}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                      {member.role === 'CAPTAIN' && <Trophy className="w-3 h-3 text-yellow-500" />}
-                      {member.role} • {member.user.rank || "Unranked"}
+                <div key={member.id} className="bg-card border border-border p-4 rounded-xl flex items-center justify-between hover:border-primary/30 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-lg font-bold text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors overflow-hidden">
+                      {member.user.image ? (
+                        <img src={member.user.image} alt={member.user.name || "User"} className="w-full h-full object-cover" />
+                      ) : (
+                        (member.user.name || "U").charAt(0)
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-bold group-hover:text-primary transition-colors">{member.user.name || "Unknown User"}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        {member.role === 'CAPTAIN' && <Trophy className="w-3 h-3 text-yellow-500" />}
+                        {member.role} • {member.user.rank || "Unranked"}
+                      </div>
                     </div>
                   </div>
+                  {isCaptain && member.role !== 'CAPTAIN' && (
+                     <form action={kickMember}>
+                       <input type="hidden" name="teamId" value={team.id} />
+                       <input type="hidden" name="membershipId" value={member.id} />
+                       <button type="submit" className="p-2 text-slate-500 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Kick Member">
+                         <UserX className="w-4 h-4" />
+                       </button>
+                     </form>
+                  )}
                 </div>
               ))}
               {!isFull && isCaptain && (
-                <div className="bg-card border border-dashed border-border p-4 rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors cursor-pointer min-h-[80px]">
+                <Link href={`/teams/${team.id}/recruit`} className="bg-card border border-dashed border-border p-4 rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors min-h-[80px]">
                   <UserPlus className="w-6 h-6" />
                   <span className="text-sm font-medium">Recruit Member</span>
-                </div>
+                </Link>
               )}
             </div>
           </div>

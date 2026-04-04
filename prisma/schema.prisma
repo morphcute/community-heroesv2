@@ -172,6 +172,7 @@ enum TeamMemberStatus {
   PENDING
   APPROVED
   REJECTED
+  INVITED
 }
 
 enum ScrimStatus {

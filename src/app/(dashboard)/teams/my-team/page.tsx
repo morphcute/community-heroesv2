@@ -2,8 +2,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { EmptyState, PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
-import { Shield, User, Users, ArrowRight, Plus, Star } from "lucide-react";
+import { Shield, User, Users, ArrowRight, Plus, Star, Check, X, Bell } from "lucide-react";
 import RoleDisplay from "@/components/RoleDisplay";
+import { acceptInvite, declineInvite } from "../actions";
 
 
   export default async function MyTeamPage() {
@@ -39,9 +40,10 @@ import RoleDisplay from "@/components/RoleDisplay";
     );
   }
 
-  const currentTeamMember = user.teamMembers[0];
+  const currentTeamMember = user.teamMembers.find(m => m.status === 'APPROVED');
+  const invitedMemberships = user.teamMembers.filter(m => m.status === 'INVITED');
   const roleCount = Array.isArray(user.roles) ? user.roles.length : 0;
-  const teamSlotLabel = currentTeamMember ? "Captain" : "Open";
+  const teamSlotLabel = currentTeamMember ? (currentTeamMember.role === 'CAPTAIN' ? "Captain" : "Member") : "Open";
 
   return (
     <PageShell size="wide" tone="blue">
@@ -77,6 +79,41 @@ import RoleDisplay from "@/components/RoleDisplay";
         </SurfaceCard>
 
         <div className="space-y-6">
+          {invitedMemberships.length > 0 && (
+            <SurfaceCard tone="gold">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-500">
+                  <Bell className="h-5 w-5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-black uppercase text-white">Pending Invitations</h3>
+                  <p className="text-xs text-slate-400">You have been invited to join a squad.</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {invitedMemberships.map((invite) => (
+                  <div key={invite.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
+                    <div className="font-bold text-sm text-white">{invite.team.name}</div>
+                    <div className="flex items-center gap-2">
+                       <form action={acceptInvite}>
+                         <input type="hidden" name="membershipId" value={invite.id} />
+                         <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 transition-colors hover:bg-emerald-500/30">
+                           <Check className="h-4 w-4" />
+                         </button>
+                       </form>
+                       <form action={declineInvite}>
+                         <input type="hidden" name="membershipId" value={invite.id} />
+                         <button className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/20 text-red-400 transition-colors hover:bg-red-500/30">
+                           <X className="h-4 w-4" />
+                         </button>
+                       </form>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SurfaceCard>
+          )}
+
           {currentTeamMember ? (
             <SurfaceCard tone="gold">
               <div className="relative z-10">
@@ -89,7 +126,7 @@ import RoleDisplay from "@/components/RoleDisplay";
                 </h2>
                 <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-slate-300">
                   <Star className="h-4 w-4 text-primary" />
-                  <span>You are the team captain.</span>
+                  <span>You are a {currentTeamMember.role.toLowerCase()} of this team.</span>
                 </div>
                 <Link href={`/teams/${currentTeamMember.team.id}`} className="action-button-primary mt-6 w-full justify-center text-[11px]">
                   Team Dashboard

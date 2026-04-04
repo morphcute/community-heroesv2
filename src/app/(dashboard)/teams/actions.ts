@@ -497,3 +497,136 @@ export async function reportScrimResult(formData: FormData) {
     revalidatePath(`/teams/${scrim.guestTeamId}`);
   }
 }
+
+export async function kickMember(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Unauthorized");
+
+  const membershipId = formData.get("membershipId") as string;
+  const teamId = formData.get("teamId") as string;
+
+  if (!membershipId || !teamId) throw new Error("Missing fields");
+
+  const user = await getCurrentCaptainUser();
+  const captainMembership = user.teamMembers.find((m) => m.teamId === teamId);
+  if (!captainMembership) throw new Error("Only team captains can kick members");
+
+  const memberToKick = await prisma.teamMember.findUnique({
+    where: { id: membershipId },
+  });
+
+  if (!memberToKick) throw new Error("Member not found");
+  if (memberToKick.teamId !== teamId) throw new Error("Member belongs to different team");
+  if (memberToKick.role === "CAPTAIN") throw new Error("Cannot kick the captain");
+
+  await prisma.teamMember.delete({
+    where: { id: membershipId },
+  });
+
+  revalidatePath(`/teams/${teamId}`);
+}
+
+export async function inviteMember(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Unauthorized");
+
+  const targetUserId = formData.get("userId") as string;
+  const teamId = formData.get("teamId") as string;
+
+  if (!targetUserId || !teamId) throw new Error("Missing fields");
+
+  const user = await getCurrentCaptainUser();
+  const captainMembership = user.teamMembers.find((m) => m.teamId === teamId);
+  if (!captainMembership) throw new Error("Only team captains can invite members");
+
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: { _count: { select: { members: { where: { status: "APPROVED" } } } } },
+  });
+
+  if (!team) throw new Error("Team not found");
+  if (team._count.members >= 5) throw new Error("Team is full");
+
+  const existingTeam = await prisma.teamMember.findFirst({
+    where: { userId: targetUserId, status: "APPROVED" },
+  });
+
+  if (existingTeam) throw new Error("User is already in a team");
+
+  await prisma.teamMember.create({
+    data: {
+      teamId,
+      userId: targetUserId,
+      role: "MEMBER",
+      status: "INVITED",
+    },
+  });
+
+  revalidatePath(`/teams/${teamId}`);
+  revalidatePath(`/teams/${teamId}/recruit`);
+}
+
+export async function acceptInvite(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Unauthorized");
+
+  const membershipId = formData.get("membershipId") as string;
+  if (!membershipId) throw new Error("Missing fields");
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) throw new Error("User not found");
+
+  const membership = await prisma.teamMember.findUnique({
+    where: { id: membershipId },
+  });
+
+  if (!membership || membership.userId !== user.id || membership.status !== "INVITED") {
+    throw new Error("Valid invitation not found");
+  }
+
+  const team = await prisma.team.findUnique({
+    where: { id: membership.teamId },
+    include: { _count: { select: { members: { where: { status: "APPROVED" } } } } },
+  });
+
+  if (!team) throw new Error("Team not found");
+  if (team._count.members >= 5) throw new Error("Team is full");
+
+  await prisma.teamMember.update({
+    where: { id: membershipId },
+    data: { status: "APPROVED" },
+  });
+
+  revalidatePath(`/teams/${membership.teamId}`);
+  revalidatePath(`/teams/my-team`);
+}
+
+export async function declineInvite(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Unauthorized");
+
+  const membershipId = formData.get("membershipId") as string;
+  if (!membershipId) throw new Error("Missing fields");
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) throw new Error("User not found");
+
+  const membership = await prisma.teamMember.findUnique({
+    where: { id: membershipId },
+  });
+
+  if (!membership || membership.userId !== user.id) {
+    throw new Error("Valid invitation not found");
+  }
+
+  await prisma.teamMember.delete({
+    where: { id: membershipId },
+  });
+
+  revalidatePath(`/teams/${membership.teamId}`);
+  revalidatePath(`/teams/my-team`);
+}
