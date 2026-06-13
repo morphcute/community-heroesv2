@@ -79,6 +79,10 @@ async function main() {
       description: 'SEA Crown Rush - MLBB 1v1 Classic is a daily head-to-head tournament built for players who want pure, individual competition.',
       banner: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
       gameMode: GameMode.SOLO_1V1,
+      matchMode: '1v1 Mode',
+      battlefield: 'ONLINE',
+      stageType: 'SINGLE_STAGE',
+      stageCount: 1,
       format: TournamentFormat.SINGLE_ELIMINATION,
       status: TournamentStatus.REGISTRATION_OPEN,
       startDate: new Date('2026-03-19T20:00:00Z'),
@@ -86,7 +90,7 @@ async function main() {
       prizePool: '7000 Diamonds',
       entryFee: 'Free for all',
       maxTeams: 64,
-      platform: 'Cross Platform',
+      platform: 'Mobile',
     },
   })
 

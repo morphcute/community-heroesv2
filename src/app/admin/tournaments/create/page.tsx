@@ -7,6 +7,14 @@ import { revalidatePath } from "next/cache";
 import { PrizeDistribution } from "./PrizeDistribution";
 import RegionSelect from "@/components/ui/RegionSelect";
 import { PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
+import AppSelect from "@/components/ui/AppSelect";
+import {
+  BATTLEFIELD_OPTIONS,
+  GAME_MODE_OPTIONS,
+  MATCH_MODE_SUGGESTIONS,
+  STAGE_TYPE_OPTIONS,
+  TOURNAMENT_FORMAT_OPTIONS,
+} from "@/lib/tournament-config";
 
 type SessionUserWithRole = {
   role?: string;
@@ -28,7 +36,10 @@ export default async function CreateTournamentPage() {
     const description = formData.get("description") as string;
     const banner = formData.get("banner") as string;
     const gameMode = formData.get("gameMode") as GameMode;
-    const platform = formData.get("platform") as string;
+    const matchMode = formData.get("matchMode") as string;
+    const battlefield = formData.get("battlefield") as "ONLINE" | "ONSITE";
+    const stageType = formData.get("stageType") as "SINGLE_STAGE" | "MULTIPLE_STAGES";
+    const stageCountInput = parseInt(formData.get("stageCount") as string, 10);
     const format = formData.get("format") as TournamentFormat;
     const maxTeams = parseInt(formData.get("maxTeams") as string, 10);
     const prizePool = formData.get("prizePool") as string;
@@ -48,7 +59,11 @@ export default async function CreateTournamentPage() {
         description,
         banner,
         gameMode,
-        platform,
+        matchMode: matchMode || "Draft Pick",
+        battlefield,
+        stageType,
+        stageCount: stageType === "MULTIPLE_STAGES" ? Math.max(2, stageCountInput || 2) : 1,
+        platform: "Mobile",
         format,
         locationRestriction: locationRestriction || null,
         maxTeams,
@@ -100,23 +115,45 @@ export default async function CreateTournamentPage() {
             <h2 className="font-display text-2xl font-black uppercase tracking-[0.08em] text-white">Game Rules</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <select required name="gameMode" className="input-hud appearance-none">
-              <option value="TEAM_5V5">5v5 Squads</option>
-              <option value="TRIO_3V3">3v3 Trios</option>
-              <option value="DUO_2V2">2v2 Duos</option>
-              <option value="SOLO_1V1">1v1 Solo Combat</option>
-            </select>
-            <select required name="platform" className="input-hud appearance-none">
-              <option value="Draft Pick">Draft Pick</option>
-              <option value="Classic">Classic</option>
-              <option value="Brawl">Brawl</option>
-              <option value="Custom / Arcade">Custom / Arcade</option>
-            </select>
-            <select required name="format" className="input-hud appearance-none">
-              <option value="SINGLE_ELIMINATION">Single Elimination</option>
-              <option value="DOUBLE_ELIMINATION">Double Elimination</option>
-              <option value="ROUND_ROBIN">Round Robin</option>
-            </select>
+            <AppSelect
+              name="gameMode"
+              defaultValue="TEAM_5V5"
+              placeholder="Select team size"
+              options={GAME_MODE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+            />
+            <input
+              required
+              name="matchMode"
+              type="text"
+              list="mlbb-match-modes"
+              placeholder="Draft Pick"
+              defaultValue="Draft Pick"
+              className="input-hud"
+            />
+            <datalist id="mlbb-match-modes">
+              {MATCH_MODE_SUGGESTIONS.map((mode) => (
+                <option key={mode} value={mode} />
+              ))}
+            </datalist>
+            <AppSelect
+              name="battlefield"
+              defaultValue="ONLINE"
+              placeholder="Select battlefield"
+              options={BATTLEFIELD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+            />
+            <AppSelect
+              name="format"
+              defaultValue="SINGLE_ELIMINATION"
+              placeholder="Select bracket format"
+              options={TOURNAMENT_FORMAT_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+            />
+            <AppSelect
+              name="stageType"
+              defaultValue="SINGLE_STAGE"
+              placeholder="Select stage setup"
+              options={STAGE_TYPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+            />
+            <input name="stageCount" type="number" min="1" max="99" defaultValue="1" className="input-hud" />
             <div className="md:col-span-2 lg:col-span-3">
               <RegionSelect fieldName="locationRestriction" defaultValue="" />
               <p className="mt-2 text-xs text-slate-500">Leave empty for nationwide eligibility, or set a specific regional gate.</p>

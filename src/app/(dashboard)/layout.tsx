@@ -52,7 +52,7 @@ export default async function DashboardLayout({
           <div className="absolute left-[-10rem] top-[-8rem] h-[26rem] w-[26rem] rounded-full bg-amber-300/10 blur-[110px]" />
           <div className="absolute bottom-[-10rem] right-[-6rem] h-[24rem] w-[24rem] rounded-full bg-cyan-300/10 blur-[120px]" />
         </div>
-        <Sidebar />
+        <Sidebar user={topBarUser} />
         <div className="relative flex min-w-0 flex-1 flex-col">
           <TopBar user={topBarUser} />
           <main className="custom-scrollbar flex-1 overflow-y-auto px-3 py-3 pb-6 sm:px-4 sm:py-4 sm:pb-6 lg:px-6 lg:py-6">

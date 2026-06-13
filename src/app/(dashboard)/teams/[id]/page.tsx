@@ -1,9 +1,10 @@
-import { Trophy, Shield, Users, Sword, History, UserPlus, UserX, MessageSquare, Send, Check, X, Clock } from "lucide-react";
+import { Trophy, Shield, Users, Swords, History, UserPlus, UserX, MessageSquare, Send, Check, X, Clock } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { sendMessage, joinTeam, leaveTeam, approveMember, rejectMember, requestScrim, kickMember } from "../actions";
 import { auth } from "@/auth";
+import { PageHero, PageShell, SurfaceCard, EmptyState } from "@/components/ui/PageShell";
 
 export default async function TeamDetailPage({
   params,
@@ -17,55 +18,37 @@ export default async function TeamDetailPage({
     where: { id },
     include: {
       members: {
-        include: {
-          user: true
-        }
+        include: { user: true },
       },
       captain: true,
       messages: {
-        include: {
-          user: true
-        },
-        orderBy: {
-          createdAt: 'asc'
-        }
+        include: { user: true },
+        orderBy: { createdAt: "asc" },
       },
       hostedScrims: {
-        where: {
-          status: { in: ["OPEN", "PENDING", "ACCEPTED"] },
-        },
-        orderBy: {
-          updatedAt: "desc",
-        },
+        where: { status: { in: ["OPEN", "PENDING", "ACCEPTED"] } },
+        orderBy: { updatedAt: "desc" },
         take: 1,
-        include: {
-          guestTeam: true,
-        },
+        include: { guestTeam: true },
       },
-    }
+    },
   });
 
-  if (!team) {
-    notFound();
-  }
+  if (!team) notFound();
 
-  // Check membership status
   const userEmail = session?.user?.email;
-  const membership = team.members.find(m => m.user.email === userEmail);
-  const isMember = membership?.status === 'APPROVED';
-  const isPending = membership?.status === 'PENDING';
-  const isCaptain = membership?.role === 'CAPTAIN' && isMember;
+  const membership = team.members.find((m) => m.user.email === userEmail);
+  const isMember = membership?.status === "APPROVED";
+  const isPending = membership?.status === "PENDING";
+  const isCaptain = membership?.role === "CAPTAIN" && isMember;
 
   const captainMembership = userEmail
     ? await prisma.teamMember.findFirst({
-        where: {
-          user: { email: userEmail },
-          role: "CAPTAIN",
-          status: "APPROVED",
-        },
+        where: { user: { email: userEmail }, role: "CAPTAIN", status: "APPROVED" },
         include: { team: true },
       })
     : null;
+
   const openHostedScrim = team.hostedScrims[0] ?? null;
   const canRequestScrim = Boolean(
     captainMembership &&
@@ -73,344 +56,375 @@ export default async function TeamDetailPage({
       openHostedScrim &&
       openHostedScrim.status === "OPEN"
   );
-  
-  const activeMembers = team.members.filter(m => m.status === 'APPROVED');
-  const pendingMembers = team.members.filter(m => m.status === 'PENDING');
-  
+
+  const activeMembers = team.members.filter((m) => m.status === "APPROVED");
+  const pendingMembers = team.members.filter((m) => m.status === "PENDING");
   const isFull = activeMembers.length >= 5;
 
   const completedScrims = await prisma.scrim.findMany({
-    where: {
-      status: "COMPLETED",
-      OR: [{ hostTeamId: team.id }, { guestTeamId: team.id }],
-    },
-    include: {
-      hostTeam: true,
-      guestTeam: true,
-      winnerTeam: true,
-    },
-    orderBy: {
-      completedAt: "desc",
-    },
+    where: { status: "COMPLETED", OR: [{ hostTeamId: team.id }, { guestTeamId: team.id }] },
+    include: { hostTeam: true, guestTeam: true, winnerTeam: true },
+    orderBy: { completedAt: "desc" },
     take: 5,
   });
 
-  const wins = completedScrims.filter((scrim) => scrim.winnerTeamId === team.id).length;
+  const wins = completedScrims.filter((s) => s.winnerTeamId === team.id).length;
   const losses = completedScrims.length - wins;
-  const winRate = completedScrims.length > 0 ? `${Math.round((wins / completedScrims.length) * 100)}%` : "No matches yet";
+  const winRate =
+    completedScrims.length > 0
+      ? `${Math.round((wins / completedScrims.length) * 100)}%`
+      : "0%";
+
   const matches = completedScrims.map((scrim) => {
     const isHost = scrim.hostTeamId === team.id;
-    const opponent = isHost ? scrim.guestTeam?.name ?? "Guest Squad" : scrim.hostTeam.name;
-    const myScore = isHost ? scrim.hostScore : scrim.guestScore;
-    const oppScore = isHost ? scrim.guestScore : scrim.hostScore;
-
     return {
       id: scrim.id,
-      opponent,
+      opponent: isHost ? scrim.guestTeam?.name ?? "Guest Squad" : scrim.hostTeam.name,
       result: scrim.winnerTeamId === team.id ? "Win" : "Loss",
-      score: `${myScore ?? 0} - ${oppScore ?? 0}`,
+      score: `${isHost ? scrim.hostScore : scrim.guestScore ?? 0} – ${isHost ? scrim.guestScore : scrim.hostScore ?? 0}`,
       date: (scrim.completedAt ?? scrim.updatedAt).toLocaleDateString("en-PH", {
         month: "short",
         day: "numeric",
       }),
     };
-  }); 
+  });
+
+  const heroStats = [
+    { label: "Members", value: `${activeMembers.length} / 5` },
+    { label: "Record", value: completedScrims.length > 0 ? `${wins}W ${losses}L` : "No matches" },
+    { label: "Win Rate", value: winRate },
+  ];
 
   return (
-    <div className="container mx-auto px-3 py-4 sm:px-4 sm:py-6 lg:py-8">
-      {/* Pending Status Banner */}
+    <PageShell size="wide" tone="blue">
+      {/* Pending banner */}
       {isPending && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 p-4 rounded-xl mb-8 flex items-center gap-3">
-          <Clock className="w-5 h-5 animate-pulse" />
-          <span className="font-bold">Your join request is pending approval from the team captain.</span>
+        <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/8 px-5 py-3 text-sm font-bold text-primary">
+          <Clock className="h-4 w-4 animate-pulse flex-shrink-0" />
+          Your join request is pending approval from the team captain.
         </div>
       )}
 
-      {/* Team Header */}
-      <div className="relative mb-6 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,31,0.96),rgba(8,11,25,0.86))] p-5 sm:mb-8 sm:rounded-[1.6rem] sm:p-6 lg:p-8">
-        <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-primary/10 blur-[90px] pointer-events-none sm:h-64 sm:w-64 sm:blur-[100px]" />
-        
-        <div className="relative z-10 flex flex-col items-center gap-5 md:flex-row md:items-start md:gap-6">
-          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[3px] border-primary/50 bg-secondary shadow-[0_0_24px_-10px_var(--color-primary)] sm:h-28 sm:w-28 md:h-32 md:w-32">
-            {team.logo ? (
-               <img src={team.logo} alt={team.name} className="h-full w-full object-cover" />
-            ) : (
-               <Shield className="h-10 w-10 text-muted-foreground sm:h-12 sm:w-12" />
-            )}
-          </div>
-          
-          <div className="flex-1 text-center md:text-left">
-            <div className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-primary">Team Profile</div>
-            <h1 className="mt-2 flex items-center justify-center gap-2 font-display text-[1.9rem] font-black uppercase leading-[1.05] tracking-[0.05em] text-white md:justify-start md:text-[2.3rem]">
-              <span>{team.name}</span>
-              <Shield className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
-            </h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-400 md:mx-0">
-              {team.description || "No team description has been added yet."}
-            </p>
-            
-            <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:max-w-xl">
-              <div className="rounded-[1rem] border border-white/10 bg-white/6 px-3 py-2.5 text-center md:text-left">
-                <div className="text-[0.5rem] font-black uppercase tracking-[0.14em] text-slate-500">Captain Rank</div>
-                <div className="mt-1 flex items-center justify-center gap-1.5 text-sm font-bold text-white md:justify-start">
-                  <Trophy className="h-3.5 w-3.5 text-yellow-500" />
-                  <span>{team.captain.rank || "Unranked"}</span>
-                </div>
-              </div>
-              <div className="rounded-[1rem] border border-white/10 bg-white/6 px-3 py-2.5 text-center md:text-left">
-                <div className="text-[0.5rem] font-black uppercase tracking-[0.14em] text-slate-500">Members</div>
-                <div className="mt-1 flex items-center justify-center gap-1.5 text-sm font-bold text-white md:justify-start">
-                  <Users className="h-3.5 w-3.5 text-blue-400" />
-                  <span>{activeMembers.length} Active</span>
-                </div>
-              </div>
-              <div className="col-span-2 rounded-[1rem] border border-white/10 bg-white/6 px-3 py-2.5 text-center sm:col-span-1 md:text-left">
-                <div className="text-[0.5rem] font-black uppercase tracking-[0.14em] text-slate-500">Team Record</div>
-                <div className="mt-1 flex items-center justify-center gap-1.5 text-sm font-bold text-white md:justify-start">
-                  <Sword className="h-3.5 w-3.5 text-rose-400" />
-                  <span>{completedScrims.length > 0 ? `${wins}W ${losses}L · ${winRate}` : winRate}</span>
-                </div>
-              </div>
-            </div>
-
-            {openHostedScrim ? (
-              <div className="mt-4 rounded-[1rem] border border-primary/15 bg-primary/8 px-3 py-3 text-sm text-slate-300">
-                <div className="text-[0.5rem] font-black uppercase tracking-[0.14em] text-primary">Scrim Status</div>
-                <div className="mt-1 font-semibold text-white">
-                  {openHostedScrim.status === "OPEN"
-                    ? `${team.name} is open for scrimmage requests.`
-                    : openHostedScrim.status === "PENDING"
-                      ? `${team.name} is reviewing a request from ${openHostedScrim.guestTeam?.name ?? "another squad"}.`
-                      : `${team.name} accepted a scrim with ${openHostedScrim.guestTeam?.name ?? "another squad"}.`}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="grid w-full grid-cols-1 gap-2.5 md:w-[180px]">
+      <PageHero
+        eyebrow="Team Profile"
+        icon={<Shield className="h-4 w-4" />}
+        title={
+          <>
+            {team.name}
+            <span className="text-gradient-electric"> squad</span>
+          </>
+        }
+        description={team.description || "No team description has been added yet. Captains can update this in team settings."}
+        stats={heroStats}
+        actions={
+          <div className="flex flex-wrap gap-2">
             {isMember ? (
               <form action={leaveTeam}>
-                 <input type="hidden" name="teamId" value={team.id} />
-                 <button className="w-full rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white transition-colors shadow-lg shadow-red-900/20 hover:bg-red-700 btn-animate">
-                   {isCaptain ? "Disband Team" : "Leave Team"}
-                 </button>
+                <input type="hidden" name="teamId" value={team.id} />
+                <button className="action-button-danger text-[11px]">
+                  {isCaptain ? "Disband Team" : "Leave Team"}
+                </button>
               </form>
             ) : isPending ? (
               <form action={leaveTeam}>
-                 <input type="hidden" name="teamId" value={team.id} />
-                 <button className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary/80 btn-animate">
-                   Cancel Request
-                 </button>
+                <input type="hidden" name="teamId" value={team.id} />
+                <button className="action-button-secondary text-[11px]">Cancel Request</button>
               </form>
             ) : (
               <form action={joinTeam}>
-                 <input type="hidden" name="teamId" value={team.id} />
-                 <button 
-                   disabled={isFull}
-                   className={`w-full rounded-xl px-4 py-2.5 text-sm font-bold transition-colors shadow-lg btn-animate ${
-                      isFull 
-                        ? "bg-secondary text-muted-foreground cursor-not-allowed" 
-                        : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
-                   }`}
-                 >
-                   {isFull ? "Team Full" : "Request to Join"}
-                 </button>
+                <input type="hidden" name="teamId" value={team.id} />
+                <button disabled={isFull} className={`text-[11px] ${isFull ? "action-button-secondary opacity-50 cursor-not-allowed" : "action-button-primary"}`}>
+                  {isFull ? "Team Full" : "Request to Join"}
+                </button>
               </form>
             )}
             {canRequestScrim ? (
               <form action={requestScrim}>
                 <input type="hidden" name="scrimId" value={openHostedScrim?.id} />
-                <button className="w-full rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 btn-animate">
-                  Request Scrim
-                </button>
+                <button className="action-button-secondary text-[11px]">Request Scrim</button>
               </form>
             ) : (
-              <Link href="/scrims" className="flex w-full items-center justify-center rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80 btn-animate">
-                {openHostedScrim ? "View Scrim Status" : "View Scrimmages"}
+              <Link href="/scrims" className="action-button-secondary text-[11px]">
+                {openHostedScrim ? "View Scrim Status" : "Scrimmages"}
               </Link>
             )}
           </div>
-        </div>
-      </div>
+        }
+        aside={
+          <SurfaceCard tone="blue" className="h-full min-w-[240px] p-6">
+            <div className="relative z-10 flex h-full flex-col items-center justify-between text-center">
+              <div className="flex flex-col items-center gap-4">
+                {/* Team Logo */}
+                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-cyan-400/30 bg-[#07101f] shadow-[0_0_24px_-10px_rgba(34,211,238,0.4)]">
+                  {team.logo ? (
+                    <img src={team.logo} alt={team.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <Shield className="h-10 w-10 text-cyan-300/60" />
+                  )}
+                </div>
+                <div>
+                  <div className="font-display text-2xl font-black uppercase tracking-[0.08em] text-white">{team.name}</div>
+                  <div className="mt-1 text-xs text-slate-400">Est. {new Date(team.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</div>
+                </div>
+              </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Roster Section */}
-        <div className="lg:col-span-2 space-y-8">
+              {/* Scrim Status */}
+              {openHostedScrim && (
+                <div className="mt-5 w-full rounded-xl border border-primary/15 bg-primary/8 px-4 py-3 text-left">
+                  <div className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-primary">Scrim Status</div>
+                  <div className="mt-1 text-xs font-semibold text-white leading-snug">
+                    {openHostedScrim.status === "OPEN"
+                      ? `${team.name} is open for scrimmage requests.`
+                      : openHostedScrim.status === "PENDING"
+                        ? `Reviewing request from ${openHostedScrim.guestTeam?.name ?? "another squad"}.`
+                        : `Scrim accepted with ${openHostedScrim.guestTeam?.name ?? "another squad"}.`}
+                  </div>
+                </div>
+              )}
+
+              {/* Captain info */}
+              <div className="mt-4 w-full border-t border-white/5 pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-slate-500">Captain</div>
+                  <div className="flex items-center gap-1.5">
+                    <Trophy className="h-3 w-3 text-primary" />
+                    <span className="text-xs font-bold text-white">{team.captain.rank || "Unranked"}</span>
+                  </div>
+                </div>
+                <div className="mt-1 text-sm font-semibold text-slate-200">{team.captain.name || "Unknown"}</div>
+              </div>
+            </div>
+          </SurfaceCard>
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.6fr)_1fr]">
+        {/* Left column: Roster + Pending */}
+        <div className="space-y-6">
           {/* Active Roster */}
-          <div>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" /> Active Roster
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <SurfaceCard>
+            <div className="mb-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-cyan-300" />
+                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">Active Roster</h2>
+              </div>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                {activeMembers.length} / 5
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {activeMembers.map((member) => (
-                <div key={member.id} className="bg-card border border-border p-4 rounded-xl flex items-center justify-between hover:border-primary/30 transition-colors group">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-lg font-bold text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors overflow-hidden">
+                <div
+                  key={member.id}
+                  className="group flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 transition-all hover:border-cyan-300/20 hover:bg-white/[0.04]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#081225] text-sm font-black text-primary transition-all group-hover:border-cyan-300/30">
                       {member.user.image ? (
-                        <img src={member.user.image} alt={member.user.name || "User"} className="w-full h-full object-cover" />
+                        <img src={member.user.image} alt={member.user.name || "User"} className="h-full w-full object-cover" />
                       ) : (
                         (member.user.name || "U").charAt(0)
                       )}
                     </div>
                     <div>
-                      <div className="font-bold group-hover:text-primary transition-colors">{member.user.name || "Unknown User"}</div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1">
-                        {member.role === 'CAPTAIN' && <Trophy className="w-3 h-3 text-yellow-500" />}
-                        {member.role} • {member.user.rank || "Unranked"}
+                      <div className="text-sm font-bold text-white">{member.user.name || "Unknown User"}</div>
+                      <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                        {member.role === "CAPTAIN" && <Trophy className="h-2.5 w-2.5 text-yellow-400" />}
+                        <span className="uppercase tracking-wider">{member.role}</span>
+                        <span>·</span>
+                        <span>{member.user.rank || "Unranked"}</span>
                       </div>
                     </div>
                   </div>
-                  {isCaptain && member.role !== 'CAPTAIN' && (
-                     <form action={kickMember}>
-                       <input type="hidden" name="teamId" value={team.id} />
-                       <input type="hidden" name="membershipId" value={member.id} />
-                       <button type="submit" className="p-2 text-slate-500 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Kick Member">
-                         <UserX className="w-4 h-4" />
-                       </button>
-                     </form>
+                  {isCaptain && member.role !== "CAPTAIN" && (
+                    <form action={kickMember}>
+                      <input type="hidden" name="teamId" value={team.id} />
+                      <input type="hidden" name="membershipId" value={member.id} />
+                      <button
+                        type="submit"
+                        className="rounded-lg p-2 text-slate-600 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100 focus:opacity-100"
+                        title="Remove Member"
+                      >
+                        <UserX className="h-4 w-4" />
+                      </button>
+                    </form>
                   )}
                 </div>
               ))}
               {!isFull && isCaptain && (
-                <Link href={`/teams/${team.id}/recruit`} className="bg-card border border-dashed border-border p-4 rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors min-h-[80px]">
-                  <UserPlus className="w-6 h-6" />
-                  <span className="text-sm font-medium">Recruit Member</span>
+                <Link
+                  href={`/teams/${team.id}/recruit`}
+                  className="flex min-h-[60px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-slate-500 transition-all hover:border-cyan-300/30 hover:text-cyan-300"
+                >
+                  <UserPlus className="h-5 w-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Recruit Member</span>
                 </Link>
               )}
             </div>
-          </div>
+          </SurfaceCard>
 
-          {/* Pending Requests (Captain Only) */}
+          {/* Pending Requests - Captain Only */}
           {isCaptain && pendingMembers.length > 0 && (
-            <div className="bg-secondary/10 border border-border rounded-xl p-6">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-yellow-500">
-                <Clock className="w-5 h-5" /> Pending Requests
-              </h2>
+            <SurfaceCard tone="gold">
+              <div className="mb-5 flex items-center gap-3">
+                <Clock className="h-5 w-5 text-primary" />
+                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">
+                  Pending Requests
+                </h2>
+                <span className="ml-auto rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary border border-primary/20">
+                  {pendingMembers.length}
+                </span>
+              </div>
               <div className="space-y-3">
                 {pendingMembers.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between bg-card p-4 rounded-lg border border-border">
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3"
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center overflow-hidden">
+                      <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#081225] text-sm font-bold text-white">
                         {member.user.image ? (
-                          <img src={member.user.image} alt={member.user.name || "User"} className="w-full h-full object-cover" />
+                          <img src={member.user.image} alt={member.user.name || "User"} className="h-full w-full object-cover" />
                         ) : (
                           (member.user.name || "U").charAt(0)
                         )}
                       </div>
                       <div>
-                        <div className="font-bold text-sm">{member.user.name}</div>
-                        <div className="text-xs text-muted-foreground">{member.user.rank || "Unranked"}</div>
+                        <div className="text-sm font-bold text-white">{member.user.name}</div>
+                        <div className="text-[10px] text-slate-500">{member.user.rank || "Unranked"}</div>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <form action={approveMember}>
                         <input type="hidden" name="membershipId" value={member.id} />
                         <input type="hidden" name="teamId" value={team.id} />
-                        <button className="p-2 bg-green-500/20 text-green-500 hover:bg-green-500/30 rounded-lg transition-colors" title="Approve">
-                          <Check className="w-4 h-4" />
+                        <button className="rounded-lg p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors" title="Approve">
+                          <Check className="h-4 w-4" />
                         </button>
                       </form>
                       <form action={rejectMember}>
                         <input type="hidden" name="membershipId" value={member.id} />
                         <input type="hidden" name="teamId" value={team.id} />
-                        <button className="p-2 bg-red-500/20 text-red-500 hover:bg-red-500/30 rounded-lg transition-colors" title="Reject">
-                          <X className="w-4 h-4" />
+                        <button className="rounded-lg p-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors" title="Reject">
+                          <X className="h-4 w-4" />
                         </button>
                       </form>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </SurfaceCard>
           )}
         </div>
 
-        {/* Match History Section */}
-        <div>
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <History className="w-5 h-5 text-primary" /> Recent Matches
-          </h2>
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            {matches.length > 0 ? (
-               matches.map((match: { id: string; opponent: string; result: string; score: string; date: string }) => (
-                 <div key={match.id} className="p-4 border-b border-border last:border-0 hover:bg-secondary/30 transition-colors">
-                   <div className="flex justify-between items-center mb-2">
-                     <span className={`text-xs font-bold px-2 py-0.5 rounded ${match.result === 'Win' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'}`}>
-                       {match.result.toUpperCase()}
-                     </span>
-                     <span className="text-xs text-muted-foreground">{match.date}</span>
-                   </div>
-                   <div className="flex justify-between items-center">
-                     <div className="font-medium">vs {match.opponent}</div>
-                     <div className="font-mono font-bold text-lg">{match.score}</div>
-                   </div>
-                 </div>
-               ))
-            ) : (
-               <div className="p-8 text-center text-muted-foreground text-sm">
-                  No matches played yet.
-               </div>
-            )}
-            
-            <div className="p-3 text-center border-t border-border">
-              <Link href="#" className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors">
-                View All Matches
-              </Link>
+        {/* Right column: Match History + Team Chat */}
+        <div className="space-y-6">
+          {/* Match History */}
+          <SurfaceCard>
+            <div className="mb-5 flex items-center gap-3">
+              <History className="h-5 w-5 text-primary" />
+              <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">Recent Matches</h2>
             </div>
-          </div>
+            {matches.length > 0 ? (
+              <div className="divide-y divide-white/[0.04]">
+                {matches.map((match) => (
+                  <div key={match.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                    <div>
+                      <div className="text-sm font-bold text-white">vs {match.opponent}</div>
+                      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">{match.date}</div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-sm font-bold text-slate-300">{match.score}</span>
+                      <span
+                        className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
+                          match.result === "Win"
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : "bg-red-500/10 text-red-400 border border-red-500/20"
+                        }`}
+                      >
+                        {match.result}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-white/[0.02] px-6 py-10 text-center">
+                <Swords className="mx-auto mb-3 h-8 w-8 text-slate-600" />
+                <div className="text-sm text-slate-500">No matches played yet. Challenge a team to a scrim!</div>
+              </div>
+            )}
+          </SurfaceCard>
+
+          {/* Team Chat - Members Only */}
+          {isMember ? (
+            <SurfaceCard tone="blue">
+              <div className="mb-4 flex items-center gap-3">
+                <MessageSquare className="h-5 w-5 text-cyan-300" />
+                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">Team Chat</h2>
+              </div>
+              <div className="h-56 overflow-y-auto space-y-3 pr-1 custom-scrollbar mb-4">
+                {team.messages.length > 0 ? (
+                  team.messages.map((msg) => {
+                    const isMe = msg.user.email === session?.user?.email;
+                    return (
+                      <div key={msg.id} className={`flex gap-2.5 ${isMe ? "flex-row-reverse" : ""}`}>
+                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#081225] text-xs font-black text-primary">
+                          {msg.user.image ? (
+                            <img src={msg.user.image} alt="User" className="h-full w-full object-cover rounded-lg" />
+                          ) : (
+                            (msg.user.name || "U").charAt(0)
+                          )}
+                        </div>
+                        <div className={`flex flex-col max-w-[80%] ${isMe ? "items-end" : "items-start"}`}>
+                          <span className="mb-1 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                            {msg.user.name} · {msg.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          <div
+                            className={`rounded-xl px-3 py-2 text-sm leading-relaxed ${
+                              isMe
+                                ? "bg-primary text-black rounded-tr-none"
+                                : "bg-white/5 text-slate-200 border border-white/5 rounded-tl-none"
+                            }`}
+                          >
+                            {msg.content}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-slate-500">
+                    No messages yet — say hello to your squad!
+                  </div>
+                )}
+              </div>
+              <form action={sendMessage} className="flex gap-2">
+                <input type="hidden" name="teamId" value={team.id} />
+                <input
+                  type="text"
+                  name="content"
+                  placeholder="Message your team..."
+                  className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-primary/50 transition-colors"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-black hover:bg-yellow-400 transition-colors"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </form>
+            </SurfaceCard>
+          ) : (
+            <EmptyState
+              icon={<MessageSquare className="h-7 w-7" />}
+              title="Members Only"
+              description="Join this team to access the private team chat channel."
+            />
+          )}
         </div>
       </div>
-      
-      {/* Team Chat Section - Only for Active Members */}
-      {isMember && (
-        <div className="mt-8 bg-card border border-border rounded-xl p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-primary" /> Team Chat
-          </h2>
-          
-          <div className="h-64 overflow-y-auto bg-secondary/20 rounded-lg p-4 mb-4 space-y-4">
-            {team.messages.length > 0 ? (
-              team.messages.map((msg) => (
-                <div key={msg.id} className={`flex gap-3 ${msg.user.email === session?.user?.email ? 'flex-row-reverse' : ''}`}>
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center font-bold text-xs text-primary-foreground flex-shrink-0">
-                    {msg.user.image ? <img src={msg.user.image} alt="User" className="w-full h-full rounded-full" /> : (msg.user.name || "U").charAt(0)}
-                  </div>
-                  <div>
-                    <div className={`flex items-baseline gap-2 mb-1 ${msg.user.email === session?.user?.email ? 'flex-row-reverse' : ''}`}>
-                      <span className="text-xs font-bold text-muted-foreground">{msg.user.name}</span>
-                      <span className="text-[10px] text-muted-foreground/70">{msg.createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <div className={`p-3 rounded-lg text-sm ${
-                      msg.user.email === session?.user?.email 
-                        ? 'bg-primary/20 text-foreground rounded-tr-none' 
-                        : 'bg-secondary text-foreground rounded-tl-none'
-                    }`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-muted-foreground py-10">No messages yet. Start the conversation!</div>
-            )}
-          </div>
-
-          <form action={sendMessage} className="flex gap-2">
-            <input type="hidden" name="teamId" value={team.id} />
-            <input 
-              type="text" 
-              name="content"
-              placeholder="Type a message..." 
-              className="flex-1 bg-secondary/50 border border-border rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors"
-              required
-            />
-            <button type="submit" className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-              <Send className="w-5 h-5" />
-            </button>
-          </form>
-        </div>
-      )}
-
-    </div>
+    </PageShell>
   );
 }

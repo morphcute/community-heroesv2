@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { generateBracket } from "@/lib/bracket-generator";
+import { getRequiredRosterSize } from "@/lib/tournament-config";
 
 export async function joinTournament(prevState: any, formData: FormData) {
   const session = await auth();
@@ -43,14 +44,14 @@ export async function joinTournament(prevState: any, formData: FormData) {
     status: "APPROVED"
   };
 
-  if (tournament.gameMode === "SOLO_1V1") {
+  if (getRequiredRosterSize(tournament.gameMode) === 1) {
     // Solo validation
     const alreadyJoined = tournament.participants.some(p => p.userId === user.id);
     if (alreadyJoined) return { ok: false, message: "You are already registered." };
     finalParticipantData.userId = user.id;
   } else {
     // Squad Validation
-    const requiredMembers = tournament.gameMode === "TEAM_5V5" ? 5 : tournament.gameMode === "TRIO_3V3" ? 3 : 2;
+    const requiredMembers = getRequiredRosterSize(tournament.gameMode);
     
     const captainedTeam = await prisma.team.findFirst({
       where: { captainId: user.id },
@@ -147,35 +148,149 @@ export async function updateMatchScore(formData: FormData) {
     data: { score1, score2, winnerId, status }
   });
 
-  // Mathematically Bubble Winner Up The Tree
-  if (status === "COMPLETED" && winnerId && match.nextMatchId) {
-     // @ts-ignore
-     const nextMatch = await prisma.match.findUnique({ where: { id: match.nextMatchId }});
-     if (nextMatch) {
-       // Is standard top or bottom feeder?
-       const isTopFeeder = match.matchIndex % 2 === 0;
-       
-       const nextData: any = {};
-       if (isTopFeeder) {
-         nextData.participant1Id = winnerId;
-       } else {
-         nextData.participant2Id = winnerId;
-       }
-       
-       // If both participant slots in the next match are now filled, make it ONGOING instantly
-       if (
-         (isTopFeeder && nextMatch.participant2Id) || 
-         (!isTopFeeder && nextMatch.participant1Id)
-       ) {
-         nextData.status = "ONGOING";
-       }
-       
-       // @ts-ignore
-       await prisma.match.update({
-         where: { id: match.nextMatchId },
-         data: nextData
-       });
-     }
+  // Mathematically Bubble Winner Up The Tree or Complete Tournament
+  if (status === "COMPLETED" && winnerId) {
+    if (match.nextMatchId) {
+      // @ts-ignore
+      const nextMatch = await prisma.match.findUnique({ where: { id: match.nextMatchId }});
+      if (nextMatch) {
+        // Is standard top or bottom feeder?
+        const isTopFeeder = match.matchIndex % 2 === 0;
+        
+        const nextData: any = {};
+        if (isTopFeeder) {
+          nextData.participant1Id = winnerId;
+        } else {
+          nextData.participant2Id = winnerId;
+        }
+        
+        // If both participant slots in the next match are now filled, make it ONGOING instantly
+        if (
+          (isTopFeeder && nextMatch.participant2Id) || 
+          (!isTopFeeder && nextMatch.participant1Id)
+        ) {
+          nextData.status = "ONGOING";
+        }
+        
+        // @ts-ignore
+        await prisma.match.update({
+          where: { id: match.nextMatchId },
+          data: nextData
+        });
+      }
+    } else {
+      // 🏆 Final match completed! Complete tournament & award prizes
+      const tournament = await prisma.tournament.findUnique({
+        where: { id: tournamentId },
+        include: { participants: true }
+      });
+      if (tournament) {
+        await prisma.tournament.update({
+          where: { id: tournamentId },
+          data: { status: "COMPLETED" }
+        });
+
+        // Determine Champion and Runner-up
+        const championPart = tournament.participants.find(p => p.id === winnerId);
+        const runnerUpId = match.participant1Id === winnerId ? match.participant2Id : match.participant1Id;
+        const runnerUpPart = tournament.participants.find(p => p.id === runnerUpId);
+
+        // Parse prize distribution
+        let distribution: { rank: number; amount: number }[] = [];
+        let currency: "DIAMONDS" | "CASH" = "DIAMONDS";
+        if (tournament.prizePool) {
+          try {
+            const parsed = JSON.parse(tournament.prizePool);
+            if (parsed.distribution) distribution = parsed.distribution;
+            if (parsed.currency) {
+              currency = parsed.currency.toLowerCase() === "diamonds" ? "DIAMONDS" : "CASH";
+            }
+          } catch {}
+        }
+
+        const championPrize = distribution.find(d => d.rank === 1)?.amount || 0;
+        const runnerUpPrize = distribution.find(d => d.rank === 2)?.amount || 0;
+
+        // Helper function to create awards and notifications
+        const grantAward = async (participant: any, rankName: string, totalAmount: number) => {
+          if (!participant || totalAmount <= 0) return;
+          if (participant.userId) {
+            // Solo Award
+            await prisma.award.create({
+              data: {
+                userId: participant.userId,
+                tournamentId: tournament.id,
+                amount: totalAmount,
+                currency
+              }
+            });
+            await prisma.notification.create({
+              data: {
+                userId: participant.userId,
+                title: `Tournament ${rankName}!`,
+                content: `Congratulations! You won ${totalAmount.toLocaleString()} ${currency === "DIAMONDS" ? "Diamonds 💎" : "Cash"} in ${tournament.title}.`,
+                link: `/profile`
+              }
+            });
+          } else if (participant.teamId) {
+            // Team Award - get approved members
+            const team = await prisma.team.findUnique({
+              where: { id: participant.teamId },
+              include: { members: { where: { status: "APPROVED" } } }
+            });
+            if (team) {
+              const membersCount = team.members.length || 1;
+              const splitAmount = Math.floor(totalAmount / membersCount);
+              
+              if (team.members.length > 0) {
+                await Promise.all(
+                  team.members.map(member => 
+                    prisma.award.create({
+                      data: {
+                        userId: member.userId,
+                        tournamentId: tournament.id,
+                        amount: splitAmount,
+                        currency
+                      }
+                    }).then(() => 
+                      prisma.notification.create({
+                        data: {
+                          userId: member.userId,
+                          title: `Tournament ${rankName}!`,
+                          content: `Congratulations! Your team won, and you received ${splitAmount.toLocaleString()} ${currency === "DIAMONDS" ? "Diamonds 💎" : "Cash"} in ${tournament.title}.`,
+                          link: `/profile`
+                        }
+                      })
+                    )
+                  )
+                );
+              } else {
+                await prisma.award.create({
+                  data: {
+                    userId: team.captainId,
+                    tournamentId: tournament.id,
+                    amount: totalAmount,
+                    currency
+                  }
+                });
+                await prisma.notification.create({
+                  data: {
+                    userId: team.captainId,
+                    title: `Tournament ${rankName}!`,
+                    content: `Congratulations! Your team won, and you received ${totalAmount.toLocaleString()} ${currency === "DIAMONDS" ? "Diamonds 💎" : "Cash"} in ${tournament.title}.`,
+                    link: `/profile`
+                  }
+                });
+              }
+            }
+          }
+        };
+
+        // Award Champion and Runner-up
+        await grantAward(championPart, "Champion", championPrize);
+        await grantAward(runnerUpPart, "Runner-Up", runnerUpPrize);
+      }
+    }
   }
 
   revalidatePath(`/tournaments/${tournamentId}`);

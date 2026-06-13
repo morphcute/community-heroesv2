@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Map, Plus, Settings2 } from "lucide-react";
 import AreaItem from "./AreaItem";
 import { PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
+import AppSelect from "@/components/ui/AppSelect";
 
 type SessionUserWithRole = {
   role?: string;
@@ -99,10 +100,16 @@ export default async function AdminSettingsPage() {
           <input name="name" required placeholder="Area name" className="input-hud" />
           <input name="coveredLocations" placeholder="Covered provinces or cities" className="input-hud md:col-span-2" />
           <div className="flex gap-3">
-            <select name="type" className="input-hud flex-1 appearance-none">
-              <option value="SOLO">Solo Area</option>
-              <option value="MULTIPLE">Multiple Area</option>
-            </select>
+            <AppSelect
+              name="type"
+              defaultValue="SOLO"
+              className="flex-1"
+              placeholder="Select area type"
+              options={[
+                { value: "SOLO", label: "Solo Area" },
+                { value: "MULTIPLE", label: "Multiple Area" },
+              ]}
+            />
             <button type="submit" className="action-button-primary whitespace-nowrap text-[11px]">
               <Plus className="h-4 w-4" />
               Add

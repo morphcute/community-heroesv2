@@ -33,6 +33,12 @@ import {
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getSiteUrl } from "@/lib/site";
+import {
+  getBattlefieldLabel,
+  getGameModeLabel,
+  getStageSummary,
+  getTournamentFormatLabel,
+} from "@/lib/tournament-config";
 
 const siteUrl = getSiteUrl();
 
@@ -52,6 +58,10 @@ async function getTournamentSeoData(id: string) {
       prizePool: true,
       entryFee: true,
       maxTeams: true,
+      matchMode: true,
+      battlefield: true,
+      stageType: true,
+      stageCount: true,
       platform: true,
       participants: {
         select: { id: true },
@@ -90,7 +100,7 @@ export async function generateMetadata({
       "Mobile Legends tournament",
       "MLBB bracket",
       "Mobile Legends esports",
-      `${tournament.gameMode.replaceAll("_", " ")} tournament`,
+      `${getGameModeLabel(tournament.gameMode)} tournament`,
     ],
     alternates: {
       canonical: canonicalUrl,
@@ -266,16 +276,18 @@ export default async function TournamentDetailPage({
     id: tournamentData.id,
     title: tournamentData.title,
     description: tournamentData.description,
-    mode: tournamentData.gameMode === 'SOLO_1V1' ? '1v1' : '5v5',
+    mode: getGameModeLabel(tournamentData.gameMode),
+    matchMode: (tournamentData as any).matchMode || "Draft Pick",
     prize: formattedPrize,
     status: tournamentData.status.replace('_', ' '), 
     startDate: tournamentData.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }),
     endDate: tournamentData.endDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }),
     participants: tournamentData.participants.length,
     maxParticipants: tournamentData.maxTeams,
-    platform: tournamentData.platform || "Cross Platform",
+    battlefield: getBattlefieldLabel((tournamentData as any).battlefield || "ONLINE"),
     fee: tournamentData.entryFee || "Free for all",
-    bracketType: tournamentData.format.replace('_', ' '),
+    bracketType: getTournamentFormatLabel(tournamentData.format),
+    stages: getStageSummary((tournamentData as any).stageType || "SINGLE_STAGE", (tournamentData as any).stageCount || 1),
     regions: derivedRegions,
     image: tournamentData.banner || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
   };
@@ -423,19 +435,19 @@ export default async function TournamentDetailPage({
                         <User className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-green-400 font-bold uppercase tracking-widest">Format</div>
-                        <div className="text-sm font-bold text-gray-200">{tournamentData.gameMode?.replace('_', ' ') || "Solo"}</div>
+                        <div className="text-[10px] text-green-400 font-bold uppercase tracking-widest">Team Size</div>
+                        <div className="text-sm font-bold text-gray-200">{tournament.mode}</div>
                      </div>
                   </div>
                   
-                  {/* Platform */}
+                  {/* MLBB Mode */}
                   <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
                      <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
                         <Smartphone className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Platform</div>
-                        <div className="text-sm font-bold text-gray-200">{tournamentData.platform || "Cross Platform"}</div>
+                        <div className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">MLBB Mode</div>
+                        <div className="text-sm font-bold text-gray-200">{tournament.matchMode}</div>
                      </div>
                   </div>
                   
@@ -941,10 +953,12 @@ export default async function TournamentDetailPage({
                    <div className="space-y-4">
                       <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">GENERAL FORMAT</h4>
                       <ul className="space-y-3 text-sm text-gray-300 font-medium list-disc pl-5 marker:text-[#FFC107]">
-                         <li><span className="text-white">Game Mode:</span> {tournament.mode}</li>
-                         <li><span className="text-white">Type:</span> {tournament.bracketType}</li>
+                         <li><span className="text-white">Team Size:</span> {tournament.mode}</li>
+                         <li><span className="text-white">Battlefield:</span> {tournament.battlefield}</li>
+                         <li><span className="text-white">Tournament Format:</span> {tournament.bracketType}</li>
+                         <li><span className="text-white">Stages:</span> {tournament.stages}</li>
                          <li><span className="text-white">Match Type:</span> Best of 1</li>
-                         <li><span className="text-white">Platform:</span> {tournament.platform}</li>
+                         <li><span className="text-white">MLBB Match Mode:</span> {tournament.matchMode}</li>
                       </ul>
                    </div>
                 </div>

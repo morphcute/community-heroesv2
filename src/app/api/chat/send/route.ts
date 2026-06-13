@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { content, channel, teamId, tournamentId } = body;
+  const { content, channel, teamId, tournamentId, chatRoomId } = body;
 
   if (!content?.trim()) {
     return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
@@ -26,13 +26,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Message too long" }, { status: 400 });
   }
 
+  if (chatRoomId) {
+    const isParticipant = await prisma.chatRoomParticipant.findFirst({
+      where: { chatRoomId, userId: dbUser.id }
+    });
+    if (!isParticipant) {
+      return NextResponse.json({ error: "Unauthorized access to chat room" }, { status: 403 });
+    }
+  }
+
   const message = await prisma.message.create({
     data: {
       content: content.trim(),
       userId: dbUser.id,
-      channel: (teamId || tournamentId) ? null : (channel || "general"),
+      channel: (teamId || tournamentId || chatRoomId) ? null : (channel || "general"),
       teamId: teamId || null,
       tournamentId: tournamentId || null,
+      chatRoomId: chatRoomId || null,
     },
     include: {
       user: {
@@ -43,3 +53,4 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(message, { status: 201 });
 }
+

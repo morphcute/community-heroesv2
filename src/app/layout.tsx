@@ -1,17 +1,27 @@
 import type { Metadata } from "next";
-import { Rajdhani, Inter } from "next/font/google";
+import { Rajdhani, Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
-const rajdhani = Rajdhani({ 
-  subsets: ["latin"], 
-  weight: ["300", "400", "500", "600", "700"],
+const rajdhani = Rajdhani({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-rajdhani",
+  display: "swap",
 });
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-outfit",
+  display: "swap",
 });
 
 const siteUrl = getSiteUrl();
@@ -70,12 +80,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="dark" data-theme="dark" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${rajdhani.variable} ${inter.variable} bg-background text-foreground antialiased`}
+        className={`${rajdhani.variable} ${inter.variable} ${outfit.variable} bg-background text-foreground antialiased`}
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

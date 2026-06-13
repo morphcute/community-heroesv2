@@ -45,6 +45,14 @@ model User {
   hostedScrims    Scrim[]                 @relation("ScrimHostedBy")
   requestedScrims Scrim[]                 @relation("ScrimRequestedBy")
 
+  // Social Relations
+  friends                Friendship[]          @relation("UserFriends")
+  friendOf               Friendship[]          @relation("FriendUsers")
+  chatRoomParticipations ChatRoomParticipant[]
+  posts                  Post[]
+  comments               Comment[]
+  postReactions          PostReaction[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -191,9 +199,13 @@ model Tournament {
   description String?
   banner      String?
 
-  gameMode GameMode
-  format   TournamentFormat
-  status   TournamentStatus @default(UPCOMING)
+  gameMode        GameMode
+  matchMode       String?             @default("Draft Pick")
+  battlefield     TournamentBattlefield @default(ONLINE)
+  stageType       TournamentStageType @default(SINGLE_STAGE)
+  stageCount      Int                 @default(1)
+  format          TournamentFormat
+  status          TournamentStatus    @default(UPCOMING)
 
   startDate DateTime
   endDate   DateTime?
@@ -258,17 +270,20 @@ model Message {
 
   tournamentId String?
   teamId       String?
+  chatRoomId   String?
   userId       String
 
   createdAt DateTime @default(now())
 
   tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   team       Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  chatRoom   ChatRoom?   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([channel, createdAt])
   @@index([teamId, createdAt])
   @@index([tournamentId, createdAt])
+  @@index([chatRoomId, createdAt])
 }
 
 model Match {
@@ -338,7 +353,22 @@ enum TournamentStatus {
 enum TournamentFormat {
   SINGLE_ELIMINATION
   DOUBLE_ELIMINATION
-  ROUND_ROBIN
+  GAUNTLET
+  BRACKET_GROUPS
+  CUSTOM_BRACKET
+  ROUND_ROBIN_GROUPS
+  LEAGUE
+  SWISS_SYSTEM
+}
+
+enum TournamentBattlefield {
+  ONLINE
+  ONSITE
+}
+
+enum TournamentStageType {
+  SINGLE_STAGE
+  MULTIPLE_STAGES
 }
 
 enum ParticipationStatus {
@@ -380,3 +410,85 @@ enum Currency {
   DIAMONDS
   CASH
 }
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model Friendship {
+  id        String           @id @default(cuid())
+  userId    String
+  friendId  String
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId, status])
+}
+
+model ChatRoom {
+  id        String   @id @default(cuid())
+  name      String?  // Name for group chats, null for DMs
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ChatRoomParticipant[]
+  messages     Message[]
+}
+
+model ChatRoomParticipant {
+  id         String   @id @default(cuid())
+  chatRoomId String
+  userId     String
+  joinedAt   DateTime @default(now())
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatRoomId, userId])
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  imageUrl  String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  reactions PostReaction[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model PostReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  type      String   // LIKE, LOVE, FIRE, TROPHY
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId, type])
+}
+

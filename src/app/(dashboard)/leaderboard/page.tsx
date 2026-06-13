@@ -82,7 +82,6 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   return (
     <PageShell size="wide">
       <PageHero
-        className="[&_.page-hero__stats]:max-w-none"
         eyebrow="Ranked Circuit"
         icon={<Trophy className="h-4 w-4" />}
         title={
@@ -157,7 +156,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                         <Crown className={`w-6 h-6 ${crownColor} mb-2`} />
                         
                         <div className={`w-20 h-20 rounded-full bg-secondary border-2 overflow-hidden ${
-                        isGold ? "border-yellow-500" : isSilver ? "border-gray-300" : "border-amber-700"
+                        isGold ? "border-primary" : isSilver ? "border-gray-300" : "border-amber-700"
                         } flex items-center justify-center font-black text-2xl text-gray-400 mb-4 ${avatarGlow}`}>
                           {player.image ? (
                              <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
@@ -197,7 +196,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                      >
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-3">
-                              {player.rank === 1 && <Crown className="w-5 h-5 text-yellow-500 fill-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]" />}
+                              {player.rank === 1 && <Crown className="w-5 h-5 text-primary fill-primary drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />}
                               {player.rank === 2 && <Medal className="w-5 h-5 text-gray-300 fill-gray-300" />}
                               {player.rank === 3 && <Medal className="w-5 h-5 text-amber-600 fill-amber-600" />}
                               {player.rank > 3 && <span className="w-5 h-5 flex items-center justify-center text-sm font-bold text-gray-500">{player.rank}</span>}
@@ -207,7 +206,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-4">
                               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm transition-all overflow-hidden ${
-                                 player.rank === 1 ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/50' :
+                                 player.rank === 1 ? 'bg-primary/20 text-primary border border-primary/50' :
                                  player.rank === 2 ? 'bg-gray-300/20 text-gray-300 border border-gray-400/50' :
                                  player.rank === 3 ? 'bg-amber-600/20 text-amber-600 border border-amber-600/50' :
                                  'bg-white/5 border border-white/10 text-gray-400'

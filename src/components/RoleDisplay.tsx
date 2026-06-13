@@ -43,7 +43,7 @@ export default function RoleDisplay({ roles }: { roles: string[] }) {
   const [showEdit, setShowEdit] = useState(false);
 
   return (
-    <div className="glass-card mb-6 rounded-[1.35rem] border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
+    <div className="hud-panel mb-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-[0.58rem] font-black uppercase tracking-[0.2em] text-slate-500">

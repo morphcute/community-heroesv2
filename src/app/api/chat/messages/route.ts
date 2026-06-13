@@ -9,13 +9,31 @@ export async function GET(req: NextRequest) {
   const channel = searchParams.get("channel");
   const teamId = searchParams.get("teamId");
   const tournamentId = searchParams.get("tournamentId");
+  const chatRoomId = searchParams.get("chatRoomId");
   const cursor = searchParams.get("cursor") || undefined;
 
-  const where = tournamentId
-    ? { tournamentId }
-    : teamId
-      ? { teamId }
-      : { channel: channel || "general" };
+  const session = await auth();
+  const currentUserId = session?.user?.id;
+
+  if (chatRoomId) {
+    if (!currentUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const participant = await prisma.chatRoomParticipant.findFirst({
+      where: { chatRoomId, userId: currentUserId }
+    });
+    if (!participant) {
+      return NextResponse.json({ error: "Unauthorized access to chat room" }, { status: 403 });
+    }
+  }
+
+  const where = chatRoomId
+    ? { chatRoomId }
+    : tournamentId
+      ? { tournamentId }
+      : teamId
+        ? { teamId }
+        : { channel: channel || "general" };
 
   const messages = await prisma.message.findMany({
     where,
@@ -31,3 +49,4 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json(messages);
 }
+

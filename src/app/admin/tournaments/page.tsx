@@ -3,6 +3,7 @@ import { Eye, Pencil, Plus, Search, Trash2, Trophy } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
+import { getGameModeLabel } from "@/lib/tournament-config";
 
 export default async function AdminTournamentsPage() {
   const tournaments = await prisma.tournament.findMany({
@@ -78,7 +79,7 @@ export default async function AdminTournamentsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-sm text-slate-300">{tournament.gameMode.replaceAll("_", " ")}</td>
+                  <td className="px-6 py-5 text-sm text-slate-300">{getGameModeLabel(tournament.gameMode)}</td>
                   <td className="px-6 py-5">
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.22em] text-primary">
                       {tournament.status.replaceAll("_", " ")}

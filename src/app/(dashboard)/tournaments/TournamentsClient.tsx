@@ -48,7 +48,6 @@ export default function TournamentsClient({ initialTournaments }: { initialTourn
   return (
     <PageShell size="wide">
       <PageHero
-        className="p-3.5 sm:p-5 lg:p-8 [&_.page-hero__eyebrow]:px-3 [&_.page-hero__eyebrow]:py-1.5 [&_.page-hero__eyebrow]:text-[0.58rem] [&_.page-hero__eyebrow]:tracking-[0.16em] [&_.page-hero__title]:text-[1.72rem] [&_.page-hero__title]:tracking-[0.04em] [&_.page-hero__description]:text-[0.92rem] [&_.page-hero__description]:leading-6 [&_.page-hero__stats]:max-w-none [&_.page-hero__stats]:rounded-[0.95rem] [&_.page-hero__copy]:gap-3 [&_.page-hero__aside]:mt-3 [&_.stat-chip]:px-2 [&_.stat-chip]:py-2 [&_.stat-chip__label]:text-[0.44rem] [&_.stat-chip__label]:tracking-[0.1em] [&_.stat-chip__value]:text-[0.92rem] sm:[&_.page-hero__eyebrow]:px-4 sm:[&_.page-hero__eyebrow]:py-2 sm:[&_.page-hero__eyebrow]:text-[0.72rem] sm:[&_.page-hero__eyebrow]:tracking-[0.24em] sm:[&_.page-hero__title]:text-[2.6rem] sm:[&_.page-hero__title]:tracking-[0.06em] sm:[&_.page-hero__description]:text-base sm:[&_.page-hero__description]:leading-7 sm:[&_.page-hero__copy]:gap-5 sm:[&_.page-hero__aside]:mt-4 sm:[&_.stat-chip]:px-4 sm:[&_.stat-chip]:py-4 sm:[&_.stat-chip__label]:text-[0.62rem] sm:[&_.stat-chip__label]:tracking-[0.22em] sm:[&_.stat-chip__value]:text-xl"
         eyebrow="Tournament Feed"
         icon={<Trophy className="h-4 w-4" />}
         title={
@@ -106,11 +105,10 @@ export default function TournamentsClient({ initialTournaments }: { initialTourn
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`mobile-pill ${
-                activeTab === tab
+              className={`mobile-pill ${activeTab === tab
                   ? "bg-primary text-black shadow-[0_14px_28px_-18px_rgba(250,204,21,0.9)]"
                   : "border border-white/10 bg-white/6 text-slate-400 hover:border-primary/20 hover:text-white"
-              }`}
+                }`}
             >
               {tab}
             </button>
@@ -154,13 +152,12 @@ export default function TournamentsClient({ initialTournaments }: { initialTourn
                     {tournament.game}
                   </div>
                   <div
-                    className={`rounded-full px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.22em] ${
-                      tournament.status === "Live"
+                    className={`rounded-full px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.22em] ${tournament.status === "Live"
                         ? "bg-rose-400/18 text-rose-200"
                         : tournament.status === "Open"
                           ? "bg-emerald-400/18 text-emerald-200"
                           : "bg-primary/16 text-primary"
-                    }`}
+                      }`}
                   >
                     {tournament.status}
                   </div>

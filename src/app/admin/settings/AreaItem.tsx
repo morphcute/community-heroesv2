@@ -2,13 +2,39 @@
 
 import { useState } from "react";
 import { Pencil, Trash2, Check, X } from "lucide-react";
+import AppSelect from "@/components/ui/AppSelect";
 
-export default function AreaItem({ area, allHandlers, updateAction, deleteAction }: { area: any, allHandlers: any[], updateAction: (fd: FormData) => void, deleteAction: (fd: FormData) => void }) {
+type AreaHandler = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+};
+
+type AreaRecord = {
+  id: string;
+  name: string;
+  type: string;
+  coveredLocations: string[];
+  handlers: AreaHandler[];
+};
+
+export default function AreaItem({
+  area,
+  allHandlers,
+  updateAction,
+  deleteAction,
+}: {
+  area: AreaRecord;
+  allHandlers: AreaHandler[];
+  updateAction: (fd: FormData) => void;
+  deleteAction: (fd: FormData) => void;
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(area.name);
   const [type, setType] = useState(area.type);
   const [coveredLocations, setCoveredLocations] = useState(area.coveredLocations?.join(", ") || "");
-  const [activeHandlerIds, setActiveHandlerIds] = useState<Set<string>>(new Set(area.handlers?.map((h: any) => h.id) || []));
+  const [activeHandlerIds, setActiveHandlerIds] = useState<Set<string>>(new Set(area.handlers?.map((handler) => handler.id) || []));
 
   if (isEditing) {
     return (
@@ -19,7 +45,7 @@ export default function AreaItem({ area, allHandlers, updateAction, deleteAction
          <div className="flex flex-col gap-3 mt-1 pt-3 border-t border-white/5">
            <span className="text-[11px] font-bold tracking-wider text-gray-500 uppercase">Assign Moderators ({activeHandlerIds.size})</span>
            <div className="flex flex-wrap gap-2">
-             {allHandlers?.map((h: any) => {
+             {allHandlers?.map((h) => {
                const isActive = activeHandlerIds.has(h.id);
                return (
                  <label key={h.id} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors ${isActive ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-black border-white/5 hover:border-white/10'}`}>
@@ -40,12 +66,20 @@ export default function AreaItem({ area, allHandlers, updateAction, deleteAction
          </div>
 
          <div className="flex justify-between items-center gap-2 mt-2 pt-3 border-t border-white/5">
-           <select value={type} onChange={e => setType(e.target.value)} className="flex-1 bg-black border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500/50">
-             <option value="SOLO">Solo Area</option>
-             <option value="MULTIPLE">Multiple Area</option>
-           </select>
+           <AppSelect
+             value={type}
+             onValueChange={setType}
+             className="flex-1"
+             placeholder="Select area type"
+             options={[
+               { value: "SOLO", label: "Solo Area" },
+               { value: "MULTIPLE", label: "Multiple Area" },
+             ]}
+             triggerClassName="rounded-lg border-white/10 bg-black px-3 py-2"
+             contentClassName="rounded-xl"
+           />
            <div className="flex gap-2 shrink-0">
-             <button onClick={() => { setIsEditing(false); setName(area.name); setType(area.type); setCoveredLocations(area.coveredLocations?.join(", ") || ""); setActiveHandlerIds(new Set(area.handlers?.map((h: any) => h.id) || [])); }} className="text-gray-400 px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors font-bold text-xs flex items-center gap-1">
+             <button onClick={() => { setIsEditing(false); setName(area.name); setType(area.type); setCoveredLocations(area.coveredLocations?.join(", ") || ""); setActiveHandlerIds(new Set(area.handlers?.map((handler) => handler.id) || [])); }} className="text-gray-400 px-4 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors font-bold text-xs flex items-center gap-1">
                <X className="w-4 h-4" /> Cancel
              </button>
              <button onClick={async () => {
@@ -81,8 +115,8 @@ export default function AreaItem({ area, allHandlers, updateAction, deleteAction
         )}
         
         <div className="flex -space-x-1.5 mt-3">
-          {area.handlers?.length > 0 ? area.handlers.map((h: any) => (
-            <div key={h.id} className="w-6 h-6 rounded-full bg-black border border-white/20 flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-lg relative z-10 hover:z-20 transform hover:scale-110 transition-all" title={h.name || h.email}>
+          {area.handlers?.length > 0 ? area.handlers.map((h) => (
+            <div key={h.id} className="w-6 h-6 rounded-full bg-black border border-white/20 flex items-center justify-center text-[8px] font-black text-white shrink-0 shadow-lg relative z-10 hover:z-20 transform hover:scale-110 transition-all" title={h.name || h.email || undefined}>
               {h.image ? <img src={h.image} className="w-full h-full rounded-full object-cover" alt="Avatar"/> : (h.name || h.email)?.substring(0, 2).toUpperCase()}
             </div>
           )) : <span className="text-[10px] text-gray-600 border border-dashed border-gray-600/50 rounded-full px-2 py-0.5">Unassigned</span>}

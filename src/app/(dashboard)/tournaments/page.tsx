@@ -1,9 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import TournamentsClient from "./TournamentsClient";
+import {
+  getBattlefieldLabel,
+  getGameModeLabel,
+  getTournamentFormatLabel,
+} from "@/lib/tournament-config";
 
 export default async function TournamentsPage() {
   const tournamentsData = await prisma.tournament.findMany({
-    include: { 
+    include: {
       participants: true,
       admins: { include: { user: true } }
     },
@@ -19,7 +24,7 @@ export default async function TournamentsPage() {
       "from-green-600/40 to-emerald-500/20"
     ];
     let sum = 0;
-    for(let i=0; i<seed.length; i++) sum += seed.charCodeAt(i);
+    for (let i = 0; i < seed.length; i++) sum += seed.charCodeAt(i);
     return gradients[sum % gradients.length];
   }
 
@@ -27,10 +32,10 @@ export default async function TournamentsPage() {
     let formattedPrize = t.prizePool || "TBA";
     try {
       if (formattedPrize.trim().startsWith("{") || formattedPrize.trim().startsWith("[")) {
-         const pData = JSON.parse(formattedPrize);
-         formattedPrize = `${pData.total} ${pData.currency}`;
+        const pData = JSON.parse(formattedPrize);
+        formattedPrize = `${pData.total} ${pData.currency}`;
       }
-    } catch {}
+    } catch { }
 
     const primaryHost = t.admins?.[0]?.user?.name || t.admins?.[0]?.user?.email?.split('@')[0] || "Community Heroes";
 
@@ -42,11 +47,11 @@ export default async function TournamentsPage() {
       prize: formattedPrize,
       participants: t.participants.filter(p => p.status === "APPROVED").length,
       maxParticipants: t.maxTeams,
-      game: t.gameMode === "SOLO_1V1" ? "MLBB 1v1" : t.gameMode === "DUO_2V2" ? "MLBB 2v2" : t.gameMode === "TRIO_3V3" ? "MLBB 3v3" : "MLBB 5v5",
+      game: `MLBB ${getGameModeLabel(t.gameMode)}`,
       status: t.status === "ONGOING" ? "Live" : t.status === "REGISTRATION_OPEN" ? "Open" : t.status === "COMPLETED" ? "Completed" : "Upcoming",
-      format: t.format.replace('_', ' '),
-      type: t.locationRestriction ? t.locationRestriction.toUpperCase() : "ONLINE",
-      platform: t.platform || "Mobile",
+      format: getTournamentFormatLabel(t.format),
+      type: t.locationRestriction ? t.locationRestriction.toUpperCase() : getBattlefieldLabel((t as any).battlefield || "ONLINE"),
+      platform: (t as any).matchMode || "Draft Pick",
       color: generateGradient(t.id),
       banner: t.banner || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop",
       fee: t.entryFee || "Free",

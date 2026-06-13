@@ -1,16 +1,25 @@
-import { Trophy, Swords, Calendar, Settings, Gamepad2, Share2 } from "lucide-react";
+import { Calendar, Settings, Gamepad2, Share2 } from "lucide-react";
+import { GameMode, TournamentBattlefield, TournamentFormat, TournamentStageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { PrizeDistribution } from "../../create/PrizeDistribution";
 import RegionSelect from "@/components/ui/RegionSelect";
+import AppSelect from "@/components/ui/AppSelect";
+import {
+  BATTLEFIELD_OPTIONS,
+  GAME_MODE_OPTIONS,
+  MATCH_MODE_SUGGESTIONS,
+  STAGE_TYPE_OPTIONS,
+  TOURNAMENT_FORMAT_OPTIONS,
+} from "@/lib/tournament-config";
 
 export default async function EditTournamentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
   const session = await auth();
-  const role = (session?.user as any)?.role;
+  const role = (session?.user as { role?: string } | undefined)?.role;
   if (role !== "SUPERADMIN" && role !== "MODERATOR") {
     redirect("/");
   }
@@ -23,15 +32,18 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
 
   async function updateTournament(formData: FormData) {
     "use server";
-    const userRole = (await auth()?.then(s => s?.user as any))?.role;
+    const userRole = ((await auth())?.user as { role?: string } | undefined)?.role;
     if (userRole !== "SUPERADMIN" && userRole !== "MODERATOR") return;
 
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
     const banner = formData.get("banner") as string;
-    const gameMode = formData.get("gameMode") as any;
-    const platform = formData.get("platform") as string;
-    const format = formData.get("format") as any;
+    const gameMode = formData.get("gameMode") as GameMode;
+    const matchMode = formData.get("matchMode") as string;
+    const battlefield = formData.get("battlefield") as TournamentBattlefield;
+    const stageType = formData.get("stageType") as TournamentStageType;
+    const stageCountInput = parseInt(formData.get("stageCount") as string, 10);
+    const format = formData.get("format") as TournamentFormat;
     const maxTeams = parseInt(formData.get("maxTeams") as string);
     const prizePool = formData.get("prizePool") as string;
     const entryFee = formData.get("entryFee") as string;
@@ -41,9 +53,22 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
     await prisma.tournament.update({
       where: { id },
       data: {
-        title, description, banner, gameMode, platform, format, locationRestriction: locationRestriction || null,
-        maxTeams, prizePool, entryFee, startDate
-      } as any
+        title,
+        description,
+        banner,
+        gameMode,
+        matchMode: matchMode || "Draft Pick",
+        battlefield,
+        stageType,
+        stageCount: stageType === "MULTIPLE_STAGES" ? Math.max(2, stageCountInput || 2) : 1,
+        platform: "Mobile",
+        format,
+        locationRestriction: locationRestriction || null,
+        maxTeams,
+        prizePool,
+        entryFee,
+        startDate
+      }
     });
 
     revalidatePath("/admin/tournaments");
@@ -121,33 +146,56 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Team Size (Mode)</label>
-              <select required defaultValue={tournament.gameMode || "TEAM_5V5"} name="gameMode" className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none appearance-none">
-                <option value="TEAM_5V5">5v5 Squads</option>
-                <option value="TRIO_3V3">3v3 Trios</option>
-                <option value="DUO_2V2">2v2 Duos</option>
-                <option value="SOLO_1V1">1v1 Solo Combat</option>
-              </select>
+              <AppSelect
+                name="gameMode"
+                defaultValue={tournament.gameMode || "TEAM_5V5"}
+                placeholder="Select team size"
+                options={GAME_MODE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Match Lobby Type</label>
-              <select required defaultValue={tournament.platform || "Classic"} name="platform" className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none appearance-none">
-                <option value="Draft Pick">Draft Pick</option>
-                <option value="Classic">Classic</option>
-                <option value="Brawl">Brawl</option>
-                <option value="Custom / Arcade">Custom / Arcade</option>
-              </select>
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">MLBB Match Mode</label>
+              <input required defaultValue={tournament.matchMode || "Draft Pick"} name="matchMode" type="text" list="mlbb-match-modes" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 transition-colors outline-none" />
+              <datalist id="mlbb-match-modes">
+                {MATCH_MODE_SUGGESTIONS.map((mode) => (
+                  <option key={mode} value={mode} />
+                ))}
+              </datalist>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Bracket Format</label>
-              <select required defaultValue={tournament.format || "SINGLE_ELIMINATION"} name="format" className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none appearance-none">
-                <option value="SINGLE_ELIMINATION">Single Elimination</option>
-                <option value="DOUBLE_ELIMINATION">Double Elimination</option>
-                <option value="ROUND_ROBIN">Round Robin</option>
-              </select>
+              <AppSelect
+                name="format"
+                defaultValue={tournament.format || "SINGLE_ELIMINATION"}
+                placeholder="Select bracket format"
+                options={TOURNAMENT_FORMAT_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tournament Battlefield</label>
+              <AppSelect
+                name="battlefield"
+                defaultValue={tournament.battlefield || "ONLINE"}
+                placeholder="Select battlefield"
+                options={BATTLEFIELD_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Stage Structure</label>
+              <AppSelect
+                name="stageType"
+                defaultValue={tournament.stageType || "SINGLE_STAGE"}
+                placeholder="Select stage setup"
+                options={STAGE_TYPE_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Number of Stages</label>
+              <input required defaultValue={tournament.stageCount || 1} name="stageCount" type="number" min="1" max="99" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-amber-500/50 outline-none" />
             </div>
             <div className="space-y-1.5 lg:col-span-3">
               <label className="text-xs font-bold text-orange-400 uppercase tracking-widest flex items-center gap-2">Geographic Scope (Philippine Boundaries)</label>
-              <RegionSelect fieldName="locationRestriction" defaultValue={(tournament as any).locationRestriction || ""} />
+              <RegionSelect fieldName="locationRestriction" defaultValue={tournament.locationRestriction || ""} />
               <p className="text-[10px] text-gray-500 font-bold mt-1">Leave standard for <strong className="text-white">Nationwide</strong>, or explicitly select a Region Gate to bound participation.</p>
             </div>
           </div>

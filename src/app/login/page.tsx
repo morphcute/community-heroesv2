@@ -73,7 +73,7 @@ export default async function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen bg-[#050a1a]">
+    <div className="relative flex min-h-screen bg-[#04060d]">
       {/* Full-page background effects */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgba(250,204,21,0.08),transparent_50%),radial-gradient(ellipse_at_80%_70%,rgba(56,189,248,0.06),transparent_50%),radial-gradient(ellipse_at_50%_50%,rgba(168,85,247,0.03),transparent_60%)]" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -151,7 +151,7 @@ export default async function LoginPage() {
           <div className="flex items-center gap-6">
             <div className="flex -space-x-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#050a1a] bg-gradient-to-br from-slate-700 to-slate-800 text-[0.55rem] font-bold text-slate-300">
+                <div key={i} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#04060d] bg-gradient-to-br from-slate-700 to-slate-800 text-[0.55rem] font-bold text-slate-300">
                   {["CH", "ML", "PH", "SG"][i]}
                 </div>
               ))}
@@ -172,7 +172,7 @@ export default async function LoginPage() {
           <div className="mb-6 rounded-[1.75rem] border border-white/10 bg-[linear-gradient(180deg,rgba(11,16,33,0.94),rgba(7,10,22,0.86))] p-5 shadow-[0_30px_80px_-50px_rgba(0,0,0,1)] lg:hidden">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-[1rem] font-black tracking-[0.24em] text-primary">Community Hero</div>
+                <div className="text-[1rem] font-black tracking-[0.24em] text-primary">Community Heroes</div>
 
                 <p className="mt-2 text-sm leading-6 text-slate-400">
                   Browse tournaments, scrimmages, and squad activity in a cleaner mobile flow.
@@ -250,22 +250,33 @@ export default async function LoginPage() {
                   <div className="w-full border-t border-white/10" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-[#050a1a] px-2 text-xs uppercase tracking-widest text-slate-500">Other Methods</span>
+                  <span className="bg-[#04060d] px-2 text-xs uppercase tracking-widest text-slate-500">Other Methods</span>
                 </div>
               </div>
 
-              <button type="button" disabled className="flex w-full items-center justify-between rounded-[1.2rem] border border-white/5 bg-transparent px-4 py-3.5 text-left opacity-60 sm:rounded-xl sm:px-6 sm:py-4 lg:rounded-2xl lg:px-6 lg:py-5">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-slate-400 lg:h-12 lg:w-12">
-                    <Shield className="h-5 w-5" />
+              <form
+                action={async () => {
+                  "use server";
+                  await signIn("credentials", {
+                    email: "jimboy@example.com",
+                    password: "admin123",
+                    redirectTo: "/"
+                  });
+                }}
+              >
+                <button type="submit" className="group flex w-full items-center justify-between rounded-[1.2rem] border border-white/5 bg-transparent px-4 py-3.5 text-left transition-all duration-300 hover:border-primary/30 hover:bg-white/10 hover:shadow-[0_0_30px_-12px_rgba(250,204,21,0.3)] sm:rounded-xl sm:px-6 sm:py-4 lg:rounded-2xl lg:px-6 lg:py-5">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-slate-400 lg:h-12 lg:w-12 group-hover:text-primary">
+                      <Shield className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-300">Developer Login</div>
+                      <div className="text-xs text-slate-500">Sign in as admin (Jimboy_Dev)</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-slate-300">Email &amp; Password</div>
-                    <div className="text-xs text-slate-500">Coming soon</div>
-                  </div>
-                </div>
-                <Zap className="h-4 w-4 text-slate-600" />
-              </button>
+                  <Zap className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
+                </button>
+              </form>
             </div>
 
             <div className="mt-6 text-center lg:mt-10 lg:text-left">

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Calendar, Mail, MapPin, Phone, Shield, Star, Trophy, User, Zap } from "lucide-react";
 import { EmptyState, PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
+import { calculateUserXP } from "@/lib/xp";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -10,8 +11,15 @@ export default async function ProfilePage() {
     ? await prisma.user.findUnique({
         where: { email: session.user.email },
         include: {
+          awards: {
+            orderBy: { createdAt: "desc" },
+            include: { tournament: { select: { title: true } } },
+          },
           _count: {
-            select: { participations: true },
+            select: {
+              participations: true,
+              awards: true,
+            },
           },
         },
       })
@@ -30,6 +38,11 @@ export default async function ProfilePage() {
     );
   }
 
+  const xpData = calculateUserXP({
+    participationsCount: user._count.participations,
+    awardsCount: user._count.awards,
+  });
+
   return (
     <PageShell size="wide">
       <PageHero
@@ -43,25 +56,37 @@ export default async function ProfilePage() {
         }
         description="Your player details, tournament history, and account info all live here in one cleaner MLBB profile page."
         stats={[
+          { label: "Level", value: `Lvl ${xpData.level}` },
           { label: "Rank", value: user.rank || "Unranked" },
-          { label: "Joined", value: new Date(user.createdAt).toLocaleDateString() },
           { label: "Tournaments", value: user._count.participations },
         ]}
         actions={<Link href="/profile/edit" className="action-button-primary text-[11px]">Edit Profile</Link>}
         aside={
-          <SurfaceCard tone="gold" className="h-full">
-            <div className="relative z-10 flex h-full flex-col items-center justify-center text-center">
-              <div className="rounded-full bg-[linear-gradient(135deg,#fef08a,#f59e0b)] p-[3px]">
-                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-[#07101f] text-4xl font-black text-primary sm:h-32 sm:w-32 sm:text-5xl">
-                  {user.image ? (
-                    <img src={user.image} alt={user.name || "User"} className="h-full w-full object-cover" />
-                  ) : (
-                    user.name?.charAt(0) || "U"
-                  )}
+          <SurfaceCard tone="gold" className="h-full min-w-[240px] p-6">
+            <div className="relative z-10 flex h-full flex-col items-center justify-between text-center">
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-[linear-gradient(135deg,#fef08a,#f59e0b)] p-[3px]">
+                  <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-[#07101f] text-4xl font-black text-primary sm:h-32 sm:w-32 sm:text-5xl">
+                    {user.image ? (
+                      <img src={user.image} alt={user.name || "User"} className="h-full w-full object-cover" />
+                    ) : (
+                      user.name?.charAt(0) || "U"
+                    )}
+                  </div>
+                </div>
+                <div className="mt-4 font-display text-2xl font-black uppercase tracking-[0.06em] text-white sm:mt-6 sm:text-3xl sm:tracking-[0.08em]">{user.rank || "Rookie"}</div>
+                <div className="mt-2 text-xs text-slate-400 sm:text-sm">{user.mlbbId ? `MLBB ID ${user.mlbbId}` : "Set your MLBB ID in profile edit"}</div>
+              </div>
+
+              <div className="mt-6 w-full border-t border-white/5 pt-4 text-left">
+                <div className="flex items-center justify-between text-[0.62rem] font-bold uppercase tracking-[0.18em] text-slate-400 font-display">
+                  <span>Season Progress</span>
+                  <span className="text-primary">{xpData.xpInCurrentLevel} / {xpData.xpNeededForNextLevel} XP</span>
+                </div>
+                <div className="stat-bar mt-2 h-1.5 w-full">
+                  <div className="stat-bar-fill" style={{ width: `${xpData.xpPercentage}%` }} />
                 </div>
               </div>
-              <div className="mt-4 font-display text-2xl font-black uppercase tracking-[0.06em] text-white sm:mt-6 sm:text-3xl sm:tracking-[0.08em]">{user.rank || "Rookie"}</div>
-              <div className="mt-2 text-xs text-slate-400 sm:text-sm">{user.mlbbId ? `MLBB ID ${user.mlbbId}` : "Set your MLBB ID in profile edit"}</div>
             </div>
           </SurfaceCard>
         }
@@ -77,7 +102,7 @@ export default async function ProfilePage() {
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <ProfileStat label="Tournaments" value={user._count.participations} icon={<Trophy className="h-5 w-5 text-primary" />} />
               <ProfileStat label="Win Rate" value="0%" icon={<Zap className="h-5 w-5 text-cyan-300" />} />
-              <ProfileStat label="Matches" value="0" icon={<Shield className="h-5 w-5 text-fuchsia-300" />} />
+              <ProfileStat label="Level" value={`Lvl ${xpData.level}`} icon={<Shield className="h-5 w-5 text-fuchsia-300" />} />
               <ProfileStat label="Server" value={user.server || "-"} icon={<MapPin className="h-5 w-5 text-emerald-300" />} />
             </div>
           </SurfaceCard>
@@ -87,9 +112,48 @@ export default async function ProfilePage() {
               <Trophy className="h-5 w-5 text-primary" />
               <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white sm:text-2xl sm:tracking-[0.08em]">Recent Achievements</h2>
             </div>
-            <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-white/4 px-6 py-12 text-center text-sm text-slate-400">
-              No achievements yet. Join tournaments to start stacking badges and placements.
-            </div>
+            {!user.awards || user.awards.length === 0 ? (
+              <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-white/4 px-6 py-12 text-center text-sm text-slate-400">
+                No achievements yet. Join tournaments to start stacking badges and placements.
+              </div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {user.awards.map((award: any) => {
+                  const isDiamonds = award.currency === "DIAMONDS";
+                  const isGold = isDiamonds ? award.amount >= 1500 : award.amount >= 20;
+                  return (
+                    <div key={award.id} className="flex items-center gap-3.5 rounded-2xl border border-white/5 bg-white/4 p-4 hover:border-primary/20 transition-all hover:scale-[1.01] duration-300">
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0 ${
+                        isGold ? "bg-amber-500/10 text-amber-300 border border-amber-500/20" : "bg-slate-400/10 text-slate-400 border border-slate-400/20"
+                      }`}>
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-display text-sm font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+                          {isDiamonds ? (
+                            <>
+                              <span className="text-primary">{award.amount.toLocaleString()}</span>
+                              <span className="text-primary/70 text-xs">💎</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-emerald-400">${award.amount.toLocaleString()}</span>
+                              <span className="text-emerald-500/70 text-xs">CASH</span>
+                            </>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-400 truncate mt-0.5" title={award.tournament?.title || "Community Heroes Award"}>
+                          {award.tournament?.title || "Community Heroes Award"}
+                        </div>
+                        <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1">
+                          {new Date(award.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </SurfaceCard>
 
           <SurfaceCard>
