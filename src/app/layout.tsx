@@ -94,7 +94,7 @@ export default async function RootLayout({
     // Tables may not exist during build on CI/CD — use defaults
   }
 
-  let backgroundStyle = `linear-gradient(rgba(3, 5, 12, 0.72), rgba(3, 5, 12, 0.86)), url('${backgroundUrl}')`;
+  let backgroundStyle = `linear-gradient(rgba(3, 5, 12, 0.3), rgba(3, 5, 12, 0.5)), url('${backgroundUrl}')`;
   if (backgroundUrl.startsWith("linear-gradient") || backgroundUrl.startsWith("radial-gradient")) {
     backgroundStyle = backgroundUrl;
   } else if (backgroundUrl.startsWith("#") || backgroundUrl.startsWith("rgb")) {
@@ -106,8 +106,12 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href={iconUrl} />
         <style dangerouslySetInnerHTML={{__html: `
-          html.dark body::before {
-            background: ${backgroundStyle} !important;
+          html.dark body {
+            background-image: ${backgroundStyle} !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
           }
         `}} />
       </head>

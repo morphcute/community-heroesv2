@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -12,50 +9,40 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-
-  // Custom Fields
-  mlbbId String?
-  server String?
-  rank   String?
-  roles  PlayerRole[]
-  role   Role         @default(USER)
-  isBanned Boolean    @default(false)
-
-  address     String?
-  phoneNumber String?
-  gender      String?
-
-  // Relations
-  teamMembers TeamMember[]
-  captainOf   Team[]
-
-  // Tournament Relations
-  participations  TournamentParticipant[]
-  adminOf         TournamentAdmin[]
-  handledAreas    Area[]                  @relation("AreaHandlers")
-  messages        Message[]
-  notifications   Notification[]
-  awards          Award[]
-  hostedScrims    Scrim[]                 @relation("ScrimHostedBy")
-  requestedScrims Scrim[]                 @relation("ScrimRequestedBy")
-
-  // Social Relations
-  friends                Friendship[]          @relation("UserFriends")
-  friendOf               Friendship[]          @relation("FriendUsers")
+  id                     String                  @id @default(cuid())
+  name                   String?
+  email                  String?                 @unique
+  emailVerified          DateTime?
+  image                  String?
+  mlbbId                 String?
+  server                 String?
+  rank                   String?
+  roles                  PlayerRole[]
+  role                   Role                    @default(USER)
+  address                String?
+  phoneNumber            String?
+  gender                 String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  isBanned               Boolean                 @default(false)
+  accounts               Account[]
+  awards                 Award[]
   chatRoomParticipations ChatRoomParticipant[]
-  posts                  Post[]
   comments               Comment[]
+  friendOf               Friendship[]            @relation("FriendUsers")
+  friends                Friendship[]            @relation("UserFriends")
+  messages               Message[]
+  notifications          Notification[]
+  posts                  Post[]
   postReactions          PostReaction[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  hostedScrims           Scrim[]                 @relation("ScrimHostedBy")
+  requestedScrims        Scrim[]                 @relation("ScrimRequestedBy")
+  sessions               Session[]
+  captainOf              Team[]
+  teamMembers            TeamMember[]
+  adminOf                TournamentAdmin[]
+  participations         TournamentParticipant[]
+  handledAreas           Area[]                  @relation("AreaHandlers")
 }
 
 model Notification {
@@ -66,8 +53,7 @@ model Notification {
   read      Boolean  @default(false)
   link      String?
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
 }
@@ -78,15 +64,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -107,50 +92,44 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Team System
 model Team {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  logo        String?
-  description String?
-
-  captainId String
-  captain   User   @relation(fields: [captainId], references: [id])
-
+  id             String                  @id @default(cuid())
+  name           String                  @unique
+  logo           String?
+  description    String?
+  captainId      String
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  messages       Message[]
+  guestScrims    Scrim[]                 @relation("GuestScrim")
+  hostedScrims   Scrim[]                 @relation("HostedScrim")
+  scrimWins      Scrim[]                 @relation("WonScrim")
+  captain        User                    @relation(fields: [captainId], references: [id])
   members        TeamMember[]
   participations TournamentParticipant[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  messages     Message[]
-  hostedScrims Scrim[]   @relation("HostedScrim")
-  guestScrims  Scrim[]   @relation("GuestScrim")
-  scrimWins    Scrim[]   @relation("WonScrim")
 }
 
 model Scrim {
   id                String      @id @default(cuid())
-  hostTeamId        String
-  guestTeamId       String?
-  hostedByUserId    String
   requestedByUserId String?
   status            ScrimStatus @default(OPEN)
   scheduledAt       DateTime?
-  hostScore         Int?
-  guestScore        Int?
   winnerTeamId      String?
   notes             String?
-  acceptedAt        DateTime?
-  completedAt       DateTime?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-
-  hostTeam    Team  @relation("HostedScrim", fields: [hostTeamId], references: [id], onDelete: Cascade)
-  guestTeam   Team? @relation("GuestScrim", fields: [guestTeamId], references: [id], onDelete: SetNull)
-  hostedBy    User  @relation("ScrimHostedBy", fields: [hostedByUserId], references: [id], onDelete: Cascade)
-  requestedBy User? @relation("ScrimRequestedBy", fields: [requestedByUserId], references: [id], onDelete: SetNull)
-  winnerTeam  Team? @relation("WonScrim", fields: [winnerTeamId], references: [id], onDelete: SetNull)
+  acceptedAt        DateTime?
+  completedAt       DateTime?
+  guestScore        Int?
+  guestTeamId       String?
+  hostScore         Int?
+  hostTeamId        String
+  hostedByUserId    String
+  guestTeam         Team?       @relation("GuestScrim", fields: [guestTeamId], references: [id])
+  hostTeam          Team        @relation("HostedScrim", fields: [hostTeamId], references: [id], onDelete: Cascade)
+  hostedBy          User        @relation("ScrimHostedBy", fields: [hostedByUserId], references: [id], onDelete: Cascade)
+  requestedBy       User?       @relation("ScrimRequestedBy", fields: [requestedByUserId], references: [id])
+  winnerTeam        Team?       @relation("WonScrim", fields: [winnerTeamId], references: [id])
 
   @@index([hostTeamId, status, createdAt])
   @@index([guestTeamId, status, createdAt])
@@ -158,18 +137,224 @@ model Scrim {
 }
 
 model TeamMember {
-  id     String           @id @default(cuid())
-  teamId String
-  userId String
-  role   TeamRole         @default(MEMBER)
-  status TeamMemberStatus @default(PENDING)
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  joinedAt DateTime @default(now())
+  id       String           @id @default(cuid())
+  teamId   String
+  userId   String
+  role     TeamRole         @default(MEMBER)
+  status   TeamMemberStatus @default(PENDING)
+  joinedAt DateTime         @default(now())
+  team     Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
+}
+
+model Tournament {
+  id                  String                  @id @default(cuid())
+  title               String
+  description         String?
+  banner              String?
+  gameMode            GameMode
+  format              TournamentFormat
+  status              TournamentStatus        @default(UPCOMING)
+  startDate           DateTime
+  endDate             DateTime?
+  prizePool           String?
+  entryFee            String?                 @default("Free")
+  maxTeams            Int
+  platform            String?                 @default("Mobile")
+  locationRestriction String?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  battlefield         TournamentBattlefield   @default(ONLINE)
+  matchMode           String?                 @default("Draft Pick")
+  stageCount          Int                     @default(1)
+  stageType           TournamentStageType     @default(SINGLE_STAGE)
+  awards              Award[]
+  matches             Match[]
+  messages            Message[]
+  admins              TournamentAdmin[]
+  participants        TournamentParticipant[]
+}
+
+model TournamentParticipant {
+  id                    String              @id @default(cuid())
+  tournamentId          String
+  userId                String?
+  teamId                String?
+  status                ParticipationStatus @default(PENDING)
+  joinedAt              DateTime            @default(now())
+  matchesAsParticipant1 Match[]             @relation("MatchParticipant1")
+  matchesAsParticipant2 Match[]             @relation("MatchParticipant2")
+  matchesWon            Match[]             @relation("MatchWinner")
+  team                  Team?               @relation(fields: [teamId], references: [id])
+  tournament            Tournament          @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user                  User?               @relation(fields: [userId], references: [id])
+
+  @@unique([tournamentId, userId])
+  @@unique([tournamentId, teamId])
+}
+
+model TournamentAdmin {
+  id           String     @id @default(cuid())
+  tournamentId String
+  userId       String
+  role         AdminRole  @default(MODERATOR)
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+}
+
+model Message {
+  id           String      @id @default(cuid())
+  content      String
+  channel      String?
+  tournamentId String?
+  teamId       String?
+  userId       String
+  createdAt    DateTime    @default(now())
+  chatRoomId   String?
+  chatRoom     ChatRoom?   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  team         Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([channel, createdAt])
+  @@index([teamId, createdAt])
+  @@index([tournamentId, createdAt])
+  @@index([chatRoomId, createdAt])
+}
+
+model Match {
+  id              String                 @id @default(cuid())
+  tournamentId    String
+  round           Int
+  matchIndex      Int
+  nextMatchId     String?
+  status          MatchStatus            @default(PENDING)
+  participant1Id  String?
+  participant2Id  String?
+  score1          Int                    @default(0)
+  score2          Int                    @default(0)
+  winnerId        String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  nextMatch       Match?                 @relation("NextMatch", fields: [nextMatchId], references: [id])
+  previousMatches Match[]                @relation("NextMatch")
+  participant1    TournamentParticipant? @relation("MatchParticipant1", fields: [participant1Id], references: [id])
+  participant2    TournamentParticipant? @relation("MatchParticipant2", fields: [participant2Id], references: [id])
+  tournament      Tournament             @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  winner          TournamentParticipant? @relation("MatchWinner", fields: [winnerId], references: [id])
+}
+
+model Area {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  type             String   @default("SOLO")
+  coveredLocations String[] @default([])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  handlers         User[]   @relation("AreaHandlers")
+}
+
+model Award {
+  id           String      @id @default(cuid())
+  userId       String
+  tournamentId String?
+  amount       Int
+  currency     Currency    @default(DIAMONDS)
+  createdAt    DateTime    @default(now())
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id])
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Friendship {
+  id        String           @id @default(cuid())
+  userId    String
+  friendId  String
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  friend    User             @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
+  user      User             @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId, status])
+}
+
+model ChatRoom {
+  id           String                @id @default(cuid())
+  name         String?
+  isGroup      Boolean               @default(false)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  participants ChatRoomParticipant[]
+  messages     Message[]
+}
+
+model ChatRoomParticipant {
+  id         String   @id @default(cuid())
+  chatRoomId String
+  userId     String
+  joinedAt   DateTime @default(now())
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatRoomId, userId])
+}
+
+model Post {
+  id        String         @id @default(cuid())
+  content   String
+  imageUrl  String?
+  userId    String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  comments  Comment[]
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions PostReaction[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PostReaction {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  type      String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId, type])
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userEmail String?
+  userName  String?
+  action    String
+  details   String
+  ipAddress String?
+  createdAt DateTime @default(now())
 }
 
 enum TeamRole {
@@ -185,135 +370,12 @@ enum TeamMemberStatus {
 }
 
 enum ScrimStatus {
-  OPEN
   PENDING
   ACCEPTED
   REJECTED
   COMPLETED
   CANCELED
-}
-
-// Tournament System
-model Tournament {
-  id          String  @id @default(cuid())
-  title       String
-  description String?
-  banner      String?
-
-  gameMode        GameMode
-  matchMode       String?             @default("Draft Pick")
-  battlefield     TournamentBattlefield @default(ONLINE)
-  stageType       TournamentStageType @default(SINGLE_STAGE)
-  stageCount      Int                 @default(1)
-  format          TournamentFormat
-  status          TournamentStatus    @default(UPCOMING)
-
-  startDate DateTime
-  endDate   DateTime?
-
-  prizePool           String?
-  entryFee            String? @default("Free")
-  maxTeams            Int
-  platform            String? @default("Mobile")
-  locationRestriction String?
-
-  // Relations
-  participants TournamentParticipant[]
-  admins       TournamentAdmin[]
-  messages     Message[]
-  matches      Match[]
-  awards       Award[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model TournamentParticipant {
-  id           String @id @default(cuid())
-  tournamentId String
-
-  // Can be a solo user or a team
-  userId String?
-  teamId String?
-
-  status   ParticipationStatus @default(PENDING)
-  joinedAt DateTime            @default(now())
-
-  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  user       User?      @relation(fields: [userId], references: [id])
-  team       Team?      @relation(fields: [teamId], references: [id])
-
-  // Matches relation
-  matchesAsParticipant1 Match[] @relation("MatchParticipant1")
-  matchesAsParticipant2 Match[] @relation("MatchParticipant2")
-  matchesWon            Match[] @relation("MatchWinner")
-
-  @@unique([tournamentId, userId])
-  @@unique([tournamentId, teamId])
-}
-
-model TournamentAdmin {
-  id           String    @id @default(cuid())
-  tournamentId String
-  userId       String
-  role         AdminRole @default(MODERATOR)
-
-  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([tournamentId, userId])
-}
-
-model Message {
-  id      String  @id @default(cuid())
-  content String  @db.Text
-  channel String? // e.g. "general", "lfg", null for team/tournament chats
-
-  tournamentId String?
-  teamId       String?
-  chatRoomId   String?
-  userId       String
-
-  createdAt DateTime @default(now())
-
-  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  team       Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  chatRoom   ChatRoom?   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([channel, createdAt])
-  @@index([teamId, createdAt])
-  @@index([tournamentId, createdAt])
-  @@index([chatRoomId, createdAt])
-}
-
-model Match {
-  id           String @id @default(cuid())
-  tournamentId String
-
-  round       Int // 1, 2, 3...
-  matchIndex  Int // Position within the round vertically
-  nextMatchId String? // The match to which the winner advances
-
-  status MatchStatus @default(PENDING)
-
-  participant1Id String?
-  participant2Id String?
-  score1         Int     @default(0)
-  score2         Int     @default(0)
-  winnerId       String?
-
-  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-
-  participant1 TournamentParticipant? @relation("MatchParticipant1", fields: [participant1Id], references: [id])
-  participant2 TournamentParticipant? @relation("MatchParticipant2", fields: [participant2Id], references: [id])
-  winner       TournamentParticipant? @relation("MatchWinner", fields: [winnerId], references: [id])
-
-  nextMatch       Match?  @relation("NextMatch", fields: [nextMatchId], references: [id])
-  previousMatches Match[] @relation("NextMatch")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  OPEN
 }
 
 enum Role {
@@ -385,28 +447,6 @@ enum AdminRole {
   MODERATOR
 }
 
-model Area {
-  id               String   @id @default(cuid())
-  name             String   @unique
-  type             String   @default("SOLO")
-  coveredLocations String[] @default([])
-  handlers         User[]   @relation("AreaHandlers")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-model Award {
-  id           String   @id @default(cuid())
-  userId       String
-  tournamentId String?
-  amount       Int
-  currency     Currency @default(DIAMONDS)
-  createdAt    DateTime @default(now())
-
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
-}
-
 enum Currency {
   DIAMONDS
   CASH
@@ -417,98 +457,3 @@ enum FriendshipStatus {
   ACCEPTED
   DECLINED
 }
-
-model Friendship {
-  id        String           @id @default(cuid())
-  userId    String
-  friendId  String
-  status    FriendshipStatus @default(PENDING)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-
-  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
-  friend User @relation("FriendUsers", fields: [friendId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, friendId])
-  @@index([userId, status])
-}
-
-model ChatRoom {
-  id        String   @id @default(cuid())
-  name      String?  // Name for group chats, null for DMs
-  isGroup   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  participants ChatRoomParticipant[]
-  messages     Message[]
-}
-
-model ChatRoomParticipant {
-  id         String   @id @default(cuid())
-  chatRoomId String
-  userId     String
-  joinedAt   DateTime @default(now())
-
-  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([chatRoomId, userId])
-}
-
-model Post {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  imageUrl  String?
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  comments  Comment[]
-  reactions PostReaction[]
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String   @db.Text
-  postId    String
-  userId    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-}
-
-model PostReaction {
-  id        String   @id @default(cuid())
-  postId    String
-  userId    String
-  type      String   // LIKE, LOVE, FIRE, TROPHY
-  createdAt DateTime @default(now())
-
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([postId, userId, type])
-}
-
-model SystemSetting {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String   @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  userEmail String?
-  userName  String?
-  action    String
-  details   String   @db.Text
-  ipAddress String?
-  createdAt DateTime @default(now())
-}
-
