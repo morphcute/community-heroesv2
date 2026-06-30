@@ -110,7 +110,7 @@ import { acceptInvite, declineInvite } from "../actions";
                   <Shield className="h-5 w-5" />
                 </div>
                 <div className="mt-5 text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Your team</div>
-                <h2 className="mt-2 font-display text-3xl font-black uppercase tracking-[0.08em] text-foreground">
+                <h2 className="mt-2 font-display text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-[0.08em] text-foreground">
                   {currentTeamMember.team.name}
                 </h2>
                 <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
