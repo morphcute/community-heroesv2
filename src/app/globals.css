@@ -320,9 +320,19 @@
     color: var(--text-secondary);
   }
   .page-hero__stats {
-    @apply flex w-full flex-wrap gap-px overflow-hidden rounded-xl border border-border lg:max-w-3xl;
+    @apply grid grid-cols-2 sm:grid-cols-3 gap-px overflow-hidden rounded-xl border border-border lg:max-w-3xl;
     background: var(--card);
   }
+
+  .page-hero__stats > :first-child {
+    @apply col-span-2 sm:col-span-1;
+  }
+
+  .stat-chip {
+    @apply flex min-w-0 flex-col justify-center px-5 py-4 text-left transition-all;
+    background: var(--card);
+  }
+
   .page-hero__actions {
     @apply flex flex-col gap-4 pt-4 sm:flex-row sm:flex-wrap [&>*]:w-full sm:[&>*]:w-auto;
   }
@@ -625,9 +635,8 @@
     box-shadow: 0 0 8px var(--primary);
   }
 
-  /* ─── STAT CHIPS ──────────────────────────────────────────────────────── */
   .stat-chip {
-    @apply flex min-w-0 flex-col justify-center px-5 py-4 text-left flex-1 transition-all;
+    @apply flex min-w-0 flex-col justify-center px-5 py-4 text-left transition-all;
     background: var(--card);
   }
 
