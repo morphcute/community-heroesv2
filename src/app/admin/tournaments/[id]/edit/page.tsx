@@ -1,3 +1,5 @@
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 import { Calendar, Settings, Gamepad2, Share2 } from "lucide-react";
 import { GameMode, TournamentBattlefield, TournamentFormat, TournamentStageType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -37,7 +39,21 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
 
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
-    const banner = formData.get("banner") as string;
+    
+    const currentTournament = await prisma.tournament.findUnique({ where: { id } });
+    if (!currentTournament) return;
+
+    const bannerFile = formData.get("bannerFile") as File | null;
+    let banner = currentTournament.banner; // Keep old banner by default
+    if (bannerFile && bannerFile.size > 0) {
+      const bytes = await bannerFile.arrayBuffer();
+      const fileName = `banner-${Date.now()}.${bannerFile.name.split('.').pop()}`;
+      const uploadsDir = join(process.cwd(), "public", "uploads");
+      await mkdir(uploadsDir, { recursive: true }).catch(() => {});
+      await writeFile(join(uploadsDir, fileName), Buffer.from(bytes));
+      banner = `/uploads/${fileName}`;
+    }
+
     const gameMode = formData.get("gameMode") as GameMode;
     const matchMode = formData.get("matchMode") as string;
     const battlefield = formData.get("battlefield") as TournamentBattlefield;
@@ -109,7 +125,7 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
         </div>
       </div>
       
-      <form action={updateTournament} className="max-w-4xl space-y-6">
+      <form action={updateTournament} encType="multipart/form-data" className="max-w-4xl space-y-6">
         {/* Basic Info */}
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/80 via-card/60 to-card/40 backdrop-blur-2xl p-6 lg:p-8 group hover:border-primary/20 transition-all duration-300 shadow-xl">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700" />
@@ -123,9 +139,12 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tournament Title</label>
                 <input required defaultValue={tournament.title} name="title" type="text" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-colors outline-none" />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Banner Image URL</label>
-                <input name="banner" defaultValue={tournament.banner || ""} type="url" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-colors outline-none" />
+              <div className="space-y-1.5 flex flex-col justify-center">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tournament Banner Image</label>
+                <input name="bannerFile" type="file" accept="image/*" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-colors outline-none" />
+                {tournament.banner && (
+                  <p className="text-[10px] text-gray-500 font-medium mt-1">Current: {tournament.banner}</p>
+                )}
               </div>
             </div>
             <div className="space-y-1.5">

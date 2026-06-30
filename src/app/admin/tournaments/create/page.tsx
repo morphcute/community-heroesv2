@@ -1,3 +1,5 @@
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 import { Calendar, Gamepad2, Settings, Swords, Trophy } from "lucide-react";
 import Link from "next/link";
 import { GameMode, TournamentFormat, TournamentStatus } from "@prisma/client";
@@ -35,7 +37,17 @@ export default async function CreateTournamentPage() {
 
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
-    const banner = formData.get("banner") as string;
+    const bannerFile = formData.get("bannerFile") as File | null;
+    let banner = null;
+    if (bannerFile && bannerFile.size > 0) {
+      const bytes = await bannerFile.arrayBuffer();
+      const fileName = `banner-${Date.now()}.${bannerFile.name.split('.').pop()}`;
+      const uploadsDir = join(process.cwd(), "public", "uploads");
+      await mkdir(uploadsDir, { recursive: true }).catch(() => {});
+      await writeFile(join(uploadsDir, fileName), Buffer.from(bytes));
+      banner = `/uploads/${fileName}`;
+    }
+
     const gameMode = formData.get("gameMode") as GameMode;
     const matchMode = formData.get("matchMode") as string;
     const battlefield = formData.get("battlefield") as "ONLINE" | "ONSITE";
@@ -97,7 +109,7 @@ export default async function CreateTournamentPage() {
         description="Configure format, region gate, prize structure, and launch timing from the refreshed admin flow."
       />
 
-      <form action={createTournament} className="space-y-6">
+      <form action={createTournament} encType="multipart/form-data" className="space-y-6">
         <SurfaceCard>
           <div className="mb-6 flex items-center gap-3">
             <Settings className="h-5 w-5 text-primary" />
@@ -105,7 +117,10 @@ export default async function CreateTournamentPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <input required name="title" type="text" placeholder="Tournament title" className="input-hud" />
-            <input name="banner" type="url" placeholder="Banner URL (optional)" className="input-hud" />
+            <div className="flex flex-col gap-1.5 justify-center">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Tournament Banner Image</label>
+              <input name="bannerFile" type="file" accept="image/*" className="input-hud" />
+            </div>
             <textarea required name="description" rows={5} placeholder="Description, rules, and structure..." className="input-hud resize-none md:col-span-2" />
           </div>
         </SurfaceCard>
