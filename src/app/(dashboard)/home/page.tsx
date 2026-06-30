@@ -15,6 +15,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { EmptyState, PageShell, SurfaceCard } from "@/components/ui/PageShell";
 import { calculateUserXP } from "@/lib/xp";
+import TournamentCarousel from "@/components/TournamentCarousel";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -32,9 +33,15 @@ export default async function Dashboard() {
       })
     : null;
 
-  const featuredTournament = await prisma.tournament.findFirst({
+  const activeTournaments = await prisma.tournament.findMany({
     where: { status: { in: ["REGISTRATION_OPEN", "ONGOING", "UPCOMING"] } },
     orderBy: { createdAt: "desc" },
+    include: {
+      admins: {
+        where: { role: "ADMIN" },
+        include: { user: { select: { name: true, image: true } } }
+      }
+    }
   });
 
   const userAwards = user?.id
@@ -83,38 +90,8 @@ export default async function Dashboard() {
     <PageShell size="wide">
       {/* Top Banner Row — Tournament Banner (left) + Player Profile (right) */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
-        {/* Tournament Banner Card */}
-        {featuredTournament?.banner ? (
-          <Link href={`/tournaments/${featuredTournament.id}`} className="group block">
-            <div className="relative w-full h-full min-h-[200px] sm:min-h-[260px] overflow-hidden rounded-2xl border border-border">
-              <img
-                src={featuredTournament.banner}
-                alt={featuredTournament.title}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                <div className="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-primary/80 sm:text-[0.65rem]">
-                  {featuredTournament.status?.replaceAll("_", " ") || "Tournament"}
-                </div>
-                <h3 className="mt-1 font-display text-lg font-black uppercase tracking-tight text-white sm:text-2xl lg:text-3xl">
-                  {featuredTournament.title}
-                </h3>
-                <p className="mt-1 text-[0.7rem] text-slate-400 sm:text-xs">
-                  Competitive Tournaments
-                </p>
-              </div>
-            </div>
-          </Link>
-        ) : (
-          <div className="relative w-full min-h-[200px] sm:min-h-[260px] overflow-hidden rounded-2xl border border-border bg-card flex items-center justify-center">
-            <div className="text-center p-6">
-              <Trophy className="h-10 w-10 mx-auto text-primary/40 mb-3" />
-              <div className="text-sm font-bold text-slate-400">No featured tournament yet</div>
-              <div className="mt-1 text-xs text-slate-500">Check back soon for the next event</div>
-            </div>
-          </div>
-        )}
+        {/* Tournament Slideshow */}
+        <TournamentCarousel tournaments={activeTournaments} />
 
         {/* Player Profile Card */}
         <SurfaceCard tone="gold" className="gamer-id-card h-full min-h-[200px] p-4 sm:min-h-[260px] sm:p-5">
@@ -358,7 +335,7 @@ export default async function Dashboard() {
         </div>
       </div>
 
-      {!featuredTournament ? (
+      {activeTournaments.length === 0 ? (
         <EmptyState
           icon={<Trophy className="h-8 w-8" />}
           title="No featured tournament yet"
