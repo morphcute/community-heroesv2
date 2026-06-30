@@ -85,15 +85,13 @@ export default async function RootLayout({
   let backgroundUrl = "/bg-dark.jpg";
 
   try {
-    // @ts-ignore
-    const iconSetting = await (prisma as any).systemSetting.findUnique({ where: { key: "icon_url" } });
+    const iconSetting = await prisma.systemSetting.findUnique({ where: { key: "icon_url" } });
     if (iconSetting) iconUrl = iconSetting.value;
 
-    // @ts-ignore
-    const bgSetting = await (prisma as any).systemSetting.findUnique({ where: { key: "background_url" } });
+    const bgSetting = await prisma.systemSetting.findUnique({ where: { key: "background_url" } });
     if (bgSetting) backgroundUrl = bgSetting.value;
-  } catch (error) {
-    console.error("Failed to load root layout settings:", error);
+  } catch {
+    // Tables may not exist during build on CI/CD — use defaults
   }
 
   let backgroundStyle = `linear-gradient(rgba(3, 5, 12, 0.72), rgba(3, 5, 12, 0.86)), url('${backgroundUrl}')`;
