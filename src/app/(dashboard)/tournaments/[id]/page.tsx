@@ -776,11 +776,27 @@ export default async function TournamentDetailPage({
               const p = prizeData.distribution.find((d: any) => d.rank === rank || d.rank === rank.toString());
               return p ? `${Number(p.amount).toFixed(2)} ${prizeData.currency}` : "TBA";
             }
-            // Legacy fallback or Unconfigured state
             return "TBA";
           };
 
           const lowerRanks = prizeData?.distribution?.filter((d: any) => d.rank > 3) || [];
+
+          const isCompleted = tournamentData.status === "COMPLETED";
+          
+          const finalMatch = isCompleted && matchesData.length > 0
+             ? matchesData.find((m: any) => m.nextMatchId === null) || matchesData[matchesData.length - 1]
+             : null;
+             
+          const championName = finalMatch?.winner
+             ? (finalMatch.winner.team?.name || finalMatch.winner.user?.name || "Unknown")
+             : null;
+             
+          const runnerUpPart = finalMatch
+             ? (finalMatch.participant1Id === finalMatch.winnerId ? finalMatch.participant2 : finalMatch.participant1)
+             : null;
+          const runnerUpName = runnerUpPart
+             ? (runnerUpPart.team?.name || runnerUpPart.user?.name || "Unknown")
+             : null;
 
           return (
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-5xl mx-auto pb-20">
@@ -808,14 +824,14 @@ export default async function TournamentDetailPage({
                   <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(2)}</div>
                   <div className="mt-4 flex flex-col items-center gap-2 w-full">
                     <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
-                      {participantsList[1] ? participantsList[1].name.charAt(0) : "—"}
+                      {runnerUpName ? runnerUpName.charAt(0) : "—"}
                     </div>
-                    <div className="text-sm font-black text-white truncate w-full">{participantsList[1] ? participantsList[1].name : "Awaiting result"}</div>
+                    <div className="text-sm font-black text-white truncate w-full">{runnerUpName ? runnerUpName : "Awaiting result"}</div>
                   </div>
                 </div>
 
                 {/* 1st Place (Gold) */}
-                <div className="w-[240px] bg-gradient-to-b from-primary/95 to-[#B8860B]/95 rounded-2xl p-6 text-center shadow-[0_15px_50px_-10px_rgba(250,204,21,0.5)] border-2 border-yellow-200/50 flex flex-col items-center justify-between h-[320px] relative z-10 hover:-translate-y-2 transition-transform">
+                <div className="w-[240px] bg-gradient-to-b from-primary/95 to-[#B8860B]/95 rounded-2xl p-6 text-center shadow-[0_15px_50px_-10px_rgba(255,215,0,0.5)] border-2 border-yellow-200/50 flex flex-col items-center justify-between h-[320px] relative z-10 hover:-translate-y-2 transition-transform">
                   <div className="absolute -top-6">
                     <Crown className="w-14 h-14 text-yellow-100 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
                   </div>
@@ -825,9 +841,9 @@ export default async function TournamentDetailPage({
                   <div className="text-base font-black text-white drop-shadow-[0_0_10px_rgba(250,204,21,0.9)] tracking-wider">{getPrizeAmount(1)}</div>
                   <div className="mt-4 flex flex-col items-center gap-3 w-full">
                     <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-yellow-100 flex items-center justify-center font-black text-2xl text-white shadow-inner">
-                      {participantsList[0] ? participantsList[0].name.charAt(0) : "—"}
+                      {championName ? championName.charAt(0) : "—"}
                     </div>
-                    <div className="text-base font-black text-white truncate w-full">{participantsList[0] ? participantsList[0].name : "Champion TBD"}</div>
+                    <div className="text-base font-black text-white truncate w-full">{championName ? championName : "Champion TBD"}</div>
                   </div>
                 </div>
 
@@ -840,9 +856,9 @@ export default async function TournamentDetailPage({
                   <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(3)}</div>
                   <div className="mt-4 flex flex-col items-center gap-2 w-full">
                     <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
-                      {participantsList[2] ? participantsList[2].name.charAt(0) : "—"}
+                      "—"
                     </div>
-                    <div className="text-sm font-black text-white truncate w-full">{participantsList[2] ? participantsList[2].name : "Awaiting result"}</div>
+                    <div className="text-sm font-black text-white truncate w-full">Awaiting result</div>
                   </div>
                 </div>
 
@@ -857,7 +873,7 @@ export default async function TournamentDetailPage({
                     <span className="text-right">Prize</span>
                   </div>
                   {lowerRanks.map((rankData: any) => {
-                    const p = participantsList[rankData.rank - 1]; // 0 indexed
+                    const p = isCompleted ? participantsList[rankData.rank - 1] : null;
                     return (
                       <div key={rankData.rank} className="grid grid-cols-[100px_1fr_150px] px-8 py-5 items-center justify-between border-b border-border last:border-0 hover:bg-muted transition-colors">
                         <div className="flex items-center gap-3">
