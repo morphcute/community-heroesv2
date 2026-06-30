@@ -245,11 +245,10 @@ export function UsersClient({ initialUsers, currentUserRole }: UsersClientProps)
                         )}
                       </td>
                       <td className="px-6 py-5">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.2em] ${
-                          user.isBanned
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-[0.2em] ${user.isBanned
                             ? "bg-red-500/10 border-red-500/20 text-red-400"
                             : "bg-green-500/10 border-green-500/20 text-green-400"
-                        }`}>
+                          }`}>
                           {user.isBanned ? "Suspended" : "Active"}
                         </span>
                       </td>
@@ -267,11 +266,10 @@ export function UsersClient({ initialUsers, currentUserRole }: UsersClientProps)
                           {user.role !== "SUPERADMIN" && (
                             <button
                               onClick={() => setBanningUser(user)}
-                              className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                                user.isBanned
+                              className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${user.isBanned
                                   ? "bg-green-500/10 border-green-500/25 text-green-400 hover:bg-green-500/20"
                                   : "bg-red-500/10 border-red-500/25 text-red-400 hover:bg-red-500/20"
-                              }`}
+                                }`}
                             >
                               {user.isBanned ? "Unban" : "Ban"}
                             </button>
@@ -333,7 +331,7 @@ export function UsersClient({ initialUsers, currentUserRole }: UsersClientProps)
                 <input
                   type="text"
                   required
-                  placeholder="Kim Lester"
+                  placeholder="Kim Lester Evangelista"
                   value={createName}
                   onChange={(e) => setCreateName(e.target.value)}
                   className="input-hud w-full"
@@ -565,9 +563,8 @@ export function UsersClient({ initialUsers, currentUserRole }: UsersClientProps)
           <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" onClick={() => setBanningUser(null)} />
           <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <div className="flex items-center gap-3 mb-4">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                banningUser.isBanned ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-              }`}>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${banningUser.isBanned ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                }`}>
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <h3 className="font-display text-lg font-black uppercase tracking-wider text-foreground">Confirm Account Moderation</h3>
@@ -587,11 +584,10 @@ export function UsersClient({ initialUsers, currentUserRole }: UsersClientProps)
               <button
                 type="button"
                 onClick={handleToggleBan}
-                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white transition-colors shadow-lg cursor-pointer ${
-                  banningUser.isBanned
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-white transition-colors shadow-lg cursor-pointer ${banningUser.isBanned
                     ? "bg-green-600 hover:bg-green-500 shadow-green-600/30"
                     : "bg-red-600 hover:bg-red-500 shadow-red-600/30"
-                }`}
+                  }`}
               >
                 Confirm
               </button>
