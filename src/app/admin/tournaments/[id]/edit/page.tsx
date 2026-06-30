@@ -21,7 +21,7 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
   const session = await auth();
   const role = (session?.user as { role?: string } | undefined)?.role;
   if (role !== "SUPERADMIN" && role !== "MODERATOR") {
-    redirect("/");
+    redirect("/home");
   }
 
   const tournament = await prisma.tournament.findUnique({
@@ -87,8 +87,8 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
     <div className="pb-24">
       <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-700 flex flex-col md:flex-row md:items-start justify-between gap-6">
         <div>
-           <h1 className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-200 mb-3 flex items-center gap-4 tracking-tight drop-shadow-lg">
-             <Settings className="w-10 h-10 text-blue-400 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)]" />
+           <h1 className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200 mb-3 flex items-center gap-4 tracking-tight drop-shadow-lg">
+             <Settings className="w-10 h-10 text-primary drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
              Edit Tournament
            </h1>
            <p className="text-gray-400 font-bold text-lg max-w-2xl">Modify bracket metrics, prize distributions, and logistic parameters.</p>
@@ -97,13 +97,13 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
         {/* Public Share URL Box */}
         <div className="bg-[#111111]/80 border border-white/10 rounded-2xl p-4 min-w-[320px] shadow-lg">
            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 flex items-center gap-2">
-              <Share2 className="w-3 h-3 text-blue-400" /> Public Share Link
+              <Share2 className="w-3 h-3 text-primary" /> Public Share Link
            </div>
            <div className="flex items-center gap-2">
               <input 
                 readOnly 
                 value={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/t/${id}`} 
-                className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-blue-300 font-mono outline-none focus:border-blue-500/50 transition-colors selection:bg-blue-500/30" 
+                className="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-primary/80 font-mono outline-none focus:border-primary/50 transition-colors selection:bg-primary/30"
               />
            </div>
         </div>
@@ -111,8 +111,8 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
       
       <form action={updateTournament} className="max-w-4xl space-y-6">
         {/* Basic Info */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/80 via-card/60 to-card/40 backdrop-blur-2xl p-6 lg:p-8 group hover:border-blue-500/20 transition-all duration-300 shadow-xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-blue-500/10 transition-colors duration-700" />
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/80 via-card/60 to-card/40 backdrop-blur-2xl p-6 lg:p-8 group hover:border-primary/20 transition-all duration-300 shadow-xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700" />
           <div className="relative z-10">
           <h2 className="text-xl font-black text-white mb-6 border-b border-white/10 pb-4 flex items-center gap-3">
             <Settings className="w-5 h-5 text-gray-500" /> General Details
@@ -121,16 +121,16 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tournament Title</label>
-                <input required defaultValue={tournament.title} name="title" type="text" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 transition-colors outline-none" />
+                <input required defaultValue={tournament.title} name="title" type="text" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-colors outline-none" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Banner Image URL</label>
-                <input name="banner" defaultValue={tournament.banner || ""} type="url" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 transition-colors outline-none" />
+                <input name="banner" defaultValue={tournament.banner || ""} type="url" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-colors outline-none" />
               </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Description & Rules</label>
-              <textarea required defaultValue={tournament.description || ""} name="description" rows={4} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 transition-colors outline-none resize-none" />
+              <textarea required defaultValue={tournament.description || ""} name="description" rows={4} className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 transition-colors outline-none resize-none" />
             </div>
           </div>
           </div>
@@ -203,24 +203,24 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
         </div>
 
         {/* Logistics */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/80 via-card/60 to-card/40 backdrop-blur-2xl p-6 lg:p-8 group hover:border-blue-500/20 transition-all duration-300 shadow-xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-blue-500/10 transition-colors duration-700" />
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-card/80 via-card/60 to-card/40 backdrop-blur-2xl p-6 lg:p-8 group hover:border-primary/20 transition-all duration-300 shadow-xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-700" />
           <div className="relative z-10">
-          <h2 className="text-xl font-black text-blue-400 mb-6 border-b border-white/10 pb-4 flex items-center gap-3">
+          <h2 className="text-xl font-black text-primary mb-6 border-b border-white/10 pb-4 flex items-center gap-3">
             <Calendar className="w-5 h-5" /> Logistics & Prizes
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Max Participants</label>
-              <input required defaultValue={tournament.maxTeams} name="maxTeams" type="number" min="2" max="512" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none" />
+              <input required defaultValue={tournament.maxTeams} name="maxTeams" type="number" min="2" max="512" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 outline-none" />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Start Date & Time</label>
-              <input required defaultValue={formatDateTimeLocal(tournament.startDate)} name="startDate" type="datetime-local" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none" />
+              <input required defaultValue={formatDateTimeLocal(tournament.startDate)} name="startDate" type="datetime-local" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 outline-none" />
             </div>
              <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Entry Fee</label>
-              <input required defaultValue={tournament.entryFee || "Free"} name="entryFee" type="text" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-blue-500/50 outline-none" />
+              <input required defaultValue={tournament.entryFee || "Free"} name="entryFee" type="text" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-primary/50 outline-none" />
             </div>
           </div>
           
@@ -231,7 +231,7 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
         {/* Actions */}
         <div className="flex justify-end gap-4 pt-6">
            <a href={`/admin/tournaments`} className="px-6 py-4 bg-white/5 hover:bg-white/10 hover:shadow-lg text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all">Cancel</a>
-           <button type="submit" className="px-10 py-4 bg-blue-500 hover:bg-blue-400 text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all shadow-[0_0_30px_-5px_rgba(59,130,246,0.5)] flex items-center gap-3 hover:-translate-y-1 relative z-20">
+           <button type="submit" className="px-10 py-4 bg-primary hover:bg-yellow-400 text-black rounded-2xl text-sm font-black uppercase tracking-wider transition-all shadow-[0_0_30px_-5px_rgba(250,204,21,0.5)] flex items-center gap-3 hover:-translate-y-1 relative z-20">
              <Settings className="w-6 h-6" /> Save Changes
            </button>
         </div>

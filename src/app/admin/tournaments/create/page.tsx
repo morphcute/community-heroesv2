@@ -1,4 +1,5 @@
 import { Calendar, Gamepad2, Settings, Swords, Trophy } from "lucide-react";
+import Link from "next/link";
 import { GameMode, TournamentFormat, TournamentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
@@ -24,7 +25,7 @@ export default async function CreateTournamentPage() {
   const session = await auth();
   const role = (session?.user as SessionUserWithRole | undefined)?.role;
   if (role !== "SUPERADMIN" && role !== "MODERATOR") {
-    redirect("/");
+    redirect("/home");
   }
 
   async function createTournament(formData: FormData) {
@@ -104,7 +105,7 @@ export default async function CreateTournamentPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <input required name="title" type="text" placeholder="Tournament title" className="input-hud" />
-            <input name="banner" type="url" placeholder="Banner URL" defaultValue="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070" className="input-hud" />
+            <input name="banner" type="url" placeholder="Banner URL (optional)" className="input-hud" />
             <textarea required name="description" rows={5} placeholder="Description, rules, and structure..." className="input-hud resize-none md:col-span-2" />
           </div>
         </SurfaceCard>
@@ -161,9 +162,9 @@ export default async function CreateTournamentPage() {
           </div>
         </SurfaceCard>
 
-        <SurfaceCard tone="blue">
+        <SurfaceCard tone="gold">
           <div className="mb-6 flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-cyan-300" />
+            <Calendar className="h-5 w-5 text-primary" />
             <h2 className="font-display text-2xl font-black uppercase tracking-[0.08em] text-white">Logistics & Prizes</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -177,9 +178,9 @@ export default async function CreateTournamentPage() {
         </SurfaceCard>
 
         <div className="flex justify-end gap-3">
-          <button type="button" className="action-button-secondary text-[11px]">
+          <Link href="/admin/tournaments" className="action-button-secondary text-[11px]">
             Cancel
-          </button>
+          </Link>
           <button type="submit" className="action-button-primary text-[11px]">
             <Swords className="h-4 w-4" />
             Launch Tournament

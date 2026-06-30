@@ -45,13 +45,13 @@ const shellSizes = {
 const surfaceTones = {
   default: "before:from-white/12 before:to-white/0",
   gold: "before:from-amber-300/20 before:to-transparent",
-  blue: "before:from-cyan-300/20 before:to-transparent",
+  blue: "before:from-slate-300/15 before:to-transparent",
   danger: "before:from-rose-300/20 before:to-transparent",
 } as const;
 
 const shellTones = {
   gold: "from-amber-300/12 via-yellow-400/6 to-transparent",
-  blue: "from-cyan-300/12 via-sky-400/6 to-transparent",
+  blue: "from-slate-300/10 via-white/6 to-transparent",
   danger: "from-rose-300/12 via-red-400/6 to-transparent",
 } as const;
 
@@ -140,7 +140,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={cn("hud-panel flex flex-col items-center justify-center gap-4 px-6 py-14 text-center", className)}>
-      {icon ? <div className="flex h-16 w-16 items-center justify-center rounded-none border border-white/10 bg-white/5 text-primary">{icon}</div> : null}
+      {icon ? <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-primary">{icon}</div> : null}
       <div className="space-y-2">
         <h2 className="font-display text-2xl font-black uppercase tracking-[0.12em] text-white">{title}</h2>
         {description ? <p className="mx-auto max-w-lg text-sm text-muted-foreground">{description}</p> : null}

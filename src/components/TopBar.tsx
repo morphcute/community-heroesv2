@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import UserProfileCard from "@/components/UserProfileCard";
 import { sendFriendRequest, acceptFriendRequest, getOrCreateDM } from "@/app/(dashboard)/chat/actions";
 import { useTheme } from "./ThemeProvider";
+import { markNotificationRead } from "@/app/actions/notifications";
 
 interface TopBarProps {
   user?: {
@@ -22,6 +23,7 @@ interface TopBarProps {
       id?: string;
       title?: string;
       content?: string;
+      link?: string | null;
     }>;
   } | null;
 }
@@ -32,6 +34,13 @@ export default function TopBar({ user }: TopBarProps) {
   const { theme, toggle: toggleTheme } = useTheme();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+
+  const handleNotifClick = async (notifId?: string) => {
+    if (!notifId) return;
+    await markNotificationRead(notifId);
+    setNotifOpen(false);
+    router.refresh();
+  };
 
   // Search engine states
   const [searchQuery, setSearchQuery] = useState("");
@@ -178,7 +187,7 @@ export default function TopBar({ user }: TopBarProps) {
   };
 
   return (
-    <div className="topbar-panel sticky top-0 z-30 border-b border-border bg-[linear-gradient(180deg,rgba(5,8,22,0.92),rgba(5,8,22,0.7))] dark:bg-[linear-gradient(180deg,rgba(5,8,22,0.92),rgba(5,8,22,0.7))] px-3 py-2.5 backdrop-blur-2xl sm:px-4 sm:py-3 lg:px-6">
+    <div className="topbar-panel sticky top-0 z-30 border-b border-border px-3 py-2.5 backdrop-blur-2xl sm:px-4 sm:py-3 lg:px-6">
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3">
         <div className="flex flex-1 items-center gap-3">
           <button
@@ -196,8 +205,8 @@ export default function TopBar({ user }: TopBarProps) {
 
           {/* Interactive Facebook-Style Header Search */}
           <div className="relative hidden md:block md:min-w-[320px] md:max-w-xl md:flex-1" ref={searchRef}>
-            <div className="flex items-center gap-3 rounded-none border border-white/10 bg-white/6 px-4 py-3 shadow-[0_16px_40px_-32px_rgba(0,0,0,0.95)]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-none border border-white/10 bg-white/6 text-primary">
+            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/6 px-4 py-3 shadow-[0_16px_40px_-32px_rgba(0,0,0,0.95)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/6 text-primary">
                 {searching ? (
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 ) : (
@@ -227,7 +236,7 @@ export default function TopBar({ user }: TopBarProps) {
 
             {/* Absolute Dropdown Results Portal */}
             {dropdownOpen && (
-              <div className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-yellow-500/20 bg-[#070a14]/95 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.9)] backdrop-blur-md max-h-[420px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="dropdown-panel absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-yellow-500/20 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.9)] backdrop-blur-md max-h-[420px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
                 {results.tournaments.length > 0 && (
                   <div className="mb-4">
                     <div className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-2">// Tournaments</div>
@@ -261,7 +270,7 @@ export default function TopBar({ user }: TopBarProps) {
                           onClick={clearSearch}
                           className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-primary/5 transition-all hover:translate-x-1 border border-transparent hover:border-yellow-500/10"
                         >
-                          <Users className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                          <Users className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="text-xs font-bold text-white truncate">{team.name}</div>
                             {team.description && <div className="text-[9px] text-gray-500 truncate">{team.description}</div>}
@@ -309,27 +318,11 @@ export default function TopBar({ user }: TopBarProps) {
         </div>
 
         <div className="flex items-center gap-2 lg:gap-3">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            className="hidden sm:flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-2 text-muted-foreground transition-all hover:border-primary/30 hover:text-primary"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-            <span className="hidden lg:inline text-[11px] font-bold uppercase tracking-wider">
-              {theme === "dark" ? "Light" : "Dark"}
-            </span>
-          </button>
-
           {user ? (
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setNotifOpen((open) => !open)}
-                className={`relative rounded-[1rem] border px-2.5 py-2 transition-all sm:rounded-none sm:px-3 ${
+                className={`relative rounded-[1rem] border px-2.5 py-2 transition-all sm:rounded-xl sm:px-3 ${
                   notifOpen
                     ? "border-primary/25 bg-primary/10 text-primary"
                     : "border-white/10 bg-white/6 text-slate-400 hover:border-primary/20 hover:text-primary"
@@ -342,8 +335,8 @@ export default function TopBar({ user }: TopBarProps) {
               </button>
 
               {notifOpen ? (
-                <div className="absolute right-0 top-full z-50 mt-3 w-[min(20rem,calc(100vw-1.5rem))] rounded-none border border-white/10 bg-[linear-gradient(180deg,rgba(7,10,24,0.98),rgba(9,13,28,0.94))] p-2 shadow-[0_26px_80px_-40px_rgba(0,0,0,0.98)] backdrop-blur-2xl sm:w-80 sm:rounded-none">
-                  <div className="mb-1 flex items-center justify-between rounded-none border border-white/8 bg-white/5 px-4 py-3">
+                <div className="dropdown-panel absolute right-0 top-full z-50 mt-3 w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-white/10 p-2 shadow-[0_26px_80px_-40px_rgba(0,0,0,0.98)] backdrop-blur-2xl sm:w-80 sm:rounded-xl">
+                  <div className="mb-1 flex items-center justify-between rounded-xl border border-white/8 bg-white/5 px-4 py-3">
                     <div>
                       <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Pulse Feed</div>
                       <div className="mt-1 text-sm font-bold text-white">Notifications</div>
@@ -354,18 +347,43 @@ export default function TopBar({ user }: TopBarProps) {
                   </div>
                   <div className="custom-scrollbar max-h-72 overflow-y-auto p-1">
                     {unreadCount === 0 ? (
-                      <div className="rounded-none border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-500">
+                      <div className="rounded-xl border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-500">
                         No new updates right now.
                       </div>
                     ) : (
-                      user.notifications?.map((notification, index) => (
-                        <div key={notification.id ?? `${notification.title}-${index}`} className="mb-2 rounded-none border border-white/8 bg-white/4 p-4 transition-colors hover:border-primary/20 hover:bg-white/7">
-                          <div className="text-xs font-black uppercase tracking-[0.18em] text-primary">
-                            {notification.title || "Notification"}
+                      user.notifications?.map((notification, index) => {
+                        const contentNode = (
+                          <>
+                            <div className="text-xs font-black uppercase tracking-[0.18em] text-primary">
+                              {notification.title || "Notification"}
+                            </div>
+                            <div className="mt-2 text-sm text-slate-300">{notification.content || "Update received."}</div>
+                          </>
+                        );
+
+                        if (notification.link) {
+                          return (
+                            <Link
+                              key={notification.id ?? `${notification.title}-${index}`}
+                              href={notification.link}
+                              onClick={() => handleNotifClick(notification.id)}
+                              className="block mb-2 rounded-xl border border-white/8 bg-white/4 p-4 transition-colors hover:border-primary/20 hover:bg-white/7 cursor-pointer"
+                            >
+                              {contentNode}
+                            </Link>
+                          );
+                        }
+
+                        return (
+                          <div 
+                            key={notification.id ?? `${notification.title}-${index}`} 
+                            onClick={() => handleNotifClick(notification.id)}
+                            className="mb-2 rounded-xl border border-white/8 bg-white/4 p-4 transition-colors hover:border-primary/20 hover:bg-white/7 cursor-pointer"
+                          >
+                            {contentNode}
                           </div>
-                          <div className="mt-2 text-sm text-slate-300">{notification.content || "Update received."}</div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </div>
@@ -382,12 +400,12 @@ export default function TopBar({ user }: TopBarProps) {
                 <div className="hidden text-right lg:block">
                   <div className="text-[13px] font-black uppercase tracking-[0.08em] text-white">{user.name}</div>
                   <div className="mt-1 flex items-center justify-end gap-1 text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-500">
-                    {user.role === "SUPERADMIN" || user.role === "MODERATOR" ? <Shield className="h-3 w-3 text-primary" /> : <Gamepad2 className="h-3 w-3 text-cyan-300" />}
+                    {user.role === "SUPERADMIN" || user.role === "MODERATOR" ? <Shield className="h-3 w-3 text-primary" /> : <Gamepad2 className="h-3 w-3 text-primary" />}
                     <span>{roleLabel}</span>
                   </div>
                 </div>
                 <div className="rounded-full bg-[linear-gradient(135deg,#fef08a,#f59e0b)] p-[2px] shadow-[0_0_18px_rgba(250,204,21,0.22)]">
-                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#07101f] text-sm font-black text-primary sm:h-10 sm:w-10">
+                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-background text-sm font-black text-primary sm:h-10 sm:w-10">
                     {user.image ? (
                       <img src={user.image} alt="User" className="h-full w-full object-cover" />
                     ) : (
@@ -398,11 +416,11 @@ export default function TopBar({ user }: TopBarProps) {
               </button>
 
               {profileOpen ? (
-                <div className="absolute right-0 top-full z-50 mt-3 w-[min(19rem,calc(100vw-1rem))] rounded-none border border-white/10 bg-[linear-gradient(180deg,rgba(7,10,24,0.98),rgba(9,13,28,0.94))] p-2 shadow-[0_26px_80px_-40px_rgba(0,0,0,0.98)] backdrop-blur-2xl sm:w-[19rem] sm:rounded-none">
-                  <div className="rounded-none border border-white/8 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.16),transparent_34%),rgba(255,255,255,0.04)] p-4">
+                <div className="dropdown-panel absolute right-0 top-full z-50 mt-3 w-[min(19rem,calc(100vw-1rem))] rounded-xl border border-border p-2 shadow-[0_26px_80px_-40px_rgba(0,0,0,0.98)] backdrop-blur-2xl sm:w-[19rem] sm:rounded-xl">
+                  <div className="rounded-xl border border-border bg-card p-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-full bg-[linear-gradient(135deg,#a5f3fc,#60a5fa)] p-[2px]">
-                        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-[#07101f] text-lg font-black text-cyan-300">
+                      <div className="rounded-full bg-[linear-gradient(135deg,#fef08a,#f59e0b)] p-[2px]">
+                        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-background text-lg font-black text-primary">
                           {user.image ? (
                             <img src={user.image} alt="User" className="h-full w-full object-cover" />
                           ) : (
@@ -411,8 +429,8 @@ export default function TopBar({ user }: TopBarProps) {
                         </div>
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate font-display text-lg font-black uppercase tracking-[0.08em] text-white">{user.name}</div>
-                        <div className="truncate text-xs text-slate-400">{user.email}</div>
+                        <div className="truncate font-display text-lg font-black uppercase tracking-[0.08em] text-foreground">{user.name}</div>
+                        <div className="truncate text-xs text-muted-foreground">{user.email}</div>
                       </div>
                     </div>
                     <Link href="/profile" onClick={() => setProfileOpen(false)} className="action-button-primary mt-4 w-full justify-center text-[11px]">
@@ -421,23 +439,41 @@ export default function TopBar({ user }: TopBarProps) {
                   </div>
 
                   <div className="mt-2 space-y-1">
+                    {/* Theme Toggle in Dropdown for all devices (including mobile) */}
+                    <button
+                      onClick={toggleTheme}
+                      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-primary cursor-pointer text-left"
+                    >
+                      {theme === "dark" ? (
+                        <>
+                          <Sun className="h-4 w-4 text-primary" />
+                          <span>Light Theme</span>
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="h-4 w-4 text-primary" />
+                          <span>Dark Theme</span>
+                        </>
+                      )}
+                    </button>
+
                     {(user.role === "SUPERADMIN" || user.role === "MODERATOR") && (
-                      <Link href="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-none px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/6 hover:text-primary">
+                      <Link href="/admin" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
                         <Shield className="h-4 w-4 text-primary" />
                         Admin Terminal
                       </Link>
                     )}
-                    <Link href="/tournaments" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-none px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/6 hover:text-primary">
+                    <Link href="/tournaments" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
                       <Trophy className="h-4 w-4 text-primary" />
                       Tournament Board
                     </Link>
-                    <Link href="/chat" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-none px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/6 hover:text-primary">
-                      <Users className="h-4 w-4 text-cyan-300" />
+                    <Link href="/chat" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
+                      <Users className="h-4 w-4 text-primary" />
                       Team Chat
                     </Link>
                     <button
                       onClick={() => signOut()}
-                      className="flex w-full items-center gap-3 rounded-none px-4 py-3 text-sm font-semibold text-rose-300 transition-colors hover:bg-rose-400/10"
+                      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-rose-300 transition-colors hover:bg-rose-400/10 cursor-pointer"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign Out

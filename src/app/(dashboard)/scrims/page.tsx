@@ -146,17 +146,17 @@ export default async function ScrimsPage() {
     .sort((a, b) => b.points - a.points || b.wins - a.wins || a.losses - b.losses);
 
   return (
-    <PageShell size="wide" tone="blue">
+    <PageShell size="wide" tone="gold">
       <PageHero
         eyebrow="Scrimmage Hub"
         icon={<Swords className="h-4 w-4" />}
         title={
           <>
             Post, accept, and
-            <span className="text-gradient-electric"> track scrims</span>
+            <span className="text-gradient-primary"> track scrims</span>
           </>
         }
-        description="Captains can post open scrimmages, accept challengers, and submit official results after the match."
+        description="Captains can post open scrimmage listings, accept challengers, and submit official results after the match."
         stats={[
           { label: "Open Posts", value: openScrims.length },
           { label: "Pending", value: incomingRequests.length + outgoingRequests.length },
@@ -179,21 +179,21 @@ export default async function ScrimsPage() {
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Host a Scrimmage</div>
-                    <h2 className="mt-2 font-display text-xl font-black uppercase tracking-[0.06em] text-white sm:text-2xl">
+                    <h2 className="mt-2 font-display text-xl font-black uppercase tracking-[0.06em] text-foreground sm:text-2xl">
                       Post one official scrim slot
                     </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       Other squads can request your open scrim, and only your captain can confirm the result.
                     </p>
                   </div>
                 </div>
 
                 {myOpenScrim ? (
-                  <div className="mt-4 rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
+                  <div className="mt-4 rounded-[1.15rem] border border-border bg-muted p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-slate-500">Current Post</div>
-                        <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-white">
+                        <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-muted-foreground">Current Post</div>
+                        <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-foreground">
                           {myOpenScrim.status === "OPEN"
                             ? "Awaiting challenger"
                             : myOpenScrim.status === "PENDING"
@@ -206,11 +206,11 @@ export default async function ScrimsPage() {
                       </div>
                     </div>
                     {myOpenScrim.notes ? (
-                      <p className="mt-3 text-sm text-slate-400">{myOpenScrim.notes}</p>
+                      <p className="mt-3 text-sm text-muted-foreground">{myOpenScrim.notes}</p>
                     ) : null}
                     {myOpenScrim.scheduledAt ? (
-                      <div className="mt-3 flex items-center gap-2 text-sm text-slate-300">
-                        <CalendarDays className="h-4 w-4 text-cyan-300" />
+                      <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                        <CalendarDays className="h-4 w-4 text-primary" />
                         {myOpenScrim.scheduledAt.toLocaleString("en-PH", {
                           month: "short",
                           day: "numeric",
@@ -228,60 +228,62 @@ export default async function ScrimsPage() {
                   </div>
                 ) : isCaptain ? (
                   <form action={postScrim} className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto] md:items-end">
-                    <label className="text-[0.58rem] font-black uppercase tracking-[0.16em] text-slate-500">
+                    <label className="text-[0.58rem] font-black uppercase tracking-[0.16em] text-muted-foreground">
                       Match details
                       <input
                         name="notes"
                         placeholder="Example: 5v5 custom room, BO3, tonight after 8PM"
-                        className="input-hud mt-1 px-4 py-3"
+                        className="input-hud mt-1 px-4 py-3 text-foreground"
                       />
                     </label>
-                    <label className="text-[0.58rem] font-black uppercase tracking-[0.16em] text-slate-500">
+                    <label className="text-[0.58rem] font-black uppercase tracking-[0.16em] text-muted-foreground">
                       Preferred time
-                      <input name="scheduledAt" type="datetime-local" className="input-hud mt-1 px-4 py-3" />
+                      <input name="scheduledAt" type="datetime-local" className="input-hud mt-1 px-4 py-3 text-foreground" />
                     </label>
                     <button className="action-button-primary text-[10px]">Post Scrim</button>
                   </form>
                 ) : (
-                  <div className="mt-4 rounded-2xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400">
+                  <div className="mt-4 rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
                     Only your captain can post a scrimmage listing.
                   </div>
                 )}
               </SurfaceCard>
 
               <SurfaceCard>
-                <div>
-                  <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-cyan-300">Open Scrim Posts</div>
-                  <h2 className="mt-2 font-display text-xl font-black uppercase tracking-[0.06em] text-white sm:text-2xl">
-                    Find squads looking for a match
-                  </h2>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Open Scrim Posts</div>
+                    <h2 className="mt-2 font-display text-xl font-black uppercase tracking-[0.06em] text-foreground sm:text-2xl">
+                      Find squads looking for a match
+                    </h2>
+                  </div>
                 </div>
 
                 <div className="mt-4 space-y-3">
                   {openScrims.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400">
+                    <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
                       No open scrim posts are available right now.
                     </div>
                   ) : (
                     openScrims.map((scrim) => (
-                      <div key={scrim.id} className="rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
+                      <div key={scrim.id} className="rounded-[1.15rem] border border-border bg-muted p-4">
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-slate-500">Hosting Team</div>
-                            <div className="mt-1 truncate font-display text-lg font-black uppercase tracking-[0.05em] text-white">
+                            <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-muted-foreground">Hosting Team</div>
+                            <div className="mt-1 truncate font-display text-lg font-black uppercase tracking-[0.05em] text-foreground">
                               {scrim.hostTeam.name}
                             </div>
                           </div>
-                          <div className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[0.58rem] font-black uppercase tracking-[0.16em] text-cyan-200">
+                          <div className="rounded-full border bg-primary/15 border-primary/15 bg-primary/10 px-3 py-1 text-[0.58rem] font-black uppercase tracking-[0.16em] text-primary/80">
                             Open
                           </div>
                         </div>
                         {scrim.notes ? (
-                          <p className="mt-3 text-sm leading-6 text-slate-400">{scrim.notes}</p>
+                          <p className="mt-3 text-sm leading-6 text-muted-foreground">{scrim.notes}</p>
                         ) : null}
                         {scrim.scheduledAt ? (
-                          <div className="mt-3 flex items-center gap-2 text-sm text-slate-300">
-                            <CalendarDays className="h-4 w-4 text-cyan-300" />
+                          <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                            <CalendarDays className="h-4 w-4 text-primary" />
                             {scrim.scheduledAt.toLocaleString("en-PH", {
                               month: "short",
                               day: "numeric",
@@ -300,7 +302,7 @@ export default async function ScrimsPage() {
                               <button className="action-button-primary text-[10px]">Request Scrim</button>
                             </form>
                           ) : (
-                            <div className="text-sm text-slate-400">Only your captain can request this scrim.</div>
+                            <div className="text-sm text-muted-foreground">Only your captain can request this scrim.</div>
                           )}
                         </div>
                       </div>
@@ -313,7 +315,7 @@ export default async function ScrimsPage() {
                 <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Accepted Scrims</div>
                 <div className="mt-4 space-y-3">
                   {acceptedScrims.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400">
+                    <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
                       No accepted scrims yet.
                     </div>
                   ) : (
@@ -322,13 +324,13 @@ export default async function ScrimsPage() {
                       const opponentName = isHost ? scrim.guestTeam?.name : scrim.hostTeam.name;
 
                       return (
-                        <div key={scrim.id} className="rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
+                        <div key={scrim.id} className="rounded-[1.15rem] border border-border bg-muted p-4">
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
-                              <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-slate-500">
+                              <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-muted-foreground">
                                 {isHost ? "You accepted" : "Accepted by host"}
                               </div>
-                              <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-white">
+                              <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-foreground">
                                 {currentTeam.name} vs {opponentName}
                               </div>
                             </div>
@@ -339,19 +341,19 @@ export default async function ScrimsPage() {
                           {isCaptain && isHost ? (
                             <form action={reportScrimResult} className="mt-4 grid gap-2 md:grid-cols-[1fr_auto_1fr_auto] md:items-end">
                               <input type="hidden" name="scrimId" value={scrim.id} />
-                              <label className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-slate-500">
+                              <label className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-muted-foreground">
                                 {scrim.hostTeam.name}
-                                <input name="hostScore" type="number" min="0" required className="input-hud mt-1 px-3 py-2.5" />
+                                <input name="hostScore" type="number" min="0" required className="input-hud mt-1 px-3 py-2.5 text-foreground" />
                               </label>
-                              <div className="pb-3 text-xs font-black uppercase tracking-[0.16em] text-slate-500">vs</div>
-                              <label className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-slate-500">
+                              <div className="pb-3 text-xs font-black uppercase tracking-[0.16em] text-muted-foreground">vs</div>
+                              <label className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-muted-foreground">
                                 {scrim.guestTeam?.name ?? "Guest"}
-                                <input name="guestScore" type="number" min="0" required className="input-hud mt-1 px-3 py-2.5" />
+                                <input name="guestScore" type="number" min="0" required className="input-hud mt-1 px-3 py-2.5 text-foreground" />
                               </label>
                               <button className="action-button-primary text-[10px]">Submit Result</button>
                             </form>
                           ) : (
-                            <div className="mt-4 text-sm text-slate-400">
+                            <div className="mt-4 text-sm text-muted-foreground">
                               {isHost
                                 ? "Only your captain can submit the official result."
                                 : `${scrim.hostTeam.name} will submit the official result after the match.`}
@@ -370,14 +372,14 @@ export default async function ScrimsPage() {
                 <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Incoming Requests</div>
                 <div className="mt-4 space-y-3">
                   {incomingRequests.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400">
+                    <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
                       No squads have requested your post yet.
                     </div>
                   ) : (
                     incomingRequests.map((scrim) => (
-                      <div key={scrim.id} className="rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
-                        <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-slate-500">Requested By</div>
-                        <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-white">
+                      <div key={scrim.id} className="rounded-[1.15rem] border border-border bg-muted p-4">
+                        <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-muted-foreground">Requested By</div>
+                        <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-foreground">
                           {scrim.guestTeam?.name ?? "Unknown Squad"}
                         </div>
                         {isCaptain ? (
@@ -398,7 +400,7 @@ export default async function ScrimsPage() {
                             </form>
                           </div>
                         ) : (
-                          <div className="mt-4 text-sm text-slate-400">Only your captain can accept this request.</div>
+                          <div className="mt-4 text-sm text-muted-foreground">Only your captain can accept this request.</div>
                         )}
                       </div>
                     ))
@@ -407,17 +409,17 @@ export default async function ScrimsPage() {
               </SurfaceCard>
 
               <SurfaceCard>
-                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-cyan-300">Your Pending Requests</div>
+                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Your Pending Requests</div>
                 <div className="mt-4 space-y-3">
                   {outgoingRequests.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400">
+                    <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
                       Your team has no pending scrim requests.
                     </div>
                   ) : (
                     outgoingRequests.map((scrim) => (
-                      <div key={scrim.id} className="rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
-                        <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-slate-500">Waiting On</div>
-                        <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-white">
+                      <div key={scrim.id} className="rounded-[1.15rem] border border-border bg-muted p-4">
+                        <div className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-muted-foreground">Waiting On</div>
+                        <div className="mt-1 font-display text-lg font-black uppercase tracking-[0.05em] text-foreground">
                           {scrim.hostTeam.name}
                         </div>
                         {isCaptain ? (
@@ -432,14 +434,14 @@ export default async function ScrimsPage() {
                 </div>
               </SurfaceCard>
 
-              <SurfaceCard tone="blue">
+              <SurfaceCard tone="gold">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
                     <Trophy className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-cyan-300">Scrim Leaderboard</div>
-                    <div className="mt-1 font-display text-xl font-black uppercase tracking-[0.06em] text-white sm:text-2xl">
+                    <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Scrim Leaderboard</div>
+                    <div className="mt-1 font-display text-xl font-black uppercase tracking-[0.06em] text-foreground sm:text-2xl">
                       Team rankings
                     </div>
                   </div>
@@ -447,19 +449,19 @@ export default async function ScrimsPage() {
 
                 <div className="mt-4 space-y-3">
                   {standings.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400">
+                    <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground">
                       Rankings will appear after teams complete scrimmages.
                     </div>
                   ) : (
                     standings.slice(0, 8).map((team, index) => (
-                      <div key={team.id} className="flex items-center justify-between rounded-[1rem] border border-white/10 bg-white/5 px-4 py-3">
+                      <div key={team.id} className="flex items-center justify-between rounded-[1rem] border border-border bg-muted px-4 py-3">
                         <div className="min-w-0">
-                          <div className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-slate-500">#{index + 1}</div>
-                          <div className="truncate font-display text-lg font-black uppercase tracking-[0.05em] text-white">{team.name}</div>
+                          <div className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-muted-foreground">#{index + 1}</div>
+                          <div className="truncate font-display text-lg font-black uppercase tracking-[0.05em] text-foreground">{team.name}</div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-black text-primary">{team.points} pts</div>
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-[11px] text-muted-foreground">
                             {team.wins}W {team.losses}L · {team.winRate}%
                           </div>
                         </div>
@@ -475,17 +477,17 @@ export default async function ScrimsPage() {
             <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Completed Scrims</div>
             <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {completedScrims.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 px-4 py-8 text-sm text-slate-400 md:col-span-2 xl:col-span-3">
+                <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-sm text-muted-foreground md:col-span-2 xl:col-span-3">
                   Completed scrimmages will appear here.
                 </div>
               ) : (
                 completedScrims.map((scrim) => (
-                  <div key={scrim.id} className="rounded-[1.15rem] border border-white/10 bg-white/5 p-4">
-                    <div className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-slate-500">Final Score</div>
-                    <div className="mt-2 font-display text-lg font-black uppercase tracking-[0.05em] text-white">
+                  <div key={scrim.id} className="rounded-[1.15rem] border border-border bg-muted p-4">
+                    <div className="text-[0.56rem] font-black uppercase tracking-[0.14em] text-muted-foreground">Final Score</div>
+                    <div className="mt-2 font-display text-lg font-black uppercase tracking-[0.05em] text-foreground">
                       {scrim.hostTeam.name} vs {scrim.guestTeam?.name ?? "Guest Squad"}
                     </div>
-                    <div className="mt-3 text-sm text-slate-300">
+                    <div className="mt-3 text-sm text-muted-foreground">
                       {scrim.hostScore} - {scrim.guestScore}
                     </div>
                     <div className="mt-2 text-[11px] uppercase tracking-[0.14em] text-primary">

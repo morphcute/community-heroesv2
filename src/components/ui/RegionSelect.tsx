@@ -77,7 +77,7 @@ export default function RegionSelect({
         <select 
            value={specificLocation} 
            onChange={(e) => setSpecificLocation(e.target.value)}
-           className="w-full bg-[#0c1320]/80 border border-cyan-500/30 rounded-xl px-4 py-3 text-sm text-cyan-400 focus:border-cyan-500/80 outline-none transition-colors appearance-none cursor-pointer animate-in fade-in slide-in-from-top-2"
+           className="w-full bg-[#0c1320]/80 border border-primary/30 rounded-xl px-4 py-3 text-sm text-primary focus:border-primary/80 outline-none transition-colors appearance-none cursor-pointer animate-in fade-in slide-in-from-top-2"
         >
           {HANDLED_AREAS.map((p: string) => <option key={p} value={p}>{p}</option>)}
         </select>

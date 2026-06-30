@@ -116,6 +116,12 @@ export default async function TournamentDetailPage({
     (session?.user as any)?.role === "SUPERADMIN" ||
     (currentUser && tournamentData.admins.some((a) => a.userId === currentUser.id));
 
+  const creatorAdmin = tournamentData.admins.find((a) => a.role === "ADMIN") || tournamentData.admins[0];
+  const isCreator = currentUser && (
+    (session?.user as any)?.role === "SUPERADMIN" || 
+    tournamentData.admins.some((a) => a.userId === currentUser.id && a.role === "ADMIN")
+  );
+
   const userTeamIds = (currentUser?.teamMembers || []).map((member) => member.teamId);
   const alreadyJoined = currentUser
     ? tournamentData.participants.some(
@@ -181,14 +187,14 @@ export default async function TournamentDetailPage({
     bracketType: getTournamentFormatLabel(tournamentData.format),
     stages: getStageSummary((tournamentData as any).stageType || "SINGLE_STAGE", (tournamentData as any).stageCount || 1),
     regions: derivedRegions,
-    image: tournamentData.banner || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
+    image: tournamentData.banner || "/ch-logo.png"
   };
 
   const admins = tournamentData.admins.map(a => ({
     id: a.user.id,
     name: a.user.name || "Unknown",
     role: a.role === 'ADMIN' ? 'Tournament Admin' : 'Moderator',
-    color: a.role === 'ADMIN' ? 'bg-primary' : 'bg-blue-500'
+    color: a.role === 'ADMIN' ? 'bg-primary' : 'bg-amber-500'
   }));
 
   const participantsList = tournamentData.participants.map(p => ({
@@ -207,7 +213,7 @@ export default async function TournamentDetailPage({
     content: m.content,
     time: m.createdAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }),
     avatar: (m.user.name || "U").charAt(0).toUpperCase(),
-    color: ['bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-orange-600'][m.user.id.charCodeAt(0) % 4],
+    color: ['bg-amber-500', 'bg-yellow-500', 'bg-orange-500', 'bg-yellow-600'][m.user.id.charCodeAt(0) % 4],
     isMe: false
   }));
 
@@ -219,24 +225,24 @@ export default async function TournamentDetailPage({
     : "overview";
 
   return (
-    <div className="min-h-screen bg-[#111111] text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans">
       {/* Black & Yellow Header Overlay */}
-      <div className="relative w-full h-[380px] bg-[#0a0a0a] overflow-hidden border-b border-white/[0.05]">
+      <div className="relative w-full h-[380px] bg-background overflow-hidden border-b border-border">
         {/* Background Banner mapped to the right */}
         <div className="absolute top-0 right-0 w-full md:w-[60%] h-full">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent z-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-[#0a0a0a]/50 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/50 z-10" />
           <img src={tournament.image} alt="Banner" className="w-full h-full object-cover opacity-60 mix-blend-luminosity" />
         </div>
 
         <div className="relative z-20 container mx-auto px-6 h-full flex flex-col justify-center mt-4">
           {/* Back Button */}
-          <Link href="/tournaments" className="flex items-center gap-2 text-[10px] text-gray-500 hover:text-primary uppercase font-black mb-8 transition-colors w-fit tracking-widest bg-white/[0.02] px-3 py-1.5 rounded border border-white/[0.05]">
+          <Link href="/tournaments" className="flex items-center gap-2 text-[10px] text-gray-500 hover:text-primary uppercase font-black mb-8 transition-colors w-fit tracking-widest bg-muted/40 px-3 py-1.5 rounded border border-border">
             <span className="text-sm leading-none -mt-0.5">←</span> Back to Arena
           </Link>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500 mb-3 tracking-tight uppercase drop-shadow-[0_0_15px_rgba(255,215,0,0.1)]">
+          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground mb-3 tracking-tight uppercase drop-shadow-[0_0_15px_rgba(255,215,0,0.1)]">
             {tournament.title}
           </h1>
 
@@ -249,16 +255,23 @@ export default async function TournamentDetailPage({
             <span className="text-primary flex items-center gap-2 uppercase tracking-widest text-[11px] drop-shadow-[0_0_8px_rgba(250,204,21,0.3)]">
               <Trophy className="w-3.5 h-3.5" /> {tournament.prize}
             </span>
-            <span className="text-green-400 flex items-center gap-2 uppercase tracking-widest text-[11px] bg-green-500/10 px-2 py-1 rounded border border-green-500/20">
+            <span className="text-primary flex items-center gap-2 uppercase tracking-widest text-[11px] bg-primary/10 px-2 py-1 rounded border border-primary/20">
               {tournament.fee}
             </span>
           </div>
 
           {/* Action Area */}
           <div className="flex items-center gap-4 relative">
-            {alreadyJoined ? (
+            {isCreator ? (
               <div className="flex flex-col gap-2">
-                <button disabled className="px-8 py-3 bg-white/5 text-primary border border-emerald-500/30 text-xs font-black rounded uppercase tracking-widest flex items-center justify-center gap-2 w-fit cursor-default shadow-[inset_0_0_20px_rgba(250,204,21,0.1)]">
+                <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="h-12 px-8 bg-primary text-black font-black text-xs uppercase tracking-widest rounded hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
+                  Manage Tournament &rarr;
+                </Link>
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">You are the host of this tournament</span>
+              </div>
+            ) : alreadyJoined ? (
+              <div className="flex flex-col gap-2">
+                <button disabled className="px-8 py-3 bg-muted text-primary border border-primary/30 text-xs font-black rounded uppercase tracking-widest flex items-center justify-center gap-2 w-fit cursor-default shadow-[inset_0_0_20px_rgba(250,204,21,0.1)]">
                   <CheckCircle2 className="w-4 h-4" /> Registered
                 </button>
                 <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">You are in the roster</span>
@@ -269,7 +282,7 @@ export default async function TournamentDetailPage({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <button disabled className="px-8 py-3 bg-[#0a0a0a] border border-white/5 text-gray-500 text-xs font-black rounded uppercase tracking-widest cursor-not-allowed w-fit">
+                <button disabled className="px-8 py-3 bg-muted border border-border text-gray-500 text-xs font-black rounded uppercase tracking-widest cursor-not-allowed w-fit">
                   Registration Closed
                 </button>
                 <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">{registrationMessage}</span>
@@ -280,7 +293,7 @@ export default async function TournamentDetailPage({
       </div>
 
       {/* Navigation Tabs */}
-      <div className="border-b border-white/[0.05] bg-[#0a0a0a]/95 backdrop-blur-xl sticky top-0 z-30 shadow-2xl">
+      <div className="border-b border-border bg-background/95 backdrop-blur-xl sticky top-0 z-30 shadow-2xl">
         <div className="container mx-auto px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6 overflow-x-auto no-scrollbar py-2">
@@ -289,7 +302,7 @@ export default async function TournamentDetailPage({
               <TabLink href={`/tournaments/${tournament.id}?tab=bracket`} active={activeTab === "bracket"}>Bracket</TabLink>
               <TabLink href={`/tournaments/${tournament.id}?tab=chat`} active={activeTab === "chat"}>
                 <div className="flex items-center gap-1.5">
-                  {tournament.status === 'ONGOING' && <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-[pulse_1s_ease-in-out_infinite]" />}
+                  {tournament.status === 'ONGOING' && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-[pulse_1s_ease-in-out_infinite]" />}
                   Chat
                 </div>
               </TabLink>
@@ -306,86 +319,90 @@ export default async function TournamentDetailPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Left Column: Details */}
             <div className="lg:col-span-2">
-              <h3 className="text-xl font-black text-white mb-6 tracking-widest uppercase flex items-center gap-2">
+              <h3 className="text-xl font-black text-foreground mb-6 tracking-widest uppercase flex items-center gap-2">
                 <div className="w-1 h-5 bg-primary rounded-sm" /> Details
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Organizer / Hosted By */}
-                <div className="flex items-center gap-4 bg-[#0a0a0a] border border-white/[0.03] hover:border-primary/20 transition-colors rounded-2xl p-4 group">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
-                    <User className="w-5 h-5" />
-                  </div>
+                <div className="flex items-center gap-4 bg-card border border-border hover:border-primary/20 transition-colors rounded-2xl p-4 group">
+                  {creatorAdmin?.user?.image ? (
+                    <img src={creatorAdmin.user.image} className="w-12 h-12 rounded-xl object-cover border border-border" alt="" />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-muted border border-border group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                      <User className="w-5 h-5" />
+                    </div>
+                  )}
                   <div>
-                    <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-0.5">Hosted By</div>
-                    <div className="text-sm font-bold text-gray-200 truncate max-w-[150px] group-hover:text-white transition-colors">
-                      {tournamentData.admins[0]?.user?.name || tournamentData.admins[0]?.user?.email?.split('@')[0] || "Community Heroes"}
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Hosted By</div>
+                    <div className="text-sm font-bold text-foreground/90 truncate max-w-[150px] group-hover:text-foreground transition-colors">
+                      {creatorAdmin?.user?.name || creatorAdmin?.user?.email?.split('@')[0] || "Tournament organizer"}
                     </div>
                   </div>
                 </div>
 
                 {/* Format */}
-                <div className="flex items-center gap-4 bg-[#0a0a0a] border border-white/[0.03] hover:border-primary/20 transition-colors rounded-2xl p-4 group">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-4 bg-card border border-border hover:border-primary/20 transition-colors rounded-2xl p-4 group">
+                  <div className="w-12 h-12 rounded-xl bg-muted border border-border group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
                     <User className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-0.5">Team Size</div>
-                    <div className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{tournament.mode}</div>
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Team Size</div>
+                    <div className="text-sm font-bold text-foreground/90 group-hover:text-foreground transition-colors">{tournament.mode}</div>
                   </div>
                 </div>
 
                 {/* MLBB Mode */}
-                <div className="flex items-center gap-4 bg-[#0a0a0a] border border-white/[0.03] hover:border-primary/20 transition-colors rounded-2xl p-4 group">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-4 bg-card border border-border hover:border-primary/20 transition-colors rounded-2xl p-4 group">
+                  <div className="w-12 h-12 rounded-xl bg-muted border border-border group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
                     <Smartphone className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-0.5">MLBB Mode</div>
-                    <div className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{tournament.matchMode}</div>
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">MLBB Mode</div>
+                    <div className="text-sm font-bold text-foreground/90 group-hover:text-foreground transition-colors">{tournament.matchMode}</div>
                   </div>
                 </div>
 
                 {/* Region Gate */}
-                <div className="flex items-center gap-4 bg-[#0a0a0a] border border-white/[0.03] hover:border-primary/20 transition-colors rounded-2xl p-4 group">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-4 bg-card border border-border hover:border-primary/20 transition-colors rounded-2xl p-4 group">
+                  <div className="w-12 h-12 rounded-xl bg-muted border border-border group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-0.5">Region Gate</div>
-                    <div className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{(tournamentData as any).locationRestriction || "Nationwide (Open)"}</div>
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Region Gate</div>
+                    <div className="text-sm font-bold text-foreground/90 group-hover:text-foreground transition-colors">{(tournamentData as any).locationRestriction || "Nationwide (Open)"}</div>
                   </div>
                 </div>
 
                 {/* Fee Entry */}
-                <div className="flex items-center gap-4 bg-[#0a0a0a] border border-white/[0.03] hover:border-primary/20 transition-colors rounded-2xl p-4 group">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-4 bg-card border border-border hover:border-primary/20 transition-colors rounded-2xl p-4 group">
+                  <div className="w-12 h-12 rounded-xl bg-muted border border-border group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
                     <Ticket className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-0.5">Fee Entry</div>
-                    <div className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{tournamentData.entryFee || "Free for all"}</div>
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Fee Entry</div>
+                    <div className="text-sm font-bold text-foreground/90 group-hover:text-foreground transition-colors">{tournamentData.entryFee || "Free for all"}</div>
                   </div>
                 </div>
 
                 {/* Bracket Type */}
-                <div className="flex items-center gap-4 bg-[#0a0a0a] border border-white/[0.03] hover:border-primary/20 transition-colors rounded-2xl p-4 group">
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/[0.05] group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-4 bg-card border border-border hover:border-primary/20 transition-colors rounded-2xl p-4 group">
+                  <div className="w-12 h-12 rounded-xl bg-muted border border-border group-hover:border-primary/30 group-hover:bg-primary/5 flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
                     <Network className="w-5 h-5" />
                   </div>
                   <div>
-                    <div className="text-[9px] text-gray-500 font-black uppercase tracking-[0.2em] mb-0.5">Bracket Type</div>
-                    <div className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors">{tournament.bracketType}</div>
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] mb-0.5">Bracket Type</div>
+                    <div className="text-sm font-bold text-foreground/90 group-hover:text-foreground transition-colors">{tournament.bracketType}</div>
                   </div>
                 </div>
 
                 {/* Prize Pool */}
-                <div className="flex items-center gap-4 bg-[#0a0a0a] border border-primary/20 hover:border-primary/40 transition-colors rounded-2xl p-4 shadow-[inset_0_0_20px_rgba(250,204,21,0.03)] group">
+                <div className="flex items-center gap-4 bg-card border border-primary/20 hover:border-primary/40 transition-colors rounded-2xl p-4 shadow-[inset_0_0_20px_rgba(250,204,21,0.03)] group">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">
                     <Trophy className="w-5 h-5" />
                   </div>
                   <div>
                     <div className="text-[9px] text-primary/70 font-black uppercase tracking-[0.2em] mb-0.5">Prize Pool</div>
-                    <div className="text-[15px] font-black text-white group-hover:text-primary transition-colors">
+                    <div className="text-[15px] font-black text-foreground group-hover:text-primary transition-colors">
                       {(() => {
                         let prizeData: any = null;
                         try {
@@ -402,10 +419,10 @@ export default async function TournamentDetailPage({
 
               {/* Description */}
               <div className="mt-12">
-                <h3 className="text-xl font-black text-white mb-6 tracking-widest uppercase flex items-center gap-2">
+                <h3 className="text-xl font-black text-foreground mb-6 tracking-widest uppercase flex items-center gap-2">
                   <div className="w-1 h-5 bg-[#FFD700] rounded-sm" /> Description
                 </h3>
-                <div className="text-sm text-gray-300 leading-relaxed font-medium bg-[#0a0a0a] p-6 lg:p-8 rounded-3xl border border-white/[0.03] shadow-lg">
+                <div className="text-sm text-foreground/80 leading-relaxed font-medium bg-card p-6 lg:p-8 rounded-3xl border border-border shadow-lg">
                   {tournamentData.description || "No description provided."}
                 </div>
               </div>
@@ -413,16 +430,16 @@ export default async function TournamentDetailPage({
 
             {/* Right Column: Status */}
             <div className="space-y-8">
-              <div className="bg-[#0a0a0a] border border-white/[0.03] rounded-3xl p-6 lg:p-8 relative overflow-hidden shadow-xl">
+              <div className="bg-card border border-border rounded-3xl p-6 lg:p-8 relative overflow-hidden shadow-xl">
                 {/* Glowing Accent */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] pointer-events-none -z-10" />
 
-                <h3 className="text-xl font-black text-white mb-6 tracking-widest uppercase flex items-center gap-2">
+                <h3 className="text-xl font-black text-foreground mb-6 tracking-widest uppercase flex items-center gap-2">
                   <div className="w-1 h-5 bg-primary rounded-sm" /> Timeline
                 </h3>
 
                 {/* Active Status Box */}
-                <div className="bg-[#111111] border border-white/[0.05] rounded-2xl p-5 mb-8 flex items-start gap-4">
+                <div className="bg-muted border border-border rounded-2xl p-5 mb-8 flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
                     <Clock className="w-4 h-4 text-primary" />
                   </div>
@@ -430,7 +447,7 @@ export default async function TournamentDetailPage({
                     <div className="text-[13px] font-black text-primary tracking-widest uppercase drop-shadow-[0_0_8px_rgba(250,204,21,0.3)] mb-1">
                       {statusSteps[Math.max(activeStatusIndex, 0)]?.title || "Status"}
                     </div>
-                    <div className="text-xs text-gray-400 font-medium">
+                    <div className="text-xs text-muted-foreground font-medium">
                       {registrationMessage}
                     </div>
                   </div>
@@ -439,7 +456,7 @@ export default async function TournamentDetailPage({
                 {/* Timeline Tree */}
                 <div className="space-y-0 relative pl-4 mt-4">
                   {/* Vertical Line */}
-                  <div className="absolute left-[19px] top-3 bottom-0 w-[1.5px] bg-gradient-to-b from-primary/40 via-white/5 to-transparent" />
+                  <div className="absolute left-[19px] top-3 bottom-0 w-[1.5px] bg-gradient-to-b from-primary/40 via-border to-transparent" />
 
                   {statusSteps.map((step, index) => (
                     <TimelineStep
@@ -461,35 +478,9 @@ export default async function TournamentDetailPage({
             <div className="mb-6">
               <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-3">Phases</div>
               <div className="flex items-center gap-2">
-                <button className="px-5 py-2 hover:opacity-90 bg-primary text-black text-xs font-black uppercase tracking-wider rounded-full transition-opacity shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]">
+                <span className="px-5 py-2 bg-primary text-black text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]">
                   Knockout
-                </button>
-              </div>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-4 mb-8">
-              <div className="space-y-2">
-                <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Matches</label>
-                <select className="appearance-none bg-[#1a1a1a] border border-white/5 hover:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium min-w-[140px] outline-none cursor-pointer transition-colors shadow-sm">
-                  <option>My Matches</option>
-                  <option>All Matches</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Group</label>
-                <select className="appearance-none bg-[#1a1a1a] border border-white/5 hover:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium min-w-[140px] outline-none cursor-pointer transition-colors shadow-sm">
-                  <option>Group A</option>
-                  <option>Group B</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Round</label>
-                <select className="appearance-none bg-[#1a1a1a] border border-white/5 hover:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium min-w-[140px] outline-none cursor-pointer transition-colors shadow-sm">
-                  <option>All</option>
-                  <option>Round 1</option>
-                  <option>Round 2</option>
-                </select>
+                </span>
               </div>
             </div>
 
@@ -511,25 +502,23 @@ export default async function TournamentDetailPage({
                   const id2 = p2?.user?.mlbbId || p2?.teamId || "WAITING";
 
                   return (
-                    <div key={m.id} className="bg-[#0f0f0f]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-colors flex flex-col shadow-xl">
+                    <div key={m.id} className="bg-card border border-border rounded-3xl overflow-hidden hover:border-border/80 transition-colors flex flex-col shadow-xl">
                       {/* Top Bar */}
-                      <div className="relative flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.01]">
+                      <div className="relative flex items-center justify-between px-5 py-4 border-b border-border bg-muted/10">
                         <div className="flex-1 text-center">
-                          <div className="text-sm font-black text-gray-200 tracking-wide gap-1 flex items-center justify-center">MATCH <span className="text-white">{idx + 1}</span></div>
+                          <div className="text-sm font-black text-muted-foreground tracking-wide gap-1 flex items-center justify-center">MATCH <span className="text-foreground">{idx + 1}</span></div>
                           <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${m.status === 'COMPLETED' ? 'text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : m.status === 'ONGOING' ? 'text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'text-gray-600'}`}>
                             {m.status}
                           </div>
                         </div>
-                        <button className="w-8 h-8 rounded-full bg-primary hover:bg-yellow-400 flex items-center justify-center transition-transform hover:scale-105 absolute right-5 shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]">
+                        <Link href={`/tournaments/${tournament.id}?tab=chat`} className="w-8 h-8 rounded-full bg-primary hover:bg-yellow-400 flex items-center justify-center transition-transform hover:scale-105 absolute right-5 shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]" title="Open tournament chat">
                           <MessageSquare className="w-4 h-4 text-black" fill="currentColor" strokeWidth={0} />
-                        </button>
+                        </Link>
                       </div>
 
-                      {/* Subtitle / Group */}
+                      {/* Subtitle / Round */}
                       <div className="text-center py-4 bg-white/[0.005]">
-                        <span className="text-[10px] font-black tracking-widest uppercase text-purple-400/90">Group {Math.ceil((idx + 1) / 4) || 1}</span>
-                        <span className="text-[10px] text-gray-700 mx-3">•</span>
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Round {m.round}</span>
+                        <span className="text-[10px] font-black tracking-widest uppercase text-primary/80">Round {m.round}</span>
                       </div>
 
                       {/* Players */}
@@ -537,39 +526,84 @@ export default async function TournamentDetailPage({
                         {/* Player 1 */}
                         <div className="flex flex-col items-center gap-3 w-[80px]">
                           {ava1 ? (
-                            <img src={ava1} alt={name1} className="w-16 h-16 rounded-full border border-white/10 object-cover shadow-lg" />
+                            <img src={ava1} alt={name1} className="w-16 h-16 rounded-full border border-border object-cover shadow-lg" />
                           ) : (
-                            <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xl shadow-lg">
+                            <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-xl shadow-lg">
                               {name1.charAt(0)}
                             </div>
                           )}
                           <div className="text-center w-full">
                             <div className="text-xs font-bold text-primary truncate">{name1}</div>
-                            <div className="text-[9px] font-mono text-gray-500 mt-1 opacity-80 truncate">{id1}</div>
+                            <div className="text-[9px] font-mono text-muted-foreground mt-1 opacity-80 truncate">{id1}</div>
                           </div>
                         </div>
 
                         {/* VS / Score */}
                         <div className="flex flex-col items-center justify-center px-4">
                           <div className="text-[10px] font-black text-red-500/80 mb-2">VS</div>
-                          <div className="text-2xl font-black text-white mix-blend-screen">{m.score1} - {m.score2}</div>
+                          <div className="text-2xl font-black text-foreground mix-blend-screen">{m.score1} - {m.score2}</div>
                         </div>
 
                         {/* Player 2 */}
                         <div className="flex flex-col items-center gap-3 w-[80px]">
                           {ava2 ? (
-                            <img src={ava2} alt={name2} className="w-16 h-16 rounded-full border border-white/10 object-cover shadow-lg" />
+                            <img src={ava2} alt={name2} className="w-16 h-16 rounded-full border border-border object-cover shadow-lg" />
                           ) : (
-                            <div className="w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xl shadow-lg">
+                            <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 font-bold text-xl shadow-lg">
                               {name2.charAt(0)}
                             </div>
                           )}
                           <div className="text-center w-full">
-                            <div className="text-xs font-bold text-gray-300 truncate">{name2}</div>
-                            <div className="text-[9px] font-mono text-gray-500 mt-1 opacity-80 truncate">{id2}</div>
+                            <div className="text-xs font-bold text-foreground/80 truncate">{name2}</div>
+                            <div className="text-[9px] font-mono text-muted-foreground mt-1 opacity-80 truncate">{id2}</div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Result Manager Form */}
+                      {resolvedSearchParams.editMatch === m.id ? (
+                        <form action={updateMatchScore} className="p-4 bg-muted/20 border-t border-border space-y-3">
+                          <input type="hidden" name="matchId" value={m.id} />
+                          <input type="hidden" name="tournamentId" value={tournament.id} />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-muted-foreground uppercase truncate block">{name1}</label>
+                              <input type="number" name="score1" defaultValue={m.score1 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-primary outline-none" />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[9px] font-bold text-muted-foreground uppercase truncate block">{name2}</label>
+                              <input type="number" name="score2" defaultValue={m.score2 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-primary outline-none" />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[9px] font-bold text-muted-foreground uppercase block">Select Winner</label>
+                            <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-primary outline-none">
+                              <option value="">-- Draw / Ongoing --</option>
+                              {p1 && <option value={p1.id}>{name1}</option>}
+                              {p2 && <option value={p2.id}>{name2}</option>}
+                            </select>
+                          </div>
+                          <div className="flex gap-2 pt-1">
+                            <button type="submit" className="flex-1 py-1.5 bg-primary text-black font-black uppercase text-[10px] tracking-wider rounded hover:bg-yellow-400 transition-colors">
+                              Save
+                            </button>
+                            <Link href={`/tournaments/${tournament.id}?tab=matches`} className="flex-1 py-1.5 bg-muted border border-border text-foreground font-black uppercase text-[10px] tracking-wider rounded hover:bg-muted/80 text-center">
+                              Cancel
+                            </Link>
+                          </div>
+                        </form>
+                      ) : (
+                        userCanEditBracket && (p1 || p2) && (
+                          <div className="border-t border-border/50 px-5 py-3 bg-muted/5 flex items-center justify-center">
+                            <Link 
+                              href={`/tournaments/${tournament.id}?tab=matches&editMatch=${m.id}`} 
+                              className="text-[10px] font-black uppercase tracking-wider text-primary hover:text-yellow-400 flex items-center gap-1.5"
+                            >
+                              <Settings className="w-3.5 h-3.5" /> Manage Result / Score
+                            </Link>
+                          </div>
+                        )
+                      )}
                     </div>
                   )
                 })
@@ -580,13 +614,13 @@ export default async function TournamentDetailPage({
 
         {activeTab === "bracket" && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 overflow-x-auto pb-10">
-            <div className="min-w-max bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/5 rounded-3xl p-8 lg:p-12 shadow-2xl relative">
+            <div className="min-w-max bg-card border border-border rounded-3xl p-8 lg:p-12 shadow-2xl relative">
 
               {Object.keys(matchesByRound).length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <Share2 className="w-16 h-16 text-gray-700 mb-4" />
-                  <h3 className="text-2xl font-black text-white">Bracket Pending</h3>
-                  <p className="text-gray-500 mt-2 max-w-sm">The tournament tree will be mathematically generated the moment capacity is reached.</p>
+                  <Share2 className="w-16 h-16 text-muted-foreground/60 mb-4" />
+                  <h3 className="text-2xl font-black text-foreground">Bracket Pending</h3>
+                  <p className="text-muted-foreground mt-2 max-w-sm">The tournament tree will be mathematically generated the moment capacity is reached.</p>
                 </div>
               ) : (
                 <div className="flex gap-16 lg:gap-24">
@@ -598,7 +632,7 @@ export default async function TournamentDetailPage({
                       <div key={round} className="flex flex-col justify-around gap-6 relative" style={{ minWidth: "280px" }}>
                         {/* Column Header */}
                         <div className="absolute -top-10 left-0 w-full text-center">
-                          <div className="text-sm font-black text-gray-400 uppercase tracking-widest">
+                          <div className="text-sm font-black text-muted-foreground uppercase tracking-widest">
                             {isFinal ? "Grand Final" : `Round ${round}`}
                           </div>
                         </div>
@@ -617,13 +651,13 @@ export default async function TournamentDetailPage({
                           return (
                             <div key={m.id} className="relative group">
                               <div className={`rounded-xl border transition-all duration-300 shadow-lg relative z-10 ${m.status === 'ONGOING' ? 'bg-primary/5 border-primary/50 shadow-[0_0_15px_-3px_rgba(250,204,21,0.3)]' :
-                                  m.status === 'COMPLETED' ? 'bg-[#1A1A1A] border-primary/20 border-l-4 border-l-primary' :
-                                    'bg-[#111111] border-white/5 opacity-70'
+                                  m.status === 'COMPLETED' ? 'bg-muted border-primary/20 border-l-4 border-l-primary' :
+                                    'bg-background border-border opacity-70'
                                 }`}>
-                                {userCanEditBracket && !isEditingThis && m.status !== "PENDING" && (
+                                {userCanEditBracket && !isEditingThis && (p1 || p2) && (
                                   <Link
                                     href={`/tournaments/${tournament.id}?tab=bracket&editMatch=${m.id}`}
-                                    className="absolute -top-3 -right-3 w-8 h-8 bg-[#111111] border-2 border-primary rounded-full flex items-center justify-center shadow-lg text-primary opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 hover:bg-[#1A1A1A] z-10"
+                                    className="absolute -top-3 -right-3 w-8 h-8 bg-background border-2 border-primary rounded-full flex items-center justify-center shadow-lg text-primary opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 hover:bg-muted z-10"
                                     title="Edit Match Score"
                                   >
                                     <Settings className="w-4 h-4" />
@@ -631,19 +665,19 @@ export default async function TournamentDetailPage({
                                 )}
 
                                 {isEditingThis ? (
-                                  <form action={updateMatchScore} className="p-3 bg-[#111111] border border-primary/50 rounded-xl space-y-3 z-20 relative shadow-2xl shadow-primary/20">
+                                  <form action={updateMatchScore} className="p-3 bg-card border border-primary/50 rounded-xl space-y-3 z-20 relative shadow-2xl shadow-primary/20">
                                     <input type="hidden" name="matchId" value={m.id} />
                                     <input type="hidden" name="tournamentId" value={tournament.id} />
                                     <div className="flex items-center justify-between gap-4">
-                                      <span className="text-xs font-bold text-gray-300 w-24 truncate">{name1}</span>
-                                      <input type="number" name="score1" defaultValue={m.score1} className="w-14 bg-black border border-white/20 rounded px-2 py-1 text-sm text-center text-white focus:border-primary outline-none" />
+                                      <span className="text-xs font-bold text-foreground/90 w-24 truncate">{name1}</span>
+                                      <input type="number" name="score1" defaultValue={m.score1} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-primary outline-none" />
                                     </div>
                                     <div className="flex items-center justify-between gap-4">
-                                      <span className="text-xs font-bold text-gray-300 w-24 truncate">{name2}</span>
-                                      <input type="number" name="score2" defaultValue={m.score2} className="w-14 bg-black border border-white/20 rounded px-2 py-1 text-sm text-center text-white focus:border-primary outline-none" />
+                                      <span className="text-xs font-bold text-foreground/90 w-24 truncate">{name2}</span>
+                                      <input type="number" name="score2" defaultValue={m.score2} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-primary outline-none" />
                                     </div>
-                                    <div className="pt-2 border-t border-white/10 flex flex-col gap-2">
-                                      <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-black border border-white/20 rounded px-2 py-1.5 text-xs text-white focus:border-primary outline-none">
+                                    <div className="pt-2 border-t border-border flex flex-col gap-2">
+                                      <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-primary outline-none">
                                         <option value="">-- Set Winner (TBA) --</option>
                                         {p1 && <option value={p1.id}>{name1}</option>}
                                         {p2 && <option value={p2.id}>{name2}</option>}
@@ -657,28 +691,28 @@ export default async function TournamentDetailPage({
                                 ) : (
                                   <div className="p-4">
                                     {/* P1 Node */}
-                                    <div className={`flex items-center justify-between p-2 rounded-lg mb-1 transition-colors ${isP1Winner ? 'bg-primary/10 shadow-[inset_0_0_15px_rgba(250,204,21,0.1)] border border-primary/30' : 'hover:bg-white/5'}`}>
+                                    <div className={`flex items-center justify-between p-2 rounded-lg mb-1 transition-colors ${isP1Winner ? 'bg-primary/10 shadow-[inset_0_0_15px_rgba(250,204,21,0.1)] border border-primary/30' : 'hover:bg-muted'}`}>
                                       <div className="flex items-center gap-3 w-[70%]">
-                                        <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-gray-400 overflow-hidden shrink-0 border border-white/5">
+                                        <div className="w-6 h-6 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground overflow-hidden shrink-0 border border-border">
                                           {p1?.user?.image ? <img src={p1.user.image} className="w-full h-full object-cover" /> : name1.charAt(0)}
                                         </div>
-                                        <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-primary' : 'text-gray-200'}`}>{name1}</span>
+                                        <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-primary' : 'text-foreground/80'}`}>{name1}</span>
                                       </div>
-                                      <span className={`text-sm font-black ${isP1Winner ? 'text-primary' : 'text-gray-500'}`}>{m.score1}</span>
+                                      <span className={`text-sm font-black ${isP1Winner ? 'text-primary' : 'text-muted-foreground'}`}>{m.score1}</span>
                                     </div>
 
                                     {/* Splitter */}
-                                    <div className="h-px w-full bg-white/10 my-1" />
+                                    <div className="h-px w-full bg-border my-1" />
 
                                     {/* P2 Node */}
-                                    <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isP2Winner ? 'bg-primary/10 shadow-[inset_0_0_15px_rgba(250,204,21,0.1)] border border-primary/30' : 'hover:bg-white/5'}`}>
+                                    <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isP2Winner ? 'bg-primary/10 shadow-[inset_0_0_15px_rgba(250,204,21,0.1)] border border-primary/30' : 'hover:bg-muted'}`}>
                                       <div className="flex items-center gap-3 w-[70%]">
-                                        <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-gray-400 overflow-hidden shrink-0 border border-white/5">
+                                        <div className="w-6 h-6 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground overflow-hidden shrink-0 border border-border">
                                           {p2?.user?.image ? <img src={p2.user.image} className="w-full h-full object-cover" /> : name2.charAt(0)}
                                         </div>
-                                        <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-primary' : 'text-gray-200'}`}>{name2}</span>
+                                        <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-primary' : 'text-foreground/80'}`}>{name2}</span>
                                       </div>
-                                      <span className={`text-sm font-black ${isP2Winner ? 'text-primary' : 'text-gray-500'}`}>{m.score2}</span>
+                                      <span className={`text-sm font-black ${isP2Winner ? 'text-primary' : 'text-muted-foreground'}`}>{m.score2}</span>
                                     </div>
                                   </div>
                                 )}
@@ -752,8 +786,8 @@ export default async function TournamentDetailPage({
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-5xl mx-auto pb-20">
               {/* Top Ribbon */}
               <div className="relative flex justify-center mb-16 mt-4">
-                <div className="relative z-10 bg-[#111111] px-12 py-4 shadow-2xl skew-x-[-10deg] border border-2 border-primary">
-                  <div className="skew-x-[10deg] text-white font-black text-2xl tracking-tight drop-shadow-md">
+                <div className="relative z-10 bg-card px-12 py-4 shadow-2xl skew-x-[-10deg] border-2 border-primary">
+                  <div className="skew-x-[10deg] text-foreground font-black text-2xl tracking-tight drop-shadow-md">
                     Total Prize Pool: {prizeData ? `${Number(prizeData.total).toFixed(2)} ${prizeData.currency}` : tournament.prize}
                   </div>
                 </div>
@@ -771,13 +805,12 @@ export default async function TournamentDetailPage({
                     <Award className="w-10 h-10 text-white drop-shadow-md" />
                     <div className="font-black text-4xl text-white drop-shadow-lg font-serif">2</div>
                   </div>
-                  <div className="text-sm font-black text-lime-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(2)}</div>
+                  <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(2)}</div>
                   <div className="mt-4 flex flex-col items-center gap-2 w-full">
                     <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
-                      {participantsList[1] ? participantsList[1].name.charAt(0) : "K"}
+                      {participantsList[1] ? participantsList[1].name.charAt(0) : "—"}
                     </div>
-                    <div className="text-sm font-black text-white truncate w-full">{participantsList[1] ? participantsList[1].name : "TBD"}</div>
-                    <div className="text-[10px] text-white/70 font-mono -mt-1">{participantsList[1] ? participantsList[1].mlbbId || "1474369755" : "-"}</div>
+                    <div className="text-sm font-black text-white truncate w-full">{participantsList[1] ? participantsList[1].name : "Awaiting result"}</div>
                   </div>
                 </div>
 
@@ -789,13 +822,12 @@ export default async function TournamentDetailPage({
                   <div className="flex flex-col items-center gap-2 mt-6">
                     <div className="font-black text-5xl text-white drop-shadow-lg font-serif">1</div>
                   </div>
-                  <div className="text-base font-black text-lime-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.9)] tracking-wider">{getPrizeAmount(1)}</div>
+                  <div className="text-base font-black text-white drop-shadow-[0_0_10px_rgba(250,204,21,0.9)] tracking-wider">{getPrizeAmount(1)}</div>
                   <div className="mt-4 flex flex-col items-center gap-3 w-full">
                     <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-yellow-100 flex items-center justify-center font-black text-2xl text-white shadow-inner">
-                      {participantsList[0] ? participantsList[0].name.charAt(0) : "M"}
+                      {participantsList[0] ? participantsList[0].name.charAt(0) : "—"}
                     </div>
-                    <div className="text-base font-black text-white truncate w-full">{participantsList[0] ? participantsList[0].name : "TBD"}</div>
-                    <div className="text-[10px] text-yellow-900 font-mono font-bold -mt-1">{participantsList[0] ? participantsList[0].mlbbId || "413217402" : "-"}</div>
+                    <div className="text-base font-black text-white truncate w-full">{participantsList[0] ? participantsList[0].name : "Champion TBD"}</div>
                   </div>
                 </div>
 
@@ -805,13 +837,12 @@ export default async function TournamentDetailPage({
                     <Award className="w-8 h-8 text-white drop-shadow-md" />
                     <div className="font-black text-4xl text-white drop-shadow-lg font-serif">3</div>
                   </div>
-                  <div className="text-sm font-black text-lime-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(3)}</div>
+                  <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(3)}</div>
                   <div className="mt-4 flex flex-col items-center gap-2 w-full">
                     <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
-                      {participantsList[2] ? participantsList[2].name.charAt(0) : "T"}
+                      {participantsList[2] ? participantsList[2].name.charAt(0) : "—"}
                     </div>
-                    <div className="text-sm font-black text-white truncate w-full">{participantsList[2] ? participantsList[2].name : "TBD"}</div>
-                    <div className="text-[10px] text-white/70 font-mono -mt-1">{participantsList[2] ? participantsList[2].mlbbId || "-" : "-"}</div>
+                    <div className="text-sm font-black text-white truncate w-full">{participantsList[2] ? participantsList[2].name : "Awaiting result"}</div>
                   </div>
                 </div>
 
@@ -819,8 +850,8 @@ export default async function TournamentDetailPage({
 
               {/* Lower Ranks List */}
               {lowerRanks.length > 0 && (
-                <div className="rounded-2xl border border-white/10 bg-[#1a1a1a]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
-                  <div className="grid grid-cols-[100px_1fr_150px] px-8 py-5 text-xs font-bold text-green-400 border-b border-white/5 uppercase tracking-widest bg-white/[0.02]">
+                <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-2xl">
+                  <div className="grid grid-cols-[100px_1fr_150px] px-8 py-5 text-xs font-bold text-primary border-b border-border uppercase tracking-widest bg-muted/10">
                     <span>Rank</span>
                     <span>User Name</span>
                     <span className="text-right">Prize</span>
@@ -828,19 +859,19 @@ export default async function TournamentDetailPage({
                   {lowerRanks.map((rankData: any) => {
                     const p = participantsList[rankData.rank - 1]; // 0 indexed
                     return (
-                      <div key={rankData.rank} className="grid grid-cols-[100px_1fr_150px] px-8 py-5 items-center justify-between border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                      <div key={rankData.rank} className="grid grid-cols-[100px_1fr_150px] px-8 py-5 items-center justify-between border-b border-border last:border-0 hover:bg-muted transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full border border-green-500/30 flex items-center justify-center font-black text-lime-500 text-sm bg-green-500/10">
+                          <div className="w-8 h-8 rounded-full border border-primary/30 flex items-center justify-center font-black text-primary text-sm bg-primary/10">
                             {rankData.rank}
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-full bg-green-500/10 text-lime-400 font-bold flex items-center justify-center text-xs">
-                            {p ? p.name.charAt(0) : "T"}
+                          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                            {p ? p.name.charAt(0) : "—"}
                           </div>
-                          <span className="font-bold text-gray-200 text-sm tracking-wide">{p ? p.name : "TBD"}</span>
+                          <span className="font-bold text-foreground/90 text-sm tracking-wide">{p ? p.name : "Awaiting result"}</span>
                         </div>
-                        <div className="text-sm font-black text-lime-400 text-right tracking-wider">
+                        <div className="text-sm font-black text-primary text-right tracking-wider">
                           {Number(rankData.amount).toFixed(2)} {prizeData.currency}
                         </div>
                       </div>
@@ -869,33 +900,33 @@ export default async function TournamentDetailPage({
         {activeTab === "rules" && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-4xl">
             <div className="mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Tournament Rules</h2>
-              <p className="text-xs text-gray-400 font-medium tracking-wide">Here are the rules and regulations for this tournament.</p>
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">Tournament Rules</h2>
+              <p className="text-xs text-muted-foreground font-medium tracking-wide">Here are the rules and regulations for this tournament.</p>
             </div>
 
             <div className="space-y-10">
               <div>
-                <h3 className="text-3xl font-black text-white mb-8 tracking-tight">{tournament.title}</h3>
+                <h3 className="text-3xl font-black text-foreground mb-8 tracking-tight">{tournament.title}</h3>
                 <div className="space-y-4">
-                  <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">GENERAL FORMAT</h4>
-                  <ul className="space-y-3 text-sm text-gray-300 font-medium list-disc pl-5 marker:text-primary">
-                    <li><span className="text-white">Team Size:</span> {tournament.mode}</li>
-                    <li><span className="text-white">Battlefield:</span> {tournament.battlefield}</li>
-                    <li><span className="text-white">Tournament Format:</span> {tournament.bracketType}</li>
-                    <li><span className="text-white">Stages:</span> {tournament.stages}</li>
-                    <li><span className="text-white">Match Type:</span> Best of 1</li>
-                    <li><span className="text-white">MLBB Match Mode:</span> {tournament.matchMode}</li>
+                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">GENERAL FORMAT</h4>
+                  <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-primary">
+                    <li><span className="text-foreground">Team Size:</span> {tournament.mode}</li>
+                    <li><span className="text-foreground">Battlefield:</span> {tournament.battlefield}</li>
+                    <li><span className="text-foreground">Tournament Format:</span> {tournament.bracketType}</li>
+                    <li><span className="text-foreground">Stages:</span> {tournament.stages}</li>
+                    <li><span className="text-foreground">Match Type:</span> Best of 1</li>
+                    <li><span className="text-foreground">MLBB Match Mode:</span> {tournament.matchMode}</li>
                   </ul>
                 </div>
               </div>
 
               <div>
                 <div className="space-y-4 mt-12">
-                  <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">START TIME</h4>
-                  <ul className="space-y-3 text-sm text-gray-300 font-medium list-disc pl-5 marker:text-primary">
-                    <li><span className="text-white">Local Time:</span> {tournament.startDate}</li>
-                    <li><span className="text-white">Maximum Capacity:</span> {tournament.maxParticipants} slots</li>
-                    <li><span className="text-white">Registration Status:</span> {registrationIsOpen ? "Open globally" : "Registration locked"}</li>
+                  <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">START TIME</h4>
+                  <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-primary">
+                    <li><span className="text-foreground">Local Time:</span> {tournament.startDate}</li>
+                    <li><span className="text-foreground">Maximum Capacity:</span> {tournament.maxParticipants} slots</li>
+                    <li><span className="text-foreground">Registration Status:</span> {registrationIsOpen ? "Open globally" : "Registration locked"}</li>
                   </ul>
                 </div>
               </div>
@@ -915,7 +946,7 @@ function TabLink({ children, active, href }: {
   return (
     <Link
       href={href}
-      className={`py-5 text-xs tracking-widest font-black transition-all relative whitespace-nowrap uppercase ${active ? 'text-primary' : 'text-gray-400 hover:text-white'
+      className={`py-5 text-xs tracking-widest font-black transition-all relative whitespace-nowrap uppercase ${active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
         }`}
     >
       {children}
@@ -929,53 +960,49 @@ function TabLink({ children, active, href }: {
 function TimelineStep({ status, label, state }: { status: string; label: string; state: 'completed' | 'active' | 'pending' }) {
   const dotColor =
     state === 'completed' ? 'bg-primary shadow-[0_0_10px_rgba(250,204,21,0.5)]' :
-      state === 'active' ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'bg-gray-800 border border-white/10';
+      state === 'active' ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'bg-muted border border-border';
 
   const textColor =
-    state === 'completed' ? 'text-gray-300' :
-      state === 'active' ? 'text-white' : 'text-gray-600';
+    state === 'completed' ? 'text-muted-foreground' :
+      state === 'active' ? 'text-foreground' : 'text-muted-foreground/60';
 
   return (
     <div className="relative pl-8 py-4">
       <div className={`absolute left-[-2px] top-5 w-2.5 h-2.5 rounded-full ${dotColor} transition-colors z-10`} />
       <div className={`text-sm font-black uppercase tracking-widest leading-tight ${textColor}`}>{status}</div>
-      <div className="text-xs text-gray-500 font-medium mt-1">{label}</div>
+      <div className="text-xs text-muted-foreground font-medium mt-1">{label}</div>
     </div>
   );
 }
 
 function ParticipantCard({ participant, index }: { participant: { id: string; name: string; avatar: string; status: string; joinedAt: Date; mlbbId: string; inGameName: string }; index: number }) {
   const topColors = [
+    "from-amber-600/60 to-amber-900/40",
+    "from-yellow-600/60 to-yellow-900/40",
     "from-orange-600/60 to-orange-900/40",
-    "from-green-600/60 to-emerald-900/40",
-    "from-yellow-600/60 to-amber-900/40",
-    "from-blue-600/60 to-cyan-900/40",
-    "from-purple-600/60 to-fuchsia-900/40",
+    "from-amber-500/60 to-amber-800/40",
+    "from-yellow-500/60 to-amber-700/40",
   ];
 
   return (
-    <div className="rounded-2xl border border-white/5 overflow-hidden bg-[#1A1A1A] hover:border-primary/50 hover:shadow-[0_0_20px_rgba(250,204,21,0.1)] transition-all shadow-lg flex flex-col group">
+    <div className="rounded-2xl border border-border overflow-hidden bg-card hover:border-primary/50 hover:shadow-[0_0_20px_rgba(250,204,21,0.1)] transition-all shadow-lg flex flex-col group">
       <div className={`h-16 bg-gradient-to-br ${topColors[index % topColors.length]} opacity-90`} />
       <div className="px-5 pb-5 -mt-8 text-center relative z-10 flex-1 flex flex-col">
-        <div className="mx-auto w-16 h-16 rounded-full bg-[#111111] border-4 border-[#1A1A1A] overflow-hidden flex items-center justify-center font-bold text-white text-xl shadow-md transition-transform group-hover:scale-105">
+        <div className="mx-auto w-16 h-16 rounded-full bg-background border-4 border-card overflow-hidden flex items-center justify-center font-bold text-foreground text-xl shadow-md transition-transform group-hover:scale-105">
           {participant.avatar ? (
             <img src={participant.avatar} alt={participant.name} className="w-full h-full object-cover" />
           ) : (
             participant.name.charAt(0)
           )}
         </div>
-        <div className="mt-3 text-sm font-bold text-white tracking-wide truncate px-2">{participant.name}</div>
-        <div className="text-[10px] text-gray-500 font-medium mt-1">{new Date(participant.joinedAt).toLocaleDateString()}</div>
+        <div className="mt-3 text-sm font-bold text-foreground tracking-wide truncate px-2">{participant.name}</div>
+        <div className="text-[10px] text-muted-foreground font-medium mt-1">{new Date(participant.joinedAt).toLocaleDateString()}</div>
 
         <div className="mt-auto pt-5">
-          <div className="border-t border-white/5 pt-4 grid grid-cols-2 gap-2 text-center">
+          <div className="border-t border-border pt-4 grid grid-cols-1 gap-2 text-center">
             <div>
-              <div className="text-[11px] font-black text-white truncate">{participant.mlbbId}</div>
-              <div className="text-[8px] uppercase tracking-widest text-gray-500 mt-1">IN-GAME ID</div>
-            </div>
-            <div>
-              <div className="text-[11px] font-black text-white truncate">{participant.inGameName}</div>
-              <div className="text-[8px] uppercase tracking-widest text-gray-500 mt-1">IN-GAME NAME</div>
+              <div className="text-[11px] font-black text-foreground truncate">{participant.mlbbId !== "N/A" ? participant.mlbbId : "—"}</div>
+              <div className="text-[8px] uppercase tracking-widest text-muted-foreground mt-1">MLBB ID</div>
             </div>
           </div>
         </div>

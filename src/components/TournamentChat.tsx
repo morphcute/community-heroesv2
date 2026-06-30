@@ -27,22 +27,22 @@ const ROLE_BADGES: Record<string, RoleBadgeConfig> = {
   "TANK_SUPPORT": { label: "Roamer", color: "text-green-400 bg-green-400/10 border-green-400/30 shadow-[0_0_10px_rgba(74,222,128,0.15)]", icon: Shield },
   "FIGHTER": { label: "EXP Laner", color: "text-orange-400 bg-orange-400/10 border-orange-400/30 shadow-[0_0_10px_rgba(251,146,60,0.15)]", icon: Swords },
   "JUNGLER": { label: "Jungler", color: "text-purple-400 bg-purple-400/10 border-purple-400/30 shadow-[0_0_10px_rgba(192,132,252,0.15)]", icon: Axe },
-  "MAGE": { label: "Mid Laner", color: "text-blue-400 bg-blue-400/10 border-blue-400/30 shadow-[0_0_10px_rgba(96,165,250,0.15)]", icon: Flame },
+  "MAGE": { label: "Mid Laner", color: "text-slate-400 bg-slate-400/10 border-slate-400/30 shadow-[0_0_10px_rgba(148,163,184,0.15)]", icon: Flame },
   "MARKSMAN": { label: "Gold Laner", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30 shadow-[0_0_10px_rgba(250,204,21,0.15)]", icon: Target },
 };
 
-const getRankIconUrl = (rank: string) => {
+const getRankShort = (rank: string) => {
   const r = rank.toLowerCase();
-  if (r.includes("immortal")) return "https://static.wikia.nocookie.net/mobile-legends/images/3/3c/Mythical_Immortal.png/revision/latest";
-  if (r.includes("glory")) return "https://static.wikia.nocookie.net/mobile-legends/images/4/42/Mythical_Glory.png/revision/latest";
-  if (r.includes("honor")) return "https://static.wikia.nocookie.net/mobile-legends/images/c/c8/Mythical_Honor.png/revision/latest";
-  if (r.includes("mythic")) return "https://static.wikia.nocookie.net/mobile-legends/images/e/ec/Mythic.png/revision/latest";
-  if (r.includes("legend")) return "https://static.wikia.nocookie.net/mobile-legends/images/1/10/Legend.png/revision/latest";
-  if (r.includes("epic")) return "https://static.wikia.nocookie.net/mobile-legends/images/2/26/Epic.png/revision/latest";
-  if (r.includes("grandmaster")) return "https://static.wikia.nocookie.net/mobile-legends/images/2/28/Grandmaster.png/revision/latest";
-  if (r.includes("master")) return "https://static.wikia.nocookie.net/mobile-legends/images/6/6b/Master.png/revision/latest";
-  if (r.includes("elite")) return "https://static.wikia.nocookie.net/mobile-legends/images/e/e3/Elite.png/revision/latest";
-  if (r.includes("warrior")) return "https://static.wikia.nocookie.net/mobile-legends/images/9/97/Warrior.png/revision/latest";
+  if (r.includes("immortal")) return "MI";
+  if (r.includes("glory")) return "MG";
+  if (r.includes("honor")) return "MH";
+  if (r.includes("mythic")) return "M";
+  if (r.includes("legend")) return "L";
+  if (r.includes("epic")) return "E";
+  if (r.includes("grandmaster")) return "GM";
+  if (r.includes("master")) return "MS";
+  if (r.includes("elite")) return "EL";
+  if (r.includes("warrior")) return "W";
   return null;
 };
 
@@ -155,7 +155,7 @@ export default function TournamentChat({ tournamentId, currentUserId }: Tourname
         ) : (
           messages.map((msg) => {
             const isMe = msg.user.id === currentUserId;
-            const rankIcon = msg.user.rank ? getRankIconUrl(msg.user.rank) : null;
+            const rankShort = msg.user.rank ? getRankShort(msg.user.rank) : null;
 
             return (
               <div key={msg.id} className={`flex items-start gap-3 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
@@ -168,9 +168,9 @@ export default function TournamentChat({ tournamentId, currentUserId }: Tourname
                       (msg.user.name || "P").charAt(0).toUpperCase()
                     )}
                   </div>
-                  {rankIcon && (
-                    <div className="absolute -bottom-1 -right-1 h-4.5 w-4.5 rounded-full bg-black/60 border border-white/10 flex items-center justify-center p-[1px] backdrop-blur-sm">
-                      <img src={rankIcon} alt="" className="h-full w-full object-contain" />
+                  {rankShort && (
+                    <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-black/70 border border-primary/40 flex items-center justify-center backdrop-blur-sm">
+                      <span className="text-[7px] font-black text-primary leading-none">{rankShort}</span>
                     </div>
                   )}
                 </div>

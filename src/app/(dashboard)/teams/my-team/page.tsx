@@ -46,14 +46,14 @@ import { acceptInvite, declineInvite } from "../actions";
   const teamSlotLabel = currentTeamMember ? (currentTeamMember.role === 'CAPTAIN' ? "Captain" : "Member") : "Open";
 
   return (
-    <PageShell size="wide" tone="blue">
+    <PageShell size="wide" tone="gold">
       <PageHero
         eyebrow="My Team"
         icon={<Users className="h-4 w-4" />}
         title={
           <>
             Set your
-            <span className="text-gradient-electric"> main roles</span>
+            <span className="text-gradient-primary"> main roles</span>
           </>
         }
         description={`${user.name}, choose your main roles, keep your team aligned, and get ready faster when it is time to queue.`}
@@ -67,12 +67,12 @@ import { acceptInvite, declineInvite } from "../actions";
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.3fr)_360px]">
         <SurfaceCard>
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-primary">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-muted text-primary">
               <User className="h-5 w-5" />
             </div>
             <div>
               <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-slate-500">Player Roles</div>
-              <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">Preferred lanes</h2>
+              <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">Preferred lanes</h2>
             </div>
           </div>
           <RoleDisplay roles={user?.roles as string[] || []} />
@@ -86,14 +86,14 @@ import { acceptInvite, declineInvite } from "../actions";
                   <Bell className="h-5 w-5 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg font-black uppercase text-white">Pending Invitations</h3>
-                  <p className="text-xs text-slate-400">You have been invited to join a squad.</p>
+                  <h3 className="font-display text-lg font-black uppercase text-foreground">Pending Invitations</h3>
+                  <p className="text-xs text-muted-foreground">You have been invited to join a squad.</p>
                 </div>
               </div>
               <div className="space-y-3">
                 {invitedMemberships.map((invite) => (
-                  <div key={invite.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
-                    <div className="font-bold text-sm text-white">{invite.team.name}</div>
+                  <div key={invite.id} className="flex items-center justify-between rounded-xl border border-border bg-muted p-3">
+                    <div className="font-bold text-sm text-foreground">{invite.team.name}</div>
                     <div className="flex items-center gap-2">
                        <form action={acceptInvite}>
                          <input type="hidden" name="membershipId" value={invite.id} />
@@ -117,14 +117,14 @@ import { acceptInvite, declineInvite } from "../actions";
           {currentTeamMember ? (
             <SurfaceCard tone="gold">
               <div className="relative z-10">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary">
                   <Shield className="h-5 w-5" />
                 </div>
                 <div className="mt-5 text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Your team</div>
-                <h2 className="mt-2 font-display text-3xl font-black uppercase tracking-[0.08em] text-white">
+                <h2 className="mt-2 font-display text-3xl font-black uppercase tracking-[0.08em] text-foreground">
                   {currentTeamMember.team.name}
                 </h2>
-                <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-slate-300">
+                <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
                   <Star className="h-4 w-4 text-primary" />
                   <span>You are a {currentTeamMember.role.toLowerCase()} of this team.</span>
                 </div>
@@ -137,22 +137,22 @@ import { acceptInvite, declineInvite } from "../actions";
           ) : (
             <>
               <SurfaceCard>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-cyan-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-muted text-primary">
                   <Users className="h-5 w-5" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">Join a team</h2>
-                <p className="mt-3 text-sm leading-7 text-slate-300">Scout active teams, see who is recruiting, and request a slot.</p>
+                <h2 className="mt-5 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">Join a team</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">Scout active teams, see who is recruiting, and request a slot.</p>
                 <Link href="/teams" className="action-button-secondary mt-6 w-full justify-center text-[11px]">
                   Browse teams
                 </Link>
               </SurfaceCard>
 
               <SurfaceCard tone="gold">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/20 bg-primary/5 text-primary">
                   <Plus className="h-5 w-5" />
                 </div>
-                <h2 className="mt-5 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">Create a team</h2>
-                <p className="mt-3 text-sm leading-7 text-slate-300">Start your own team and captain a lineup built for the next tournament push.</p>
+                <h2 className="mt-5 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">Create a team</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">Start your own team and captain a lineup built for the next tournament push.</p>
                 <Link href="/teams/create" className="action-button-primary mt-6 w-full justify-center text-[11px]">
                   Start team
                 </Link>

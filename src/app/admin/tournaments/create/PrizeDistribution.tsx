@@ -80,7 +80,7 @@ export function PrizeDistribution({ initialPrizes }: { initialPrizes?: string })
           <label className="text-sm font-black uppercase tracking-widest text-white">Prizing & Distribution Bracket</label>
           <p className="mt-1 text-xs text-gray-500">Configure exactly what each placement wins in Diamonds or cash.</p>
         </div>
-        <div className="rounded border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-blue-400">
+        <div className="rounded border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-primary">
           Final Payout: {prizes.filter((prize) => prize.amount).length} Tiers
         </div>
       </div>
@@ -94,14 +94,14 @@ export function PrizeDistribution({ initialPrizes }: { initialPrizes?: string })
               type="text"
               value={prize.place}
               onChange={(e) => updatePrize(index, "place", e.target.value)}
-              className="w-1/3 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50"
+              className="w-1/3 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-bold text-white outline-none focus:border-primary/50"
               placeholder="e.g. Champion"
             />
             <input
               type="number"
               value={prize.amount}
               onChange={(e) => updatePrize(index, "amount", e.target.value)}
-              className="w-1/3 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-black text-[#FFD700] outline-none focus:border-blue-500/50"
+              className="w-1/3 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-black text-[#FFD700] outline-none focus:border-primary/50"
               placeholder="Amount (e.g. 4000)"
             />
             <AppSelect

@@ -4,14 +4,14 @@ import { PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
 
 export default function CreateTeamPage() {
   return (
-    <PageShell tone="blue">
+    <PageShell tone="gold">
       <PageHero
         eyebrow="Create Squad"
         icon={<Shield className="h-4 w-4" />}
         title={
           <>
             Launch a
-            <span className="text-gradient-electric"> new roster</span>
+            <span className="text-gradient-primary"> new roster</span>
           </>
         }
         description="Name your squad, set the tone, and give future teammates a cleaner first impression."

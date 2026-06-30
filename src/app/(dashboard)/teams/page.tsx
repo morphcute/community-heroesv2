@@ -21,14 +21,14 @@ export default async function TeamsPage() {
   });
 
   return (
-    <PageShell size="wide" tone="blue">
+    <PageShell size="wide" tone="gold">
       <PageHero
         eyebrow="Team Directory"
         icon={<Users className="h-4 w-4" />}
         title={
           <>
             Find your
-            <span className="text-gradient-electric"> next team</span>
+            <span className="text-gradient-primary"> next team</span>
           </>
         }
         description="Browse active teams, check captains, and join a lineup that fits your role and rank."
@@ -60,11 +60,11 @@ export default async function TeamsPage() {
               href={`/teams/${team.id}`}
               className="group esports-card p-5 transition-all duration-300 hover:-translate-y-1"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(250,204,21,0.14),transparent_20%)] opacity-85" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.16),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(250,204,21,0.14),transparent_20%)] opacity-85" />
               <div className="relative z-10">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/6 text-primary">
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.5rem] border border-border bg-muted text-primary">
                       {team.logo ? (
                         <img src={team.logo} alt={team.name} className="h-full w-full object-cover" />
                       ) : (
@@ -72,10 +72,10 @@ export default async function TeamsPage() {
                       )}
                     </div>
                     <div>
-                      <h2 className="font-display text-2xl font-black uppercase tracking-[0.08em] text-white transition-colors group-hover:text-primary">
+                      <h2 className="font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground group-hover:text-primary transition-colors">
                         {team.name}
                       </h2>
-                      <div className="mt-2 flex items-center gap-2 text-sm text-slate-400">
+                      <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                         <Trophy className="h-4 w-4 text-primary" />
                         Captain rank {team.captain.rank || "Unranked"}
                       </div>
@@ -100,9 +100,9 @@ export default async function TeamsPage() {
 
 function TeamMetric({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/6 px-4 py-4 text-center">
-      <div className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-slate-500">{label}</div>
-      <div className="mt-3 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">{value}</div>
+    <div className="rounded-xl border border-border bg-muted px-4 py-4 text-center">
+      <div className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
+      <div className="mt-3 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">{value}</div>
     </div>
   );
 }

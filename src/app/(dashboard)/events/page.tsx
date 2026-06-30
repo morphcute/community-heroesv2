@@ -14,7 +14,7 @@ export default async function EventsPage() {
   });
 
   const colors = [
-    "from-cyan-500/20 to-blue-500/10",
+    "from-slate-500/20 to-zinc-500/10",
     "from-amber-500/20 to-orange-500/10",
     "from-fuchsia-500/20 to-violet-500/10",
     "from-emerald-500/20 to-teal-500/10",

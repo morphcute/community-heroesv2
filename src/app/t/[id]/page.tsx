@@ -33,6 +33,8 @@ import {
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getSiteUrl } from "@/lib/site";
+import { updateMatchScore } from "../../(dashboard)/tournaments/actions";
+import JoinTournamentForm from "./JoinTournamentForm";
 import {
   getBattlefieldLabel,
   getGameModeLabel,
@@ -224,6 +226,12 @@ export default async function TournamentDetailPage({
     (session?.user as any)?.role === "SUPERADMIN" || 
     (currentUser && tournamentData.admins.some((a) => a.userId === currentUser.id));
 
+  const creatorAdmin = tournamentData.admins.find((a) => a.role === "ADMIN") || tournamentData.admins[0];
+  const isCreator = currentUser && (
+    (session?.user as any)?.role === "SUPERADMIN" || 
+    tournamentData.admins.some((a) => a.userId === currentUser.id && a.role === "ADMIN")
+  );
+
   const userTeamIds = (currentUser?.teamMembers || []).map((member) => member.teamId);
   const alreadyJoined = currentUser
     ? tournamentData.participants.some(
@@ -289,14 +297,14 @@ export default async function TournamentDetailPage({
     bracketType: getTournamentFormatLabel(tournamentData.format),
     stages: getStageSummary((tournamentData as any).stageType || "SINGLE_STAGE", (tournamentData as any).stageCount || 1),
     regions: derivedRegions,
-    image: tournamentData.banner || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop"
+    image: tournamentData.banner || "/ch-logo.png"
   };
 
   const admins = tournamentData.admins.map(a => ({
     id: a.user.id,
     name: a.user.name || "Unknown",
     role: a.role === 'ADMIN' ? 'Tournament Admin' : 'Moderator',
-    color: a.role === 'ADMIN' ? 'bg-primary' : 'bg-blue-500'
+    color: a.role === 'ADMIN' ? 'bg-primary' : 'bg-amber-500'
   }));
 
   const participantsList = tournamentData.participants.map(p => ({
@@ -315,7 +323,7 @@ export default async function TournamentDetailPage({
     content: m.content,
     time: m.createdAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }),
     avatar: (m.user.name || "U").charAt(0).toUpperCase(),
-    color: ['bg-blue-600', 'bg-purple-600', 'bg-green-600', 'bg-orange-600'][m.user.id.charCodeAt(0) % 4],
+    color: ['bg-amber-500', 'bg-yellow-500', 'bg-orange-500', 'bg-yellow-600'][m.user.id.charCodeAt(0) % 4],
     isMe: false
   }));
 
@@ -327,20 +335,20 @@ export default async function TournamentDetailPage({
     : "overview";
 
   return (
-    <div className="min-h-screen bg-[#111111] text-white font-sans">
+    <div className="min-h-screen bg-background text-foreground font-sans">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(tournamentJsonLd) }} />
       {/* Black & Yellow Header Overlay */}
-      <div className="relative w-full h-[320px] bg-[#111111] overflow-hidden border-b border-white/5">
+      <div className="relative w-full h-[320px] bg-background overflow-hidden border-b border-border">
          {/* Background Banner mapped to the right */}
          <div className="absolute top-0 right-0 w-full md:w-[60%] h-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-[#111111] via-[#111111]/80 to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent z-10" />
             <img src={tournament.image} alt="Banner" className="w-full h-full object-cover opacity-70" />
          </div>
          
          <div className="relative z-20 container mx-auto px-6 h-full flex flex-col justify-center">
             {/* Back Button */}
-            <Link href="/tournaments" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white font-bold mb-8 transition-colors w-fit tracking-wider">
-               <span className="text-xl leading-none -mt-1">←</span> Back
+            <Link href="/" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white font-bold mb-8 transition-colors w-fit tracking-wider">
+               <span className="text-xl leading-none -mt-1">←</span> Back to Community Heroes
             </Link>
 
             {/* Title */}
@@ -357,54 +365,67 @@ export default async function TournamentDetailPage({
                <span className="text-[#FFC107] flex items-center gap-2 drop-shadow-[0_0_8px_rgba(255,193,7,0.3)]">
                   <Trophy className="w-4 h-4" /> {tournament.prize}
                </span>
-               <span className="text-green-500 flex items-center gap-2">
+               <span className="text-primary flex items-center gap-2">
                   {tournament.fee}
                </span>
             </div>
 
             {/* Action Area */}
             <div className="flex items-center gap-4">
-               {alreadyJoined ? (
-                  <div className="flex flex-col gap-2">
-                     <button disabled className="px-8 py-2.5 bg-[#4285F4] hover:bg-blue-500 text-white text-sm font-bold rounded-full flex items-center justify-center gap-2 transition-colors w-fit">
-                        <CheckCircle2 className="w-4 h-4" /> Registered
-                     </button>
-                     <span className="text-[10px] text-gray-400 font-medium">You are already registered for this tournament</span>
-                  </div>
-               ) : registrationIsOpen ? (
-                  <div className="w-fit scale-90 origin-left">
-                    <Link href={`/login?callbackUrl=/tournaments/${tournamentData.id}`} className="h-14 px-8 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
-                      Login to Register &rarr;
-                    </Link>
-                  </div>
-               ) : (
-                  <div className="flex flex-col gap-2">
-                     <button disabled className="px-8 py-2.5 bg-gray-800 text-gray-400 text-sm font-bold rounded-full cursor-not-allowed w-fit">
-                        Registration Closed
-                     </button>
-                     <span className="text-[10px] text-gray-500 font-medium">{registrationMessage}</span>
-                  </div>
-               )}
-            </div>
+                {isCreator ? (
+                   <div className="flex flex-col gap-2">
+                      <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="px-8 py-3 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
+                         Manage Tournament &rarr;
+                      </Link>
+                      <span className="text-[10px] text-gray-400 font-medium">You are the host of this tournament</span>
+                   </div>
+                ) : alreadyJoined ? (
+                   <div className="flex flex-col gap-2">
+                      <button disabled className="px-8 py-2.5 bg-primary/20 hover:bg-primary/30 text-primary text-sm font-bold rounded-full flex items-center justify-center gap-2 transition-colors w-fit border border-primary/30">
+                         <CheckCircle2 className="w-4 h-4" /> Registered
+                      </button>
+                      <span className="text-[10px] text-gray-400 font-medium">You are already registered for this tournament</span>
+                   </div>
+                ) : registrationIsOpen ? (
+                    currentUser ? (
+                      <div className="w-fit">
+                        <JoinTournamentForm tournamentId={tournamentData.id} alreadyJoined={alreadyJoined} registrationMessage={registrationMessage} />
+                      </div>
+                    ) : (
+                      <div className="w-fit scale-90 origin-left">
+                        <Link href={`/login?callbackUrl=/t/${tournamentData.id}`} className="h-14 px-8 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
+                          Login to Register &rarr;
+                        </Link>
+                      </div>
+                    )
+                ) : (
+                   <div className="flex flex-col gap-2">
+                      <button disabled className="px-8 py-2.5 bg-gray-800 text-gray-400 text-sm font-bold rounded-full cursor-not-allowed w-fit">
+                         Registration Closed
+                      </button>
+                      <span className="text-[10px] text-gray-500 font-medium">{registrationMessage}</span>
+                   </div>
+                )}
+             </div>
          </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="border-b border-white/5 bg-[#111111] sticky top-0 z-30 shadow-2xl">
+      <div className="border-b border-border bg-background sticky top-0 z-30 shadow-2xl">
          <div className="container mx-auto px-6">
             <div className="flex items-center gap-8 overflow-x-auto no-scrollbar">
-               <TabLink href={`/tournaments/${tournament.id}?tab=overview`} active={activeTab === "overview"}>Overview</TabLink>
-               <TabLink href={`/tournaments/${tournament.id}?tab=matches`} active={activeTab === "matches"}>Matches</TabLink>
-               <TabLink href={`/tournaments/${tournament.id}?tab=bracket`} active={activeTab === "bracket"}>Bracket</TabLink>
-               <TabLink href={`/tournaments/${tournament.id}?tab=chat`} active={activeTab === "chat"}>
+               <TabLink href={`/t/${tournament.id}?tab=overview`} active={activeTab === "overview"}>Overview</TabLink>
+               <TabLink href={`/t/${tournament.id}?tab=matches`} active={activeTab === "matches"}>Matches</TabLink>
+               <TabLink href={`/t/${tournament.id}?tab=bracket`} active={activeTab === "bracket"}>Bracket</TabLink>
+               <TabLink href={`/t/${tournament.id}?tab=chat`} active={activeTab === "chat"}>
                   <div className="flex items-center gap-1.5">
-                     {tournament.status === 'ONGOING' && <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
+                     {tournament.status === 'ONGOING' && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
                      Chat
                   </div>
                </TabLink>
-               <TabLink href={`/tournaments/${tournament.id}?tab=prizes`} active={activeTab === "prizes"}>Prizes</TabLink>
-               <TabLink href={`/tournaments/${tournament.id}?tab=participants`} active={activeTab === "participants"}>Participants ({tournament.participants}/{tournament.maxParticipants})</TabLink>
-               <TabLink href={`/tournaments/${tournament.id}?tab=rules`} active={activeTab === "rules"}>Rules</TabLink>
+               <TabLink href={`/t/${tournament.id}?tab=prizes`} active={activeTab === "prizes"}>Prizes</TabLink>
+               <TabLink href={`/t/${tournament.id}?tab=participants`} active={activeTab === "participants"}>Participants ({tournament.participants}/{tournament.maxParticipants})</TabLink>
+               <TabLink href={`/t/${tournament.id}?tab=rules`} active={activeTab === "rules"}>Rules</TabLink>
             </div>
          </div>
       </div>
@@ -414,84 +435,88 @@ export default async function TournamentDetailPage({
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
             {/* Left Column: Details */}
             <div className="lg:col-span-2">
-               <h3 className="text-2xl font-bold text-white mb-6 tracking-tight">Details</h3>
+               <h3 className="text-2xl font-bold text-foreground mb-6 tracking-tight">Details</h3>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Organizer / Hosted By */}
-                  <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
-                     <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
-                        <User className="w-6 h-6" />
-                     </div>
-                     <div>
-                        <div className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">Hosted By</div>
-                        <div className="text-sm font-bold text-gray-200 truncate max-w-[150px]">
-                           {tournamentData.admins[0]?.user?.name || tournamentData.admins[0]?.user?.email?.split('@')[0] || "Community Heroes"}
+                  <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">
+                      {creatorAdmin?.user?.image ? (
+                        <img src={creatorAdmin.user.image} className="w-12 h-12 rounded-xl object-cover border border-border" alt="" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                           <User className="w-6 h-6" />
                         </div>
-                     </div>
-                  </div>
-                  
+                      )}
+                      <div>
+                         <div className="text-[10px] text-primary font-bold uppercase tracking-widest">Hosted By</div>
+                         <div className="text-sm font-bold text-foreground/90 truncate max-w-[150px]">
+                            {creatorAdmin?.user?.name || creatorAdmin?.user?.email?.split('@')[0] || "Tournament organizer"}
+                         </div>
+                      </div>
+                   </div>
+
                   {/* Format */}
-                  <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
-                     <div className="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400">
+                  <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">
+                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                         <User className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-green-400 font-bold uppercase tracking-widest">Team Size</div>
-                        <div className="text-sm font-bold text-gray-200">{tournament.mode}</div>
+                        <div className="text-[10px] text-primary font-bold uppercase tracking-widest">Team Size</div>
+                        <div className="text-sm font-bold text-foreground/90">{tournament.mode}</div>
                      </div>
                   </div>
-                  
+
                   {/* MLBB Mode */}
-                  <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
-                     <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
+                  <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">
+                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                         <Smartphone className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-orange-400 font-bold uppercase tracking-widest">MLBB Mode</div>
-                        <div className="text-sm font-bold text-gray-200">{tournament.matchMode}</div>
+                        <div className="text-[10px] text-primary font-bold uppercase tracking-widest">MLBB Mode</div>
+                        <div className="text-sm font-bold text-foreground/90">{tournament.matchMode}</div>
                      </div>
                   </div>
-                  
+
                   {/* Region Gate */}
-                  <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
-                     <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">
+                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                         <MapPin className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Region Gate</div>
-                        <div className="text-sm font-bold text-gray-200">{(tournamentData as any).locationRestriction || "Nationwide (Open)"}</div>
+                        <div className="text-[10px] text-primary font-bold uppercase tracking-widest">Region Gate</div>
+                        <div className="text-sm font-bold text-foreground/90">{(tournamentData as any).locationRestriction || "Nationwide (Open)"}</div>
                      </div>
                   </div>
-                  
+
                   {/* Fee Entry */}
-                  <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
-                     <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                  <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">
+                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                         <Ticket className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">Fee Entry</div>
-                        <div className="text-sm font-bold text-gray-200">{tournamentData.entryFee || "Free for all"}</div>
+                        <div className="text-[10px] text-primary font-bold uppercase tracking-widest">Fee Entry</div>
+                        <div className="text-sm font-bold text-foreground/90">{tournamentData.entryFee || "Free for all"}</div>
                      </div>
                   </div>
-                  
+
                   {/* Bracket Type */}
-                  <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
-                     <div className="w-12 h-12 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400">
+                  <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">
+                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                         <Network className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-fuchsia-400 font-bold uppercase tracking-widest">Bracket Type</div>
-                        <div className="text-sm font-bold text-gray-200">{tournamentData.format?.replace('_', ' ') || "Single Elimination"}</div>
+                        <div className="text-[10px] text-primary font-bold uppercase tracking-widest">Bracket Type</div>
+                        <div className="text-sm font-bold text-foreground/90">{tournament.bracketType}</div>
                      </div>
                   </div>
-                  
+
                   {/* Prize Pool */}
-                  <div className="flex items-center gap-4 bg-[#111111]/80 border border-white/5 rounded-2xl p-4">
-                     <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                  <div className="flex items-center gap-4 bg-card border border-primary/30 rounded-2xl p-4 shadow-[inset_0_0_20px_rgba(250,204,21,0.03)]">
+                     <div className="w-12 h-12 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">
                         <Trophy className="w-6 h-6" />
                      </div>
                      <div>
-                        <div className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Prize Pool</div>
-                        <div className="text-sm font-bold text-gray-200">
+                        <div className="text-[10px] text-primary font-bold uppercase tracking-widest">Prize Pool</div>
+                        <div className="text-sm font-bold text-foreground">
                            {(() => {
                               let prizeData: any = null;
                               try {
@@ -507,8 +532,8 @@ export default async function TournamentDetailPage({
                </div>
 
                <div className="mt-12">
-                  <h3 className="text-2xl font-bold text-white mb-6 tracking-tight">Description</h3>
-                  <div className="text-sm text-gray-400 leading-relaxed font-medium bg-[#111111]/80 p-6 rounded-2xl border border-white/5">
+                  <h3 className="text-2xl font-bold text-foreground mb-6 tracking-tight">Description</h3>
+                  <div className="text-sm text-muted-foreground leading-relaxed font-medium bg-card p-6 rounded-2xl border border-border">
                      {tournamentData.description || "No description provided."}
                   </div>
                </div>
@@ -516,22 +541,22 @@ export default async function TournamentDetailPage({
 
             {/* Right Column: Status */}
             <div className="space-y-8">
-               <div className="bg-[#111111]/80 border border-white/5 rounded-2xl p-6 relative overflow-hidden">
-                  <h3 className="text-2xl font-bold text-white mb-6 tracking-tight">Status</h3>
+               <div className="bg-card border border-border rounded-2xl p-6 relative overflow-hidden">
+                  <h3 className="text-2xl font-bold text-foreground mb-6 tracking-tight">Status</h3>
                   
                   {/* Active Status Box */}
-                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mb-8 flex items-start gap-3">
-                     <Clock className="w-5 h-5 text-purple-400 mt-0.5" />
+                  <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-8 flex items-start gap-3">
+                     <Clock className="w-5 h-5 text-primary mt-0.5" />
                      <div>
-                    <div className="text-sm font-black text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)] tracking-wide mb-1">{statusSteps[Math.max(activeStatusIndex, 0)]?.title || "Status"}</div>
-                    <div className="text-xs text-purple-400/80">{registrationMessage}</div>
+                    <div className="text-sm font-black text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] tracking-wide mb-1">{statusSteps[Math.max(activeStatusIndex, 0)]?.title || "Status"}</div>
+                    <div className="text-xs text-primary/80">{registrationMessage}</div>
                      </div>
                   </div>
 
                   {/* Timeline */}
                   <div className="space-y-0 relative pl-2">
                      {/* Vertical Line */}
-                     <div className="absolute left-[11px] top-2 bottom-4 w-[2px] bg-white/5" />
+                     <div className="absolute left-[11px] top-2 bottom-4 w-[2px] bg-border" />
                      
                     {statusSteps.map((step, index) => (
                       <TimelineStep
@@ -553,35 +578,9 @@ export default async function TournamentDetailPage({
               <div className="mb-6">
                  <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-3">Phases</div>
                  <div className="flex items-center gap-2">
-                    <button className="px-5 py-2 hover:opacity-90 bg-emerald-500 text-black text-xs font-black uppercase tracking-wider rounded-full transition-opacity shadow-[0_0_15px_-3px_rgba(16,185,129,0.4)]">
+                    <span className="px-5 py-2 bg-primary text-black text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]">
                       Knockout
-                    </button>
-                 </div>
-              </div>
-
-              {/* Filters */}
-              <div className="flex flex-wrap items-center gap-4 mb-8">
-                 <div className="space-y-2">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Matches</label>
-                    <select className="appearance-none bg-[#1a1a1a] border border-white/5 hover:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium min-w-[140px] outline-none cursor-pointer transition-colors shadow-sm">
-                      <option>My Matches</option>
-                      <option>All Matches</option>
-                    </select>
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Group</label>
-                    <select className="appearance-none bg-[#1a1a1a] border border-white/5 hover:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium min-w-[140px] outline-none cursor-pointer transition-colors shadow-sm">
-                      <option>Group A</option>
-                      <option>Group B</option>
-                    </select>
-                 </div>
-                 <div className="space-y-2">
-                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Round</label>
-                    <select className="appearance-none bg-[#1a1a1a] border border-white/5 hover:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium min-w-[140px] outline-none cursor-pointer transition-colors shadow-sm">
-                      <option>All</option>
-                      <option>Round 1</option>
-                      <option>Round 2</option>
-                    </select>
+                    </span>
                  </div>
               </div>
 
@@ -603,25 +602,23 @@ export default async function TournamentDetailPage({
                        const id2 = p2?.user?.mlbbId || p2?.teamId || "WAITING";
                        
                        return (
-                          <div key={m.id} className="bg-[#0f0f0f]/80 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-colors flex flex-col shadow-xl">
+                          <div key={m.id} className="bg-card border border-border rounded-3xl overflow-hidden hover:border-border/80 transition-colors flex flex-col shadow-xl">
                              {/* Top Bar */}
-                             <div className="relative flex items-center justify-between px-5 py-4 border-b border-white/5 bg-white/[0.01]">
+                             <div className="relative flex items-center justify-between px-5 py-4 border-b border-border bg-muted/10">
                                 <div className="flex-1 text-center">
-                                   <div className="text-sm font-black text-gray-200 tracking-wide gap-1 flex items-center justify-center">MATCH <span className="text-white">{idx + 1}</span></div>
-                                   <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${m.status === 'COMPLETED' ? 'text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : m.status === 'ONGOING' ? 'text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'text-gray-600'}`}>
+                                   <div className="text-sm font-black text-muted-foreground tracking-wide gap-1 flex items-center justify-center">MATCH <span className="text-foreground">{idx + 1}</span></div>
+                                   <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${m.status === 'COMPLETED' ? 'text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : m.status === 'ONGOING' ? 'text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'text-gray-600'}`}>
                                       {m.status}
                                    </div>
                                 </div>
-                                <button className="w-8 h-8 rounded-full bg-emerald-500 hover:bg-emerald-400 flex items-center justify-center transition-transform hover:scale-105 absolute right-5 shadow-[0_0_15px_-3px_rgba(16,185,129,0.4)]">
+                                <Link href={`/t/${tournament.id}?tab=chat`} className="w-8 h-8 rounded-full bg-primary hover:bg-yellow-400 flex items-center justify-center transition-transform hover:scale-105 absolute right-5 shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]" title="Open tournament chat">
                                    <MessageSquare className="w-4 h-4 text-black" fill="currentColor" strokeWidth={0} />
-                                </button>
+                                </Link>
                              </div>
-                             
-                             {/* Subtitle / Group */}
+
+                             {/* Subtitle / Round */}
                              <div className="text-center py-4 bg-white/[0.005]">
-                                <span className="text-[10px] font-black tracking-widest uppercase text-purple-400/90">Group {Math.ceil((idx + 1) / 4) || 1}</span>
-                                <span className="text-[10px] text-gray-700 mx-3">•</span>
-                                <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400">Round {m.round}</span>
+                                <span className="text-[10px] font-black tracking-widest uppercase text-primary/80">Round {m.round}</span>
                              </div>
 
                              {/* Players */}
@@ -629,39 +626,83 @@ export default async function TournamentDetailPage({
                                 {/* Player 1 */}
                                 <div className="flex flex-col items-center gap-3 w-[80px]">
                                    {ava1 ? (
-                                      <img src={ava1} alt={name1} className="w-16 h-16 rounded-full border border-white/10 object-cover shadow-lg" />
+                                      <img src={ava1} alt={name1} className="w-16 h-16 rounded-full border border-border object-cover shadow-lg" />
                                    ) : (
-                                      <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xl shadow-lg">
+                                      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-xl shadow-lg">
                                          {name1.charAt(0)}
                                       </div>
                                    )}
                                    <div className="text-center w-full">
-                                      <div className="text-xs font-bold text-emerald-400 truncate">{name1}</div>
-                                      <div className="text-[9px] font-mono text-gray-500 mt-1 opacity-80 truncate">{id1}</div>
+                                      <div className="text-xs font-bold text-primary truncate">{name1}</div>
+                                      <div className="text-[9px] font-mono text-muted-foreground mt-1 opacity-80 truncate">{id1}</div>
                                    </div>
                                 </div>
 
                                 {/* VS / Score */}
                                 <div className="flex flex-col items-center justify-center px-4">
                                    <div className="text-[10px] font-black text-red-500/80 mb-2">VS</div>
-                                   <div className="text-2xl font-black text-white mix-blend-screen">{m.score1} - {m.score2}</div>
+                                   <div className="text-2xl font-black text-foreground mix-blend-screen">{m.score1} - {m.score2}</div>
                                 </div>
 
                                 {/* Player 2 */}
                                 <div className="flex flex-col items-center gap-3 w-[80px]">
                                    {ava2 ? (
-                                      <img src={ava2} alt={name2} className="w-16 h-16 rounded-full border border-white/10 object-cover shadow-lg" />
+                                      <img src={ava2} alt={name2} className="w-16 h-16 rounded-full border border-border object-cover shadow-lg" />
                                    ) : (
-                                      <div className="w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xl shadow-lg">
+                                      <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 font-bold text-xl shadow-lg">
                                          {name2.charAt(0)}
                                       </div>
                                    )}
                                    <div className="text-center w-full">
-                                      <div className="text-xs font-bold text-gray-300 truncate">{name2}</div>
-                                      <div className="text-[9px] font-mono text-gray-500 mt-1 opacity-80 truncate">{id2}</div>
+                                      <div className="text-xs font-bold text-foreground/80 truncate">{name2}</div>
+                                      <div className="text-[9px] font-mono text-muted-foreground mt-1 opacity-80 truncate">{id2}</div>
                                    </div>
                                 </div>
                              </div>
+                             {/* Result Manager Form */}
+                              {resolvedSearchParams.editMatch === m.id ? (
+                                <form action={updateMatchScore} className="p-4 bg-muted/20 border-t border-border space-y-3">
+                                  <input type="hidden" name="matchId" value={m.id} />
+                                  <input type="hidden" name="tournamentId" value={tournament.id} />
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <label className="text-[9px] font-bold text-muted-foreground uppercase truncate block">{name1}</label>
+                                      <input type="number" name="score1" defaultValue={m.score1 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-[#FFC107] outline-none" />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[9px] font-bold text-muted-foreground uppercase truncate block">{name2}</label>
+                                      <input type="number" name="score2" defaultValue={m.score2 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-[#FFC107] outline-none" />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] font-bold text-muted-foreground uppercase block">Select Winner</label>
+                                    <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-[#FFC107] outline-none">
+                                      <option value="">-- Draw / Ongoing --</option>
+                                      {p1 && <option value={p1.id}>{name1}</option>}
+                                      {p2 && <option value={p2.id}>{name2}</option>}
+                                    </select>
+                                  </div>
+                                  <div className="flex gap-2 pt-1">
+                                    <button type="submit" className="flex-1 py-1.5 bg-[#FFC107] text-black font-black uppercase text-[10px] tracking-wider rounded hover:bg-yellow-400 transition-colors">
+                                      Save
+                                    </button>
+                                    <Link href={`/t/${tournament.id}?tab=matches`} className="flex-1 py-1.5 bg-muted border border-border text-foreground font-black uppercase text-[10px] tracking-wider rounded hover:bg-muted/80 text-center">
+                                      Cancel
+                                    </Link>
+                                  </div>
+                                </form>
+                              ) : (
+                                userCanEditBracket && (p1 || p2) && (
+                                  <div className="border-t border-border/50 px-5 py-3 bg-muted/5 flex items-center justify-center">
+                                    <Link 
+                                      href={`/t/${tournament.id}?tab=matches&editMatch=${m.id}`} 
+                                      className="text-[10px] font-black uppercase tracking-wider text-primary hover:text-yellow-400 flex items-center gap-1.5"
+                                    >
+                                      <Settings className="w-3.5 h-3.5" /> Manage Result / Score
+                                    </Link>
+                                  </div>
+                                )
+                              )}
                           </div>
                        )
                     })
@@ -672,13 +713,13 @@ export default async function TournamentDetailPage({
          
          {activeTab === "bracket" && (
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 overflow-x-auto pb-10">
-              <div className="min-w-max bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 lg:p-12 shadow-2xl relative">
+              <div className="min-w-max bg-card border border-border rounded-3xl p-8 lg:p-12 shadow-2xl relative">
                 
                 {Object.keys(matchesByRound).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
-                     <Share2 className="w-16 h-16 text-gray-700 mb-4" />
-                     <h3 className="text-2xl font-black text-white">Bracket Pending</h3>
-                     <p className="text-gray-500 mt-2 max-w-sm">The tournament tree will be mathematically generated the moment capacity is reached.</p>
+                     <Share2 className="w-16 h-16 text-muted-foreground/60 mb-4" />
+                     <h3 className="text-2xl font-black text-foreground">Bracket Pending</h3>
+                     <p className="text-muted-foreground mt-2 max-w-sm">The tournament tree will be mathematically generated the moment capacity is reached.</p>
                   </div>
                 ) : (
                   <div className="flex gap-16 lg:gap-24">
@@ -690,7 +731,7 @@ export default async function TournamentDetailPage({
                          <div key={round} className="flex flex-col justify-around gap-6 relative" style={{ minWidth: "280px" }}>
                             {/* Column Header */}
                             <div className="absolute -top-10 left-0 w-full text-center">
-                               <div className="text-sm font-black text-gray-400 uppercase tracking-widest">
+                               <div className="text-sm font-black text-muted-foreground uppercase tracking-widest">
                                   {isFinal ? "Grand Final" : `Round ${round}`}
                                </div>
                             </div>
@@ -703,41 +744,77 @@ export default async function TournamentDetailPage({
                                const name2 = p2 ? (p2.user?.name || "Player 2") : "TBD";
                                const isP1Winner = m.winnerId && m.winnerId === p1?.id;
                                const isP2Winner = m.winnerId && m.winnerId === p2?.id;
+                               const isEditingThis = resolvedSearchParams.editMatch === m.id;
                                
                                return (
                                  <div key={m.id} className="relative group">
                                     <div className={`rounded-xl border transition-all duration-300 shadow-lg relative z-10 ${
                                       m.status === 'ONGOING' ? 'bg-[#FFC107]/5 border-[#FFC107]/50 shadow-[0_0_15px_-3px_rgba(255,193,7,0.3)]' :
-                                      m.status === 'COMPLETED' ? 'bg-[#1A1A1A] border-[#FFC107]/20 border-l-4 border-l-[#FFC107]' :
-                                      'bg-[#111111] border-white/5 opacity-70'
+                                      m.status === 'COMPLETED' ? 'bg-muted border-[#FFC107]/20 border-l-4 border-l-[#FFC107]' :
+                                      'bg-background border-border opacity-70'
                                     }`}>
-                                       {/* Read Only Match Render */}
-                                       <div className="p-4">
-                                         {/* P1 Node */}
-                                         <div className={`flex items-center justify-between p-2 rounded-lg mb-1 transition-colors ${isP1Winner ? 'bg-[#FFC107]/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-[#FFC107]/30' : 'hover:bg-white/5'}`}>
-                                            <div className="flex items-center gap-3 w-[70%]">
-                                               <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-gray-400 overflow-hidden shrink-0 border border-white/5">
-                                                  {p1?.user?.image ? <img src={p1.user.image} className="w-full h-full object-cover" /> : name1.charAt(0)}
-                                               </div>
-                                               <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-[#FFC107]' : 'text-gray-200'}`}>{name1}</span>
+                                      {userCanEditBracket && !isEditingThis && (p1 || p2) && (
+                                        <Link
+                                          href={`/t/${tournament.id}?tab=bracket&editMatch=${m.id}`}
+                                          className="absolute -top-3 -right-3 w-8 h-8 bg-background border-2 border-[#FFC107] rounded-full flex items-center justify-center shadow-lg text-[#FFC107] opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 hover:bg-muted z-10"
+                                          title="Edit Match Score"
+                                        >
+                                          <Settings className="w-4 h-4" />
+                                        </Link>
+                                      )}
+
+                                      {isEditingThis ? (
+                                        <form action={updateMatchScore} className="p-3 bg-card border border-[#FFC107]/50 rounded-xl space-y-3 z-20 relative shadow-2xl shadow-[#FFC107]/20">
+                                          <input type="hidden" name="matchId" value={m.id} />
+                                          <input type="hidden" name="tournamentId" value={tournament.id} />
+                                          <div className="flex items-center justify-between gap-4">
+                                            <span className="text-xs font-bold text-foreground/90 w-24 truncate">{name1}</span>
+                                            <input type="number" name="score1" defaultValue={m.score1} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-[#FFC107] outline-none" />
+                                          </div>
+                                          <div className="flex items-center justify-between gap-4">
+                                            <span className="text-xs font-bold text-foreground/90 w-24 truncate">{name2}</span>
+                                            <input type="number" name="score2" defaultValue={m.score2} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-[#FFC107] outline-none" />
+                                          </div>
+                                          <div className="pt-2 border-t border-border flex flex-col gap-2">
+                                            <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-[#FFC107] outline-none">
+                                              <option value="">-- Set Winner (TBA) --</option>
+                                              {p1 && <option value={p1.id}>{name1}</option>}
+                                              {p2 && <option value={p2.id}>{name2}</option>}
+                                            </select>
+                                            <div className="flex gap-2">
+                                              <Link href={`/t/${tournament.id}?tab=bracket`} className="flex-1 text-center py-1.5 bg-white/10 text-xs font-bold rounded hover:bg-white/20 transition-colors">Cancel</Link>
+                                              <button type="submit" className="flex-1 py-1.5 bg-[#FFC107] text-black font-black text-xs rounded hover:bg-[#FFC107]/90 transition-colors">Save</button>
                                             </div>
-                                            <span className={`text-sm font-black ${isP1Winner ? 'text-[#FFC107]' : 'text-gray-500'}`}>{m.score1}</span>
-                                         </div>
-                                         
-                                         {/* Splitter */}
-                                         <div className="h-px w-full bg-white/10 my-1" />
-                                         
-                                         {/* P2 Node */}
-                                         <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isP2Winner ? 'bg-[#FFC107]/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-[#FFC107]/30' : 'hover:bg-white/5'}`}>
-                                            <div className="flex items-center gap-3 w-[70%]">
-                                               <div className="w-6 h-6 rounded bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-gray-400 overflow-hidden shrink-0 border border-white/5">
-                                                  {p2?.user?.image ? <img src={p2.user.image} className="w-full h-full object-cover" /> : name2.charAt(0)}
-                                               </div>
-                                               <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-[#FFC107]' : 'text-gray-200'}`}>{name2}</span>
-                                            </div>
-                                            <span className={`text-sm font-black ${isP2Winner ? 'text-[#FFC107]' : 'text-gray-500'}`}>{m.score2}</span>
-                                         </div>
-                                       </div>
+                                          </div>
+                                        </form>
+                                      ) : (
+                                        <div className="p-4">
+                                          {/* P1 Node */}
+                                          <div className={`flex items-center justify-between p-2 rounded-lg mb-1 transition-colors ${isP1Winner ? 'bg-[#FFC107]/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-[#FFC107]/30' : 'hover:bg-muted'}`}>
+                                             <div className="flex items-center gap-3 w-[70%]">
+                                                <div className="w-6 h-6 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground overflow-hidden shrink-0 border border-border">
+                                                   {p1?.user?.image ? <img src={p1.user.image} className="w-full h-full object-cover" /> : name1.charAt(0)}
+                                                </div>
+                                                <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-[#FFC107]' : 'text-foreground/80'}`}>{name1}</span>
+                                             </div>
+                                             <span className={`text-sm font-black ${isP1Winner ? 'text-[#FFC107]' : 'text-muted-foreground'}`}>{m.score1}</span>
+                                          </div>
+                                          
+                                          {/* Splitter */}
+                                          <div className="h-px w-full bg-border my-1" />
+                                          
+                                          {/* P2 Node */}
+                                          <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isP2Winner ? 'bg-[#FFC107]/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-[#FFC107]/30' : 'hover:bg-muted'}`}>
+                                             <div className="flex items-center gap-3 w-[70%]">
+                                                <div className="w-6 h-6 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground overflow-hidden shrink-0 border border-border">
+                                                   {p2?.user?.image ? <img src={p2.user.image} className="w-full h-full object-cover" /> : name2.charAt(0)}
+                                                </div>
+                                                <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-[#FFC107]' : 'text-foreground/80'}`}>{name2}</span>
+                                             </div>
+                                             <span className={`text-sm font-black ${isP2Winner ? 'text-[#FFC107]' : 'text-muted-foreground'}`}>{m.score2}</span>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                     
                                     {/* CSS Bracketing Connectors */}
@@ -764,41 +841,18 @@ export default async function TournamentDetailPage({
          )}
 
          {activeTab === "chat" && (
-           <section className="rounded-2xl border border-border/50 bg-linear-to-b from-cyan-950/20 via-card/70 to-card/80 backdrop-blur-xl p-4 md:p-6 animate-in fade-in slide-in-from-bottom-8 duration-500">
-             <div className="mx-auto max-w-3xl space-y-3 pb-6">
-               {messages.length === 0 && (
-                 <div className="text-sm text-muted-foreground">No messages yet.</div>
-               )}
-              {messages.map((message, index) => (
-                <div key={message.id} className="flex items-start gap-3 p-4 rounded-xl bg-gradient-to-r from-cyan-900/20 to-transparent border border-cyan-500/15 hover:border-cyan-400/35 transition-all">
-                   <div className="w-9 h-9 rounded-lg bg-blue-600/30 border border-blue-400/30 flex items-center justify-center text-xs font-black text-blue-200">
-                     <UserPlus className="w-4 h-4" />
-                   </div>
-                   <div className="flex-1">
-                    <div className="text-[10px] uppercase tracking-wider font-black text-gray-300">{message.user}</div>
-                     <div className="text-lg leading-tight">
-                      <span className={index % 4 === 0 ? "text-lime-400 font-black" : index % 4 === 1 ? "text-fuchsia-400 font-black" : index % 4 === 2 ? "text-cyan-400 font-black" : "text-violet-400 font-black"}>{message.content}</span>
-                     </div>
-                   </div>
-                   <div className="text-xs text-muted-foreground">{message.time}</div>
-                 </div>
-               ))}
-             </div>
-             <div className="rounded-2xl border border-cyan-300/20 bg-cyan-950/15 px-4 py-3 flex items-center gap-3">
-               <div className="w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white font-black">K</div>
-               <input
-                 type="text"
-                 disabled
-                 placeholder="Write a message..."
-                 className="flex-1 h-12 bg-transparent border-none outline-none px-1 text-base text-gray-200 placeholder:text-gray-500"
-               />
-               <button disabled className="h-11 w-11 rounded-full border border-white/10 text-gray-300 flex items-center justify-center">
-                 <MoreVertical className="w-4 h-4" />
-               </button>
-               <button disabled className="h-11 px-5 rounded-xl bg-white/10 text-gray-400 font-bold hover:bg-white/15 transition-colors flex items-center gap-2">
-                 <Send className="w-4 h-4" />
-                 Send
-               </button>
+            <section className="animate-in fade-in slide-in-from-bottom-8 duration-500">
+              <div className="mx-auto max-w-3xl">
+                <div className="rounded-2xl border border-border bg-card p-10 text-center">
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                    <MessageSquare className="h-7 w-7" />
+                  </div>
+                  <h3 className="text-xl font-black text-foreground uppercase tracking-wider mb-2">Join the conversation</h3>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">Sign in to chat with other participants and follow the tournament action in real time.</p>
+                 <Link href={`/login?callbackUrl=/t/${tournamentData.id}?tab=chat`} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-wider text-black transition-colors hover:bg-yellow-400">
+                   Sign in to chat
+                 </Link>
+               </div>
              </div>
            </section>
          )}
@@ -826,14 +880,14 @@ export default async function TournamentDetailPage({
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-5xl mx-auto pb-20">
                {/* Top Ribbon */}
                <div className="relative flex justify-center mb-16 mt-4">
-                  <div className="relative z-10 bg-[#E53935] px-12 py-4 shadow-2xl skew-x-[-10deg] border border-red-400">
-                     <div className="skew-x-[10deg] text-white font-black text-2xl tracking-tight drop-shadow-md">
+                  <div className="relative z-10 bg-primary px-12 py-4 shadow-2xl skew-x-[-10deg] border border-yellow-300">
+                     <div className="skew-x-[10deg] text-black font-black text-2xl tracking-tight drop-shadow-md">
                         Total Prize Pool: {prizeData ? `${Number(prizeData.total).toFixed(2)} ${prizeData.currency}` : tournament.prize}
                      </div>
                   </div>
                   {/* Ribbon Tails */}
-                  <div className="absolute top-2 -left-6 w-16 h-12 bg-red-900 skew-x-[30deg] z-0" />
-                  <div className="absolute top-2 -right-6 w-16 h-12 bg-red-900 skew-x-[-30deg] z-0" />
+                  <div className="absolute top-2 -left-6 w-16 h-12 bg-amber-700 skew-x-[30deg] z-0" />
+                  <div className="absolute top-2 -right-6 w-16 h-12 bg-amber-700 skew-x-[-30deg] z-0" />
                </div>
 
                {/* Podium Grid */}
@@ -845,13 +899,12 @@ export default async function TournamentDetailPage({
                         <Award className="w-10 h-10 text-white drop-shadow-md" />
                         <div className="font-black text-4xl text-white drop-shadow-lg font-serif">2</div>
                      </div>
-                     <div className="text-sm font-black text-lime-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)] tracking-wider">{getPrizeAmount(2)}</div>
+                     <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(2)}</div>
                      <div className="mt-4 flex flex-col items-center gap-2 w-full">
                         <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
-                           {participantsList[1] ? participantsList[1].name.charAt(0) : "K"}
+                           {participantsList[1] ? participantsList[1].name.charAt(0) : "—"}
                         </div>
-                        <div className="text-sm font-black text-white truncate w-full">{participantsList[1] ? participantsList[1].name : "TBD"}</div>
-                        <div className="text-[10px] text-white/70 font-mono -mt-1">{participantsList[1] ? participantsList[1].mlbbId || "1474369755" : "-"}</div>
+                        <div className="text-sm font-black text-white truncate w-full">{participantsList[1] ? participantsList[1].name : "Awaiting result"}</div>
                      </div>
                   </div>
 
@@ -863,13 +916,12 @@ export default async function TournamentDetailPage({
                      <div className="flex flex-col items-center gap-2 mt-6">
                         <div className="font-black text-5xl text-white drop-shadow-lg font-serif">1</div>
                      </div>
-                     <div className="text-base font-black text-lime-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.9)] tracking-wider">{getPrizeAmount(1)}</div>
+                     <div className="text-base font-black text-white drop-shadow-[0_0_10px_rgba(250,204,21,0.9)] tracking-wider">{getPrizeAmount(1)}</div>
                      <div className="mt-4 flex flex-col items-center gap-3 w-full">
                         <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-yellow-100 flex items-center justify-center font-black text-2xl text-white shadow-inner">
-                           {participantsList[0] ? participantsList[0].name.charAt(0) : "M"}
+                           {participantsList[0] ? participantsList[0].name.charAt(0) : "—"}
                         </div>
-                        <div className="text-base font-black text-white truncate w-full">{participantsList[0] ? participantsList[0].name : "TBD"}</div>
-                        <div className="text-[10px] text-yellow-900 font-mono font-bold -mt-1">{participantsList[0] ? participantsList[0].mlbbId || "413217402" : "-"}</div>
+                        <div className="text-base font-black text-white truncate w-full">{participantsList[0] ? participantsList[0].name : "Champion TBD"}</div>
                      </div>
                   </div>
 
@@ -879,13 +931,12 @@ export default async function TournamentDetailPage({
                         <Award className="w-8 h-8 text-white drop-shadow-md" />
                         <div className="font-black text-4xl text-white drop-shadow-lg font-serif">3</div>
                      </div>
-                     <div className="text-sm font-black text-lime-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)] tracking-wider">{getPrizeAmount(3)}</div>
+                     <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(3)}</div>
                      <div className="mt-4 flex flex-col items-center gap-2 w-full">
                         <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
-                           {participantsList[2] ? participantsList[2].name.charAt(0) : "T"}
+                           {participantsList[2] ? participantsList[2].name.charAt(0) : "—"}
                         </div>
-                        <div className="text-sm font-black text-white truncate w-full">{participantsList[2] ? participantsList[2].name : "TBD"}</div>
-                        <div className="text-[10px] text-white/70 font-mono -mt-1">{participantsList[2] ? participantsList[2].mlbbId || "-" : "-"}</div>
+                        <div className="text-sm font-black text-white truncate w-full">{participantsList[2] ? participantsList[2].name : "Awaiting result"}</div>
                      </div>
                   </div>
 
@@ -893,33 +944,33 @@ export default async function TournamentDetailPage({
 
                {/* Lower Ranks List */}
                {lowerRanks.length > 0 && (
-                 <div className="rounded-2xl border border-white/10 bg-[#1a1a1a]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
-                    <div className="grid grid-cols-[100px_1fr_150px] px-8 py-5 text-xs font-bold text-green-400 border-b border-white/5 uppercase tracking-widest bg-white/[0.02]">
-                       <span>Rank</span>
-                       <span>User Name</span>
-                       <span className="text-right">Prize</span>
-                    </div>
-                    {lowerRanks.map((rankData: any) => {
-                       const p = participantsList[rankData.rank - 1]; // 0 indexed
-                       return (
-                          <div key={rankData.rank} className="grid grid-cols-[100px_1fr_150px] px-8 py-5 items-center justify-between border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
-                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full border border-green-500/30 flex items-center justify-center font-black text-lime-500 text-sm bg-green-500/10">
-                                   {rankData.rank}
-                                </div>
-                             </div>
-                             <div className="flex items-center gap-4">
-                                <div className="w-8 h-8 rounded-full bg-green-500/10 text-lime-400 font-bold flex items-center justify-center text-xs">
-                                   {p ? p.name.charAt(0) : "T"}
-                                </div>
-                                <span className="font-bold text-gray-200 text-sm tracking-wide">{p ? p.name : "TBD"}</span>
-                             </div>
-                             <div className="text-sm font-black text-lime-400 text-right tracking-wider">
-                                {Number(rankData.amount).toFixed(2)} {prizeData.currency}
-                             </div>
-                          </div>
-                       );
-                    })}
+                  <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-2xl">
+                     <div className="grid grid-cols-[100px_1fr_150px] px-8 py-5 text-xs font-bold text-primary border-b border-border uppercase tracking-widest bg-muted/10">
+                        <span>Rank</span>
+                        <span>User Name</span>
+                        <span className="text-right">Prize</span>
+                     </div>
+                     {lowerRanks.map((rankData: any) => {
+                        const p = participantsList[rankData.rank - 1]; // 0 indexed
+                        return (
+                           <div key={rankData.rank} className="grid grid-cols-[100px_1fr_150px] px-8 py-5 items-center justify-between border-b border-border last:border-0 hover:bg-muted transition-colors">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 rounded-full border border-primary/30 flex items-center justify-center font-black text-primary text-sm bg-primary/10">
+                                    {rankData.rank}
+                                 </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                                    {p ? p.name.charAt(0) : "—"}
+                                 </div>
+                                 <span className="font-bold text-foreground/90 text-sm tracking-wide">{p ? p.name : "Awaiting result"}</span>
+                              </div>
+                              <div className="text-sm font-black text-primary text-right tracking-wider">
+                                 {Number(rankData.amount).toFixed(2)} {prizeData.currency}
+                              </div>
+                           </div>
+                        );
+                     })}
                  </div>
                )}
             </section>
@@ -941,40 +992,40 @@ export default async function TournamentDetailPage({
          )}
 
          {activeTab === "rules" && (
-           <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-4xl">
-             <div className="mb-10">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Tournament Rules</h2>
-                <p className="text-xs text-gray-400 font-medium tracking-wide">Here are the rules and regulations for this tournament.</p>
-             </div>
-             
-             <div className="space-y-10">
-                <div>
-                   <h3 className="text-3xl font-black text-white mb-8 tracking-tight">{tournament.title}</h3>
-                   <div className="space-y-4">
-                      <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">GENERAL FORMAT</h4>
-                      <ul className="space-y-3 text-sm text-gray-300 font-medium list-disc pl-5 marker:text-[#FFC107]">
-                         <li><span className="text-white">Team Size:</span> {tournament.mode}</li>
-                         <li><span className="text-white">Battlefield:</span> {tournament.battlefield}</li>
-                         <li><span className="text-white">Tournament Format:</span> {tournament.bracketType}</li>
-                         <li><span className="text-white">Stages:</span> {tournament.stages}</li>
-                         <li><span className="text-white">Match Type:</span> Best of 1</li>
-                         <li><span className="text-white">MLBB Match Mode:</span> {tournament.matchMode}</li>
-                      </ul>
-                   </div>
-                </div>
+            <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-4xl">
+              <div className="mb-10">
+                 <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Tournament Rules</h2>
+                 <p className="text-xs text-muted-foreground font-medium tracking-wide">Here are the rules and regulations for this tournament.</p>
+              </div>
+              
+              <div className="space-y-10">
+                 <div>
+                    <h3 className="text-3xl font-black text-foreground mb-8 tracking-tight">{tournament.title}</h3>
+                    <div className="space-y-4">
+                       <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">GENERAL FORMAT</h4>
+                       <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-[#FFC107]">
+                          <li><span className="text-foreground">Team Size:</span> {tournament.mode}</li>
+                          <li><span className="text-foreground">Battlefield:</span> {tournament.battlefield}</li>
+                          <li><span className="text-foreground">Tournament Format:</span> {tournament.bracketType}</li>
+                          <li><span className="text-foreground">Stages:</span> {tournament.stages}</li>
+                          <li><span className="text-foreground">Match Type:</span> Best of 1</li>
+                          <li><span className="text-foreground">MLBB Match Mode:</span> {tournament.matchMode}</li>
+                       </ul>
+                    </div>
+                 </div>
 
-                <div>
-                   <div className="space-y-4 mt-12">
-                      <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-4">START TIME</h4>
-                      <ul className="space-y-3 text-sm text-gray-300 font-medium list-disc pl-5 marker:text-[#FFC107]">
-                         <li><span className="text-white">Local Time:</span> {tournament.startDate}</li>
-                         <li><span className="text-white">Maximum Capacity:</span> {tournament.maxParticipants} slots</li>
-                         <li><span className="text-white">Registration Status:</span> {registrationIsOpen ? "Open globally" : "Registration locked"}</li>
-                      </ul>
-                   </div>
-                </div>
-             </div>
-           </section>
+                 <div>
+                    <div className="space-y-4 mt-12">
+                       <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">START TIME</h4>
+                       <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-[#FFC107]">
+                          <li><span className="text-foreground">Local Time:</span> {tournament.startDate}</li>
+                          <li><span className="text-foreground">Maximum Capacity:</span> {tournament.maxParticipants} slots</li>
+                          <li><span className="text-foreground">Registration Status:</span> {registrationIsOpen ? "Open globally" : "Registration locked"}</li>
+                       </ul>
+                    </div>
+                 </div>
+              </div>
+            </section>
          )}
       </div>
     </div>
@@ -990,7 +1041,7 @@ function TabLink({ children, active, href }: {
       <Link 
         href={href} 
         className={`py-4 text-xs tracking-wide font-bold transition-all relative whitespace-nowrap ${
-          active ? 'text-white' : 'text-gray-400 hover:text-gray-200'
+          active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
         }`}
       >
         {children}
@@ -1003,11 +1054,11 @@ function TabLink({ children, active, href }: {
 
 function TimelineStep({ status, label, state }: { status: string; label: string; state: 'completed' | 'active' | 'pending' }) {
   const dotColor =
-    state === 'completed' ? 'bg-emerald-400' : state === 'active' ? 'bg-primary' : 'bg-border/60';
+    state === 'completed' ? 'bg-primary' : state === 'active' ? 'bg-white' : 'bg-border/60';
   return (
     <div className="relative pl-6 py-3">
       <div className={`absolute left-0 top-3 w-2 h-2 rounded-full ${dotColor}`} />
-      <div className="text-sm font-bold text-white leading-tight">{status}</div>
+      <div className="text-sm font-bold text-foreground leading-tight">{status}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
     </div>
   );
@@ -1015,36 +1066,32 @@ function TimelineStep({ status, label, state }: { status: string; label: string;
 
 function ParticipantCard({ participant, index }: { participant: { id: string; name: string; avatar: string; status: string; joinedAt: Date; mlbbId: string; inGameName: string }; index: number }) {
   const topColors = [
+    "from-amber-600/60 to-amber-900/40",
+    "from-yellow-600/60 to-yellow-900/40",
     "from-orange-600/60 to-orange-900/40",
-    "from-green-600/60 to-emerald-900/40",
-    "from-yellow-600/60 to-amber-900/40",
-    "from-blue-600/60 to-cyan-900/40",
-    "from-purple-600/60 to-fuchsia-900/40",
+    "from-amber-500/60 to-amber-800/40",
+    "from-yellow-500/60 to-amber-700/40",
   ];
 
   return (
-    <div className="rounded-2xl border border-white/5 overflow-hidden bg-[#1A1A1A] hover:border-[#FFC107]/50 hover:shadow-[0_0_20px_rgba(255,193,7,0.1)] transition-all shadow-lg flex flex-col group">
+    <div className="rounded-2xl border border-border overflow-hidden bg-card hover:border-[#FFC107]/50 hover:shadow-[0_0_20px_rgba(255,193,7,0.1)] transition-all shadow-lg flex flex-col group">
       <div className={`h-16 bg-gradient-to-br ${topColors[index % topColors.length]} opacity-90`} />
       <div className="px-5 pb-5 -mt-8 text-center relative z-10 flex-1 flex flex-col">
-        <div className="mx-auto w-16 h-16 rounded-full bg-[#111111] border-4 border-[#1A1A1A] overflow-hidden flex items-center justify-center font-bold text-white text-xl shadow-md transition-transform group-hover:scale-105">
+        <div className="mx-auto w-16 h-16 rounded-full bg-background border-4 border-card overflow-hidden flex items-center justify-center font-bold text-foreground text-xl shadow-md transition-transform group-hover:scale-105">
           {participant.avatar ? (
             <img src={participant.avatar} alt={participant.name} className="w-full h-full object-cover" />
           ) : (
             participant.name.charAt(0)
           )}
         </div>
-        <div className="mt-3 text-sm font-bold text-white tracking-wide truncate px-2">{participant.name}</div>
-        <div className="text-[10px] text-gray-500 font-medium mt-1">{new Date(participant.joinedAt).toLocaleDateString()}</div>
-        
+        <div className="mt-3 text-sm font-bold text-foreground tracking-wide truncate px-2">{participant.name}</div>
+        <div className="text-[10px] text-muted-foreground font-medium mt-1">{new Date(participant.joinedAt).toLocaleDateString()}</div>
+
         <div className="mt-auto pt-5">
-           <div className="border-t border-white/5 pt-4 grid grid-cols-2 gap-2 text-center">
+           <div className="border-t border-border pt-4 grid grid-cols-1 gap-2 text-center">
              <div>
-               <div className="text-[11px] font-black text-white truncate">{participant.mlbbId}</div>
-               <div className="text-[8px] uppercase tracking-widest text-gray-500 mt-1">IN-GAME ID</div>
-             </div>
-             <div>
-               <div className="text-[11px] font-black text-white truncate">{participant.inGameName}</div>
-               <div className="text-[8px] uppercase tracking-widest text-gray-500 mt-1">IN-GAME NAME</div>
+               <div className="text-[11px] font-black text-foreground truncate">{participant.mlbbId !== "N/A" ? participant.mlbbId : "—"}</div>
+               <div className="text-[8px] uppercase tracking-widest text-muted-foreground mt-1">MLBB ID</div>
              </div>
            </div>
         </div>

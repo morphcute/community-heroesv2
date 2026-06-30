@@ -3,6 +3,7 @@ import { Rajdhani, Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { getSiteUrl } from "@/lib/site";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { prisma } from "@/lib/prisma";
 
 const rajdhani = Rajdhani({
   subsets: ["latin"],
@@ -74,13 +75,44 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let iconUrl = "/ch-logo.png";
+  let backgroundUrl = "/bg-dark.jpg";
+
+  try {
+    // @ts-ignore
+    const iconSetting = await (prisma as any).systemSetting.findUnique({ where: { key: "icon_url" } });
+    if (iconSetting) iconUrl = iconSetting.value;
+
+    // @ts-ignore
+    const bgSetting = await (prisma as any).systemSetting.findUnique({ where: { key: "background_url" } });
+    if (bgSetting) backgroundUrl = bgSetting.value;
+  } catch (error) {
+    console.error("Failed to load root layout settings:", error);
+  }
+
+  let backgroundStyle = `linear-gradient(rgba(3, 5, 12, 0.72), rgba(3, 5, 12, 0.86)), url('${backgroundUrl}')`;
+  if (backgroundUrl.startsWith("linear-gradient") || backgroundUrl.startsWith("radial-gradient")) {
+    backgroundStyle = backgroundUrl;
+  } else if (backgroundUrl.startsWith("#") || backgroundUrl.startsWith("rgb")) {
+    backgroundStyle = backgroundUrl;
+  }
+
   return (
     <html lang="en" className="dark" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href={iconUrl} />
+        <style dangerouslySetInnerHTML={{__html: `
+          html.dark body::before {
+            background: ${backgroundStyle} !important;
+          }
+        `}} />
+      </head>
       <body
         suppressHydrationWarning
         className={`${rajdhani.variable} ${inter.variable} ${outfit.variable} bg-background text-foreground antialiased`}

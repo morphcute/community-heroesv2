@@ -6,17 +6,20 @@ Community Heroes should feel like a premium Mobile Legends tournament platform b
 
 - **Linear** for precision, hierarchy, and calm dark surfaces
 - **Supabase** for disciplined dark layering and restrained glow usage
-- **Current Community Heroes DNA** for arena energy through gold and electric-cyan accents
+- **Championship prestige** for arena energy through a single gold identity
 
 The interface should feel more like a polished esports operations hub than an arcade poster. Use bold headlines, compact metadata, and disciplined spacing. Favor clarity, confidence, and competitive credibility over decorative effects.
 
 ### Core mood
 - Competitive but formal
 - Mobile-first and thumb-friendly
-- Premium dark surfaces with strong contrast
-- Gold for primary actions and achievement
-- Cyan for live, informational, and system accents
+- Premium near-black surfaces with strong contrast
+- **Gold** is the single brand identity — primary actions, achievement, live states, and informational accents all draw from the gold family
+- A restrained silver/white secondary provides cool contrast (no cyan-vs-gold split)
 - Minimal use of violet or pink, only for atmospheric gradients
+
+### Identity decision
+The product uses a **unified Black + Gold** identity (championship/prestige). Earlier drafts split accent duties between gold and electric-cyan; that split has been retired to present one confident brand voice. Gold gradients drive every primary action; silver/white serves as the neutral informational tone.
 
 ### Product personality
 - Tournament organizer friendly
@@ -26,23 +29,24 @@ The interface should feel more like a polished esports operations hub than an ar
 
 ## 2. Color Palette & Roles
 
-### Core Backgrounds
-- **Arena Void** `#04060d`: Deep page background
-- **Night Surface** `#081024`: Primary app shell background
-- **Panel Surface** `#0a0e1f`: Default card and hero base
-- **Elevated Surface** `#10162b`: Hovered or emphasized surfaces
+The token values below are the source of truth and live in `src/app/globals.css` as CSS custom properties. Always use the tokens, never hardcode hex.
+
+### Core Backgrounds (dark mode defaults)
+- **Page Void** `#050505` (`--background`): Deep page background
+- **Card** `#0d0d0f` (`--card`): Default card and hero base
+- **Surface Raised** `#18181c` (`--surface-raised`): Hovered or emphasized surfaces
 
 ### Text
-- **Primary Text** `#f8fafc`: Main heading and body emphasis
-- **Secondary Text** `#cbd5e1`: Standard paragraph text
-- **Muted Text** `#94a3b8`: Metadata, placeholders, helper copy
+- **Primary Text** `#f0f0f0` (`--foreground` / `--text-primary`): Main heading and body emphasis
+- **Secondary Text** `#a0aec0` (`--text-secondary`): Standard paragraph text
+- **Muted Text** `#4a5568` (`--text-muted`): Metadata, placeholders, helper copy
 - **Subtle Text** `#64748b`: Fine labels and dividers
 
 ### Brand & Accent
-- **Hero Gold** `#facc15`: Primary brand accent, key CTA color
-- **Gold Glow** `#f59e0b`: Warm extension of primary gradient
-- **Electric Cyan** `#22d3ee`: Live states, active filters, informational accent
-- **Arena Blue** `#60a5fa`: Cool secondary accent for links and informative UI
+- **Primary Gold** `#FFD700` (`--primary`): Single brand identity — CTAs, achievement, live states, active filters
+- **Gold Glow** `#f59e0b`: Warm extension of the primary gradient
+- **Silver/White**: Neutral secondary tone for informational UI and cool contrast (no dedicated cyan token)
+- **Primary Gradient** `linear-gradient(135deg, #FFDF00 0%, #D4AF37 50%, #996515 100%)` (`--gradient-primary`)
 
 ### Status
 - **Success** `#10b981`
@@ -65,22 +69,29 @@ The interface should feel more like a polished esports operations hub than an ar
 ## 3. Typography Rules
 
 ### Font Families
-- **Display**: `Rajdhani`, sans-serif
-- **Body**: `Inter`, sans-serif
+- **Display**: `Rajdhani`, sans-serif — used only via the `.font-display` utility for the esports look
+- **Body**: `Outfit`, sans-serif — the default body and semantic-heading font
+- **Inter**: secondary fallback body font
 - **Monospace Optional**: system monospace only when needed for IDs, codes, or admin views
+
+### Headings — critical rule
+- Semantic `h1`–`h6` elements render in **Outfit** (readable, accessible, not italic, not uppercase). They are used for screen-reader-critical and long-copy titles.
+- The esports display look (italic + uppercase + Rajdhani) is an **explicit opt-in** via the `.font-display` class — apply it only to short, high-impact titles (page heroes, card titles, stat values). Never apply it to paragraphs or long titles.
+- `.page-hero__title` and stat-value utilities carry their own display styling and do not need `.font-display`.
 
 ### Hierarchy
 
 | Role | Font | Size | Weight | Line Height | Letter Spacing | Notes |
 |------|------|------|--------|-------------|----------------|-------|
-| Mobile Hero | Rajdhani | 28–34px | 700 | 1.00–1.05 | 0.04em | Compact, high-impact mobile headline |
-| Desktop Hero | Rajdhani | 48–64px | 700 | 1.00–1.04 | 0.05em | Main marketing and page hero headline |
-| Section Heading | Rajdhani | 22–32px | 700 | 1.05–1.15 | 0.05em | Major panels and sections |
-| Card Title | Rajdhani | 18–22px | 700 | 1.10–1.20 | 0.04em | Compact card titles |
-| Body Large | Inter | 16–18px | 400 | 1.60 | normal | Intro paragraphs |
-| Body | Inter | 14–16px | 400 | 1.55–1.70 | normal | Main body text |
-| UI Label | Inter | 12–13px | 600 | 1.40 | 0.08em | Labels, chips, support headings |
-| Micro Label | Rajdhani | 9–11px | 700 | 1.20 | 0.18em | Overlines and stat labels |
+| Mobile Hero | Rajdhani `.font-display` | 28–34px | 700 | 1.00–1.05 | 0.04em | Compact, high-impact mobile headline |
+| Desktop Hero | Rajdhani `.font-display` | 48–64px | 700 | 1.00–1.04 | 0.05em | Main marketing and page hero headline |
+| Section Heading | Rajdhani `.font-display` | 22–32px | 700 | 1.05–1.15 | 0.05em | Major panels and sections |
+| Card Title | Rajdhani `.font-display` | 18–22px | 700 | 1.10–1.20 | 0.04em | Compact card titles |
+| Semantic Title | Outfit (default `h1–h6`) | 16–28px | 700 | 1.2 | -0.01em | Readable, non-italic titles |
+| Body Large | Outfit | 16–18px | 400 | 1.60 | normal | Intro paragraphs |
+| Body | Outfit | 14–16px | 400 | 1.55–1.70 | normal | Main body text |
+| UI Label | Outfit | 12–13px | 600 | 1.40 | 0.08em | Labels, chips, support headings |
+| Micro Label | Rajdhani `.font-display` | 9–11px | 700 | 1.20 | 0.18em | Overlines and stat labels |
 
 ### Typography principles
 - Use Rajdhani for anything that should feel competitive or structural

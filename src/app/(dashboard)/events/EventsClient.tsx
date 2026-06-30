@@ -26,14 +26,14 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventCa
       : initialEvents.filter((event) => event.status === activeTab);
 
   return (
-    <PageShell size="wide" tone="blue">
+    <PageShell size="wide" tone="gold">
       <PageHero
         eyebrow="Event Calendar"
         icon={<Calendar className="h-4 w-4" />}
         title={
           <>
             Track the next
-            <span className="text-gradient-electric"> community event</span>
+            <span className="text-gradient-primary"> community event</span>
           </>
         }
         description="Follow featured events, community activities, and official tournament updates from one cleaner event page."
@@ -52,8 +52,8 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventCa
               onClick={() => setActiveTab(tab)}
               className={`mobile-pill ${
                 activeTab === tab
-                  ? "bg-emerald-300 text-black shadow-[0_14px_28px_-18px_rgba(110,231,183,0.9)]"
-                  : "border border-white/10 bg-white/6 text-slate-400 hover:border-cyan-300/22 hover:text-white"
+                  ? "bg-primary text-black shadow-[0_0_15px_rgba(250,204,21,0.25)]"
+                  : "border border-border bg-card text-muted-foreground hover:border-primary/20 hover:text-foreground"
               }`}
             >
               {tab === "Ongoing" ? <Clock className="mr-1.5 inline h-3 w-3 sm:mr-2 sm:h-3.5 sm:w-3.5" /> : null}
@@ -76,29 +76,25 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventCa
             <Link
               key={event.id}
               href={`/tournaments/${event.id}`}
-              className="group relative overflow-hidden rounded-[1.8rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,31,0.94),rgba(8,11,25,0.82))] transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/24"
+              className="esports-card group block overflow-hidden p-0"
             >
               <div className={`absolute inset-x-0 top-0 h-44 bg-gradient-to-br ${event.color} opacity-20 group-hover:opacity-35 transition-opacity duration-300`} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#050816] via-[#050816]/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
               <div className="relative p-5 pt-36">
-                <div className="inline-block rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[0.62rem] font-black uppercase tracking-[0.22em] text-emerald-200 backdrop-blur-md">
+                <div className="inline-block rounded-full border border-border bg-muted/40 px-3 py-1 text-[0.62rem] font-black uppercase tracking-[0.22em] text-primary backdrop-blur-md">
                   {event.status} Match
                 </div>
-                <h2 className="mt-4 font-display text-2xl font-black uppercase tracking-[0.08em] text-white group-hover:text-primary transition-colors">{event.name}</h2>
-                <p className="mt-3 text-sm leading-7 text-slate-300">{event.dates}</p>
+                <h2 className="mt-4 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground group-hover:text-primary transition-colors">{event.name}</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{event.dates}</p>
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 flex flex-col justify-between">
+                  <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground flex flex-col justify-between">
                     <Trophy className="mb-2 h-4 w-4 text-primary" />
                     <span>{event.tournamentsCount} tournaments</span>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 flex flex-col justify-between">
-                    <Users className="mb-2 h-4 w-4 text-cyan-300" />
+                  <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground flex flex-col justify-between">
+                    <Users className="mb-2 h-4 w-4 text-primary" />
                     <span>{event.playersCount} registrations</span>
                   </div>
-                </div>
-                <div className="mt-5 flex items-center gap-2 text-sm font-bold text-primary">
-                  <Shield className="h-4 w-4" />
-                  Hosted by Community Heroes
                 </div>
               </div>
             </Link>

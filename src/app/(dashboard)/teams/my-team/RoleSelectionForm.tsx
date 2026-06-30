@@ -18,7 +18,7 @@ export default function RoleSelectionForm({ initialRoles }: RoleSelectionFormPro
   };
   
   const roleMeta: Record<string, { label: string; lane: string; detail: string; accent: string }> = {
-     'TANK_SUPPORT': { label: 'Roamer', lane: 'Roam', detail: 'Peel, vision, engage', accent: 'peer-checked:border-emerald-300/50 peer-checked:bg-emerald-300/10' },
+     'TANK_SUPPORT': { label: 'Roamer', lane: 'Roam', detail: 'Peel, vision, engage', accent: 'peer-checked:border-amber-300/50 peer-checked:bg-amber-300/10' },
      'FIGHTER': { label: 'EXP Laner', lane: 'EXP', detail: 'Duel and frontline pressure', accent: 'peer-checked:border-orange-300/50 peer-checked:bg-orange-300/10' },
      'JUNGLER': { label: 'Jungler', lane: 'Core', detail: 'Objectives, farm, and rotation', accent: 'peer-checked:border-violet-300/50 peer-checked:bg-violet-300/10' },
      'MAGE': { label: 'Mid Laner', lane: 'Mid', detail: 'Wave clear and burst control', accent: 'peer-checked:border-sky-300/50 peer-checked:bg-sky-300/10' },
@@ -55,7 +55,7 @@ export default function RoleSelectionForm({ initialRoles }: RoleSelectionFormPro
         <div className="text-[0.58rem] font-black uppercase tracking-[0.2em] text-slate-500">
           Edit Preferred Roles
         </div>
-        <p className="mt-2 text-sm leading-6 text-slate-400">
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
           Pick every lane you can confidently play so captains and teammates know where you fit best.
         </p>
       </div>
@@ -76,22 +76,22 @@ export default function RoleSelectionForm({ initialRoles }: RoleSelectionFormPro
               onChange={() => handleRoleToggle(role)}
               className="peer sr-only"
             />
-            <div className={`flex items-center gap-3 rounded-[1.1rem] border border-white/6 bg-white/[0.03] p-3 transition-all duration-300 hover:border-white/12 hover:bg-white/[0.05] group-hover:-translate-y-0.5 ${meta.accent}`}>
-              <div className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-colors ${isChecked ? 'border-primary/30 bg-primary text-black' : 'border-white/8 bg-secondary text-gray-400 group-hover:text-white'}`}>
+            <div className={`flex items-center gap-3 rounded-[1.1rem] border border-border bg-muted/40 p-3 transition-all duration-300 hover:border-border/80 hover:bg-muted group-hover:-translate-y-0.5 ${meta.accent}`}>
+              <div className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-colors ${isChecked ? 'border-primary/30 bg-primary text-black' : 'border-border bg-background text-muted-foreground group-hover:text-foreground'}`}>
                  <Icon className="w-5 h-5" />
               </div>
               <div className="flex-1">
                  <div className="flex items-center gap-2">
-                    <div className="font-display text-sm font-black uppercase tracking-[0.05em] text-white">{meta.label}</div>
-                    <span className="rounded-full border border-white/10 bg-white/6 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">
+                    <div className="font-display text-sm font-black uppercase tracking-[0.05em] text-foreground">{meta.label}</div>
+                    <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-muted-foreground">
                       {meta.lane}
                     </span>
                  </div>
-                 <div className="mt-1 text-[11px] text-gray-400">
+                 <div className="mt-1 text-[11px] text-muted-foreground">
                     {meta.detail}
                  </div>
               </div>
-              <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${isChecked ? 'border-primary bg-primary text-black' : 'border-white/10'}`}>
+              <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-all ${isChecked ? 'border-primary bg-primary text-black' : 'border-border'}`}>
                  {isChecked && <CheckCircle2 className="w-3.5 h-3.5" />}
               </div>
             </div>

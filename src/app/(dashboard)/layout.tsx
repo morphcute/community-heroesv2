@@ -3,6 +3,8 @@ import { Sidebar } from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateUserXP } from "@/lib/xp";
+import { headers } from "next/headers";
 
 import { redirect } from "next/navigation";
 
@@ -14,24 +16,45 @@ export default async function DashboardLayout({
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/login");
+    const headersList = await headers();
+    const pathname = headersList.get("x-pathname") || "";
+    const search = headersList.get("x-invoke-query") || "";
+    const fullPath = search ? `${pathname}?${search}` : pathname;
+    const callbackUrl = fullPath ? encodeURIComponent(fullPath) : "";
+    redirect(callbackUrl ? `/login?callbackUrl=${callbackUrl}` : "/login");
   }
 
   const user = session?.user?.email
-    ? await prisma.user.findUnique({
+    ? await (prisma as any).user.findUnique({
       where: { email: session.user.email },
       select: {
         id: true,
         rank: true,
         role: true,
+        isBanned: true,
         notifications: {
           where: { read: false },
           orderBy: { createdAt: 'desc' },
           take: 10
-        }
+        },
+        _count: {
+          select: {
+            participations: true,
+            awards: true,
+          },
+        },
       }
-    })
+    }) as any
     : null;
+
+  if (user?.isBanned) {
+    redirect("/login?error=suspended");
+  }
+
+  const xp = user ? calculateUserXP({
+    participationsCount: user._count.participations,
+    awardsCount: user._count.awards,
+  }) : null;
 
   const topBarUser = session?.user
     ? {
@@ -41,18 +64,23 @@ export default async function DashboardLayout({
       image: session.user.image,
       rank: user?.rank,
       role: user?.role,
-      notifications: user?.notifications || []
+      notifications: user?.notifications || [],
+      level: xp?.level ?? null,
+      xpPercentage: xp?.xpPercentage ?? null,
     }
     : null;
+
+  const logoSetting = await (prisma as any).systemSetting.findUnique({ where: { key: "logo_url" } });
+  const logoUrl = logoSetting?.value || "/ch-logo.png";
 
   return (
     <SidebarProvider>
       <div className="relative flex min-h-screen bg-transparent text-foreground">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-[-10rem] top-[-8rem] h-[26rem] w-[26rem] rounded-full bg-amber-300/10 blur-[110px]" />
-          <div className="absolute bottom-[-10rem] right-[-6rem] h-[24rem] w-[24rem] rounded-full bg-cyan-300/10 blur-[120px]" />
+          <div className="absolute bottom-[-10rem] right-[-6rem] h-[24rem] w-[24rem] rounded-full bg-amber-500/8 blur-[120px]" />
         </div>
-        <Sidebar user={topBarUser} />
+        <Sidebar user={topBarUser} logoUrl={logoUrl} />
         <div className="relative flex min-w-0 flex-1 flex-col">
           <TopBar user={topBarUser} />
           <main className="custom-scrollbar flex-1 overflow-y-auto px-3 py-3 pb-6 sm:px-4 sm:py-4 sm:pb-6 lg:px-6 lg:py-6">

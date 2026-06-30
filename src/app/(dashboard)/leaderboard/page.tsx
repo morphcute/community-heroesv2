@@ -97,8 +97,8 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
           { label: "Podium", value: top3.length },
         ]}
         aside={
-          <SurfaceCard tone="blue">
-            <div className="text-[0.56rem] font-black uppercase tracking-[0.2em] text-cyan-300 sm:text-[0.62rem] sm:tracking-[0.24em]">Mode Filter</div>
+          <SurfaceCard tone="gold">
+            <div className="text-[0.56rem] font-black uppercase tracking-[0.2em] text-primary sm:text-[0.62rem] sm:tracking-[0.24em]">Mode Filter</div>
             <div className="mobile-pill-rail mt-3 sm:mt-4">
               {modeFilters.map((f) => (
                 <Link
@@ -107,7 +107,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                   className={`mobile-pill flex items-center gap-1.5 sm:gap-2 ${
                     mode === f.value
                       ? "bg-primary text-black shadow-[0_14px_28px_-18px_rgba(250,204,21,0.9)]"
-                      : "border border-white/10 bg-white/6 text-slate-400 hover:border-primary/20 hover:text-white"
+                      : "border border-border bg-card text-muted-foreground hover:border-primary/25 hover:text-foreground"
                   }`}
                 >
                   <span className="scale-90 sm:scale-100">{f.icon}</span>
@@ -121,9 +121,9 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
 
       {leaderboardData.length === 0 ? (
          <SurfaceCard className="flex flex-col items-center justify-center py-20 text-center">
-            <Trophy className="w-16 h-16 text-gray-700 mb-4" />
-            <h3 className="text-2xl font-black text-white">No Ranking Data</h3>
-            <p className="text-gray-500 mt-2 max-w-sm">Completed matches in {mode.replace('_', ' ')} will automatically calculate points and update the leaderboard globally.</p>
+            <Trophy className="w-16 h-16 text-muted-foreground/60 mb-4" />
+            <h3 className="text-2xl font-black text-foreground">No Ranking Data</h3>
+            <p className="text-muted-foreground mt-2 max-w-sm">Completed matches in {mode.replace('_', ' ')} will automatically calculate points and update the leaderboard globally.</p>
          </SurfaceCard>
       ) : (
          <>
@@ -157,7 +157,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                         
                         <div className={`w-20 h-20 rounded-full bg-secondary border-2 overflow-hidden ${
                         isGold ? "border-primary" : isSilver ? "border-gray-300" : "border-amber-700"
-                        } flex items-center justify-center font-black text-2xl text-gray-400 mb-4 ${avatarGlow}`}>
+                        } flex items-center justify-center font-black text-2xl text-muted-foreground mb-4 ${avatarGlow}`}>
                           {player.image ? (
                              <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
                           ) : (
@@ -165,10 +165,10 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                           )}
                         </div>
                         
-                        <div className="font-black text-white text-lg mb-1 truncate w-full text-center">{player.name}</div>
-                        <div className="text-xs text-gray-400 font-bold mb-2">#{player.rank}</div>
+                        <div className="font-black text-foreground text-lg mb-1 truncate w-full text-center">{player.name}</div>
+                        <div className="text-xs text-muted-foreground font-bold mb-2">#{player.rank}</div>
                         <div className="text-primary font-black text-2xl mb-1">{player.points}</div>
-                        <div className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Points</div>
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Points</div>
                      </div>
                   );
                   })}
@@ -180,27 +180,27 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                <div className="overflow-x-auto">
                <table className="w-full">
                   <thead>
-                     <tr className="bg-white/[0.02] text-left border-b border-white/5">
-                     <th className="px-6 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Rank</th>
-                     <th className="px-6 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Competitor</th>
-                     <th className="px-6 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Points</th>
-                     <th className="px-6 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Wins</th>
-                     <th className="px-6 py-5 text-xs font-bold text-gray-400 uppercase tracking-wider">Win Rate</th>
+                     <tr className="bg-muted/40 text-left border-b border-border">
+                     <th className="px-6 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Rank</th>
+                     <th className="px-6 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Competitor</th>
+                     <th className="px-6 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Points</th>
+                     <th className="px-6 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Wins</th>
+                     <th className="px-6 py-5 text-xs font-bold text-muted-foreground uppercase tracking-wider">Win Rate</th>
                      </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
+                  <tbody className="divide-y divide-border">
                      {leaderboardData.map((player) => (
                      <tr
                         key={player.rank}
-                        className="hover:bg-white/[0.03] transition-colors"
+                        className="hover:bg-muted/40 transition-colors"
                      >
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-3">
                               {player.rank === 1 && <Crown className="w-5 h-5 text-primary fill-primary drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />}
                               {player.rank === 2 && <Medal className="w-5 h-5 text-gray-300 fill-gray-300" />}
                               {player.rank === 3 && <Medal className="w-5 h-5 text-amber-600 fill-amber-600" />}
-                              {player.rank > 3 && <span className="w-5 h-5 flex items-center justify-center text-sm font-bold text-gray-500">{player.rank}</span>}
-                              <span className={`font-black tracking-wide ${player.rank <= 3 ? 'text-white text-lg' : 'text-gray-400 text-base'}`}>#{player.rank}</span>
+                              {player.rank > 3 && <span className="w-5 h-5 flex items-center justify-center text-sm font-bold text-muted-foreground">{player.rank}</span>}
+                              <span className={`font-black tracking-wide ${player.rank <= 3 ? 'text-foreground text-lg' : 'text-muted-foreground text-base'}`}>#{player.rank}</span>
                            </div>
                         </td>
                         <td className="px-6 py-4">
@@ -209,7 +209,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                                  player.rank === 1 ? 'bg-primary/20 text-primary border border-primary/50' :
                                  player.rank === 2 ? 'bg-gray-300/20 text-gray-300 border border-gray-400/50' :
                                  player.rank === 3 ? 'bg-amber-600/20 text-amber-600 border border-amber-600/50' :
-                                 'bg-white/5 border border-white/10 text-gray-400'
+                                 'bg-muted border border-border text-muted-foreground'
                               }`}>
                                  {player.image ? (
                                     <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
@@ -218,7 +218,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                                  )}
                               </div>
                               <div>
-                                 <span className="font-bold text-white text-base block">{player.name}</span>
+                                 <span className="font-bold text-foreground text-base block">{player.name}</span>
                                  {player.rank <= 3 && (
                                  <div className="flex items-center gap-1 mt-1">
                                     <Star className="w-3 h-3 text-primary fill-primary" />
@@ -234,11 +234,11 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                            <TrendingUp className="w-4 h-4 text-green-500" />
                            </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-300 hidden md:table-cell font-medium">{player.wins}</td>
+                        <td className="px-6 py-4 text-muted-foreground hidden md:table-cell font-medium">{player.wins}</td>
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-3">
-                           <span className="text-white font-bold">{player.winRate}</span>
-                           <div className="w-20 h-2 bg-white/5 rounded-full overflow-hidden hidden lg:block border border-white/5">
+                           <span className="text-foreground font-bold">{player.winRate}</span>
+                           <div className="w-20 h-2 bg-muted rounded-full overflow-hidden hidden lg:block border border-border">
                               <div className="h-full bg-gradient-to-r from-primary to-green-500" style={{ width: player.winRate }} />
                            </div>
                            </div>

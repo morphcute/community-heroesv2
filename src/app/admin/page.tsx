@@ -15,6 +15,7 @@ import {
   UserCog,
   Users,
   Zap,
+  MessageSquare,
 } from "lucide-react";
 import { PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
 import { getGameModeLabel, getTournamentFormatLabel } from "@/lib/tournament-config";
@@ -38,6 +39,8 @@ export default async function AdminDashboard() {
     scheduledToday,
     recentTournaments,
     recentUsers,
+    totalScrims,
+    totalPosts,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: { in: ["MODERATOR", "SUPERADMIN"] } } }),
@@ -68,6 +71,8 @@ export default async function AdminDashboard() {
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true, email: true, role: true, createdAt: true },
     }),
+    prisma.scrim.count(),
+    prisma.post.count(),
   ]);
 
   const controlStats = [
@@ -89,21 +94,21 @@ export default async function AdminDashboard() {
       value: moderators,
       sublabel: `${totalAreas} mapped territories`,
       icon: <UserCog className="h-5 w-5" />,
-      tone: "text-cyan-300",
+      tone: "text-primary",
     },
     {
       label: "Team Network",
       value: totalTeams,
       sublabel: `${totalUsers} player accounts`,
       icon: <Users className="h-5 w-5" />,
-      tone: "text-fuchsia-300",
+      tone: "text-primary",
     },
     {
       label: "Today’s Schedule",
       value: scheduledToday,
       sublabel: "events queued today",
       icon: <CalendarClock className="h-5 w-5" />,
-      tone: "text-emerald-300",
+      tone: "text-primary",
     },
   ];
 
@@ -136,10 +141,10 @@ export default async function AdminDashboard() {
             <div className="space-y-5">
               <div>
                 <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-rose-200">Command Snapshot</div>
-                <div className="mt-3 font-display text-3xl font-black uppercase tracking-[0.08em] text-white">
+                <div className="mt-3 font-display text-3xl font-black uppercase tracking-[0.08em] text-foreground">
                   {activeTournaments} Active
                 </div>
-                <p className="mt-2 text-sm leading-6 text-slate-300">
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {openTournaments} tournament registrations are open and {scheduledToday} tournaments are scheduled for today.
                 </p>
               </div>
@@ -156,14 +161,14 @@ export default async function AdminDashboard() {
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {commandCards.map((card) => (
           <SurfaceCard key={card.label} className="group overflow-hidden">
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-white/8 via-transparent to-transparent opacity-80" />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-foreground/5 via-transparent to-transparent opacity-80" />
             <div className="relative flex items-start justify-between">
               <div>
-                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-slate-500">{card.label}</div>
-                <div className="mt-4 font-display text-5xl font-black uppercase tracking-[0.08em] text-white">{card.value}</div>
-                <div className="mt-2 text-sm text-slate-400">{card.sublabel}</div>
+                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-muted-foreground">{card.label}</div>
+                <div className="mt-4 font-display text-5xl font-black uppercase tracking-[0.08em] text-foreground">{card.value}</div>
+                <div className="mt-2 text-sm text-muted-foreground">{card.sublabel}</div>
               </div>
-              <div className={`rounded-2xl border border-white/10 bg-white/6 p-3 ${card.tone}`}>{card.icon}</div>
+              <div className={`rounded-2xl border border-border bg-muted p-3 ${card.tone}`}>{card.icon}</div>
             </div>
           </SurfaceCard>
         ))}
@@ -171,31 +176,31 @@ export default async function AdminDashboard() {
 
       <div className="grid gap-6 xl:grid-cols-[1.35fr_0.95fr]">
         <SurfaceCard className="p-0">
-          <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+          <div className="flex items-center justify-between border-b border-border px-5 py-5">
             <div>
-              <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-cyan-300">Tournament Queue</div>
-              <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">Newest tournament launches</h2>
+              <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Tournament Queue</div>
+              <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">Newest tournament launches</h2>
             </div>
-            <Link href="/admin/tournaments" className="text-sm font-bold text-slate-400 transition-colors hover:text-white">
+            <Link href="/admin/tournaments" className="text-sm font-bold text-muted-foreground transition-colors hover:text-foreground">
               Open all
             </Link>
           </div>
-          <div className="divide-y divide-white/8">
+          <div className="divide-y divide-border">
             {recentTournaments.map((tournament) => {
               const admin = tournament.admins[0]?.user;
               return (
                 <div key={tournament.id} className="grid gap-4 px-5 py-5 md:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,0.7fr))]">
                   <div className="min-w-0">
-                    <div className="truncate font-display text-2xl font-black uppercase tracking-[0.06em] text-white">{tournament.title}</div>
+                    <div className="truncate font-display text-2xl font-black uppercase tracking-[0.06em] text-foreground">{tournament.title}</div>
                     <div className="mt-2 flex flex-wrap gap-2 text-[0.62rem] font-black uppercase tracking-[0.18em]">
-                      <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-200">
+                      <span className="rounded-full border bg-primary/15 border-primary/15 bg-primary/10 px-3 py-1 text-primary/80">
                         {getGameModeLabel(tournament.gameMode)}
                       </span>
-                      <span className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-slate-300">
+                      <span className="rounded-full border border-border bg-muted px-3 py-1 text-muted-foreground">
                         {getTournamentFormatLabel(tournament.format)}
                       </span>
                     </div>
-                    <div className="mt-3 text-sm text-slate-400">
+                    <div className="mt-3 text-sm text-muted-foreground">
                       Hosted by {admin?.name || admin?.email?.split("@")[0] || "Community Heroes"}
                     </div>
                   </div>
@@ -218,13 +223,13 @@ export default async function AdminDashboard() {
         </SurfaceCard>
 
         <div className="grid gap-6">
-          <SurfaceCard tone="blue">
+          <SurfaceCard tone="gold">
             <div className="mb-5 flex items-center justify-between">
               <div>
-                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-cyan-300">Operations Focus</div>
-                <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">What needs attention</h2>
+                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Operations Focus</div>
+                <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">What needs attention</h2>
               </div>
-              <Clock3 className="h-5 w-5 text-cyan-300" />
+              <Clock3 className="h-5 w-5 text-primary" />
             </div>
             <div className="space-y-3">
               <OpsAlert
@@ -249,22 +254,22 @@ export default async function AdminDashboard() {
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-rose-200">Recent Access</div>
-                <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">Newest accounts</h2>
+                <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">Newest accounts</h2>
               </div>
               <Users className="h-5 w-5 text-rose-200" />
             </div>
             <div className="space-y-3">
               {recentUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+                <div key={user.id} className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-4">
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-bold text-white">{user.name || user.email?.split("@")[0] || "Unnamed User"}</div>
-                    <div className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-500">{user.role}</div>
+                    <div className="truncate text-sm font-bold text-foreground">{user.name || user.email?.split("@")[0] || "Unnamed User"}</div>
+                    <div className="mt-1 text-xs uppercase tracking-[0.18em] text-muted-foreground">{user.role}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-bold text-slate-300">
+                    <div className="text-xs font-bold text-muted-foreground">
                       {user.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </div>
-                    <div className="mt-1 text-[0.62rem] uppercase tracking-[0.18em] text-slate-500">Joined</div>
+                    <div className="mt-1 text-[0.62rem] uppercase tracking-[0.18em] text-muted-foreground">Joined</div>
                   </div>
                 </div>
               ))}
@@ -273,7 +278,7 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <QuickLink
           href="/admin/users"
           icon={<UserCog className="h-5 w-5" />}
@@ -288,9 +293,27 @@ export default async function AdminDashboard() {
         />
         <QuickLink
           href="/admin/tournaments"
-          icon={<Swords className="h-5 w-5" />}
-          title="Bracket Operations"
+          icon={<Trophy className="h-5 w-5" />}
+          title="Tournament Operations"
           description="Jump into tournament editing, match oversight, and launch preparation without digging through tabs."
+        />
+        <QuickLink
+          href="/admin/teams"
+          icon={<Users className="h-5 w-5" />}
+          title="Team Rosters"
+          description="Monitor active squads, disband teams violating rules, and audit rosters."
+        />
+        <QuickLink
+          href="/admin/scrims"
+          icon={<Swords className="h-5 w-5" />}
+          title="Scrimmage Oversight"
+          description="Track community scrimmage matches, review scores, and moderate scrim requests."
+        />
+        <QuickLink
+          href="/admin/feed"
+          icon={<MessageSquare className="h-5 w-5" />}
+          title="Arena Feed Moderation"
+          description="Moderate community posts and comments, remove spam, and keep communications clean."
         />
       </div>
     </PageShell>
@@ -300,23 +323,23 @@ export default async function AdminDashboard() {
 function DashboardCell({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="min-w-0">
-      <div className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-slate-500">{label}</div>
-      <div className="mt-2 truncate text-sm font-bold text-white">{value}</div>
+      <div className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-muted-foreground">{label}</div>
+      <div className="mt-2 truncate text-sm font-bold text-foreground">{value}</div>
     </div>
   );
 }
 
 function StatusRow({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+    <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="rounded-xl border border-white/10 bg-white/6 p-2 text-primary">{icon}</div>
+        <div className="rounded-xl border border-border bg-muted p-2 text-primary">{icon}</div>
         <div>
-          <div className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-slate-500">{label}</div>
-          <div className="mt-1 text-sm font-bold text-white">{value}</div>
+          <div className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+          <div className="mt-1 text-sm font-bold text-foreground">{value}</div>
         </div>
       </div>
-      <Activity className="h-4 w-4 text-emerald-300" />
+      <Activity className="h-4 w-4 text-primary" />
     </div>
   );
 }
@@ -332,16 +355,16 @@ function OpsAlert({
 }) {
   const toneStyles = {
     gold: "border-primary/20 bg-primary/8 text-primary",
-    blue: "border-cyan-300/20 bg-cyan-300/8 text-cyan-200",
+    blue: "bg-primary/15 border-primary/15 bg-primary/8 text-primary/80",
     danger: "border-rose-300/20 bg-rose-300/8 text-rose-200",
   } as const;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-2xl border border-border bg-muted/40 p-4">
       <div className={`inline-flex rounded-full border px-3 py-1 text-[0.58rem] font-black uppercase tracking-[0.2em] ${toneStyles[tone]}`}>
         {title}
       </div>
-      <p className="mt-3 text-sm leading-7 text-slate-300">{description}</p>
+      <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -362,15 +385,17 @@ function QuickLink({
       <SurfaceCard className="group h-full transition-all duration-300 hover:-translate-y-1 hover:border-primary/20">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-primary">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-muted text-primary">
               {icon}
             </div>
-            <h2 className="mt-5 font-display text-2xl font-black uppercase tracking-[0.08em] text-white">{title}</h2>
-            <p className="mt-3 text-sm leading-7 text-slate-300">{description}</p>
+            <h2 className="mt-5 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">{title}</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
           </div>
-          <ArrowRight className="h-5 w-5 text-slate-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-primary" />
+          <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1 group-hover:text-primary" />
         </div>
       </SurfaceCard>
     </Link>
   );
 }
+
+

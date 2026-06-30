@@ -96,7 +96,7 @@ export default async function TeamDetailPage({
   ];
 
   return (
-    <PageShell size="wide" tone="blue">
+    <PageShell size="wide" tone="gold">
       {/* Pending banner */}
       {isPending && (
         <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/8 px-5 py-3 text-sm font-bold text-primary">
@@ -111,7 +111,7 @@ export default async function TeamDetailPage({
         title={
           <>
             {team.name}
-            <span className="text-gradient-electric"> squad</span>
+            <span className="text-gradient-primary"> squad</span>
           </>
         }
         description={team.description || "No team description has been added yet. Captains can update this in team settings."}
@@ -151,20 +151,20 @@ export default async function TeamDetailPage({
           </div>
         }
         aside={
-          <SurfaceCard tone="blue" className="h-full min-w-[240px] p-6">
+          <SurfaceCard tone="gold" className="h-full min-w-[240px] p-6">
             <div className="relative z-10 flex h-full flex-col items-center justify-between text-center">
               <div className="flex flex-col items-center gap-4">
                 {/* Team Logo */}
-                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-cyan-400/30 bg-[#07101f] shadow-[0_0_24px_-10px_rgba(34,211,238,0.4)]">
+                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-primary/30 bg-card shadow-[0_0_24px_-10px_rgba(250,204,21,0.4)]">
                   {team.logo ? (
                     <img src={team.logo} alt={team.name} className="h-full w-full object-cover" />
                   ) : (
-                    <Shield className="h-10 w-10 text-cyan-300/60" />
+                    <Shield className="h-10 w-10 text-primary/60" />
                   )}
                 </div>
                 <div>
-                  <div className="font-display text-2xl font-black uppercase tracking-[0.08em] text-white">{team.name}</div>
-                  <div className="mt-1 text-xs text-slate-400">Est. {new Date(team.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</div>
+                  <div className="font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">{team.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">Est. {new Date(team.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</div>
                 </div>
               </div>
 
@@ -172,7 +172,7 @@ export default async function TeamDetailPage({
               {openHostedScrim && (
                 <div className="mt-5 w-full rounded-xl border border-primary/15 bg-primary/8 px-4 py-3 text-left">
                   <div className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-primary">Scrim Status</div>
-                  <div className="mt-1 text-xs font-semibold text-white leading-snug">
+                  <div className="mt-1 text-xs font-semibold text-foreground leading-snug">
                     {openHostedScrim.status === "OPEN"
                       ? `${team.name} is open for scrimmage requests.`
                       : openHostedScrim.status === "PENDING"
@@ -183,15 +183,15 @@ export default async function TeamDetailPage({
               )}
 
               {/* Captain info */}
-              <div className="mt-4 w-full border-t border-white/5 pt-4">
+              <div className="mt-4 w-full border-t border-border pt-4">
                 <div className="flex items-center justify-between">
-                  <div className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-slate-500">Captain</div>
+                  <div className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-muted-foreground">Captain</div>
                   <div className="flex items-center gap-1.5">
                     <Trophy className="h-3 w-3 text-primary" />
-                    <span className="text-xs font-bold text-white">{team.captain.rank || "Unranked"}</span>
+                    <span className="text-xs font-bold text-foreground">{team.captain.rank || "Unranked"}</span>
                   </div>
                 </div>
-                <div className="mt-1 text-sm font-semibold text-slate-200">{team.captain.name || "Unknown"}</div>
+                <div className="mt-1 text-sm font-semibold text-foreground/90">{team.captain.name || "Unknown"}</div>
               </div>
             </div>
           </SurfaceCard>
@@ -205,10 +205,10 @@ export default async function TeamDetailPage({
           <SurfaceCard>
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Users className="h-5 w-5 text-cyan-300" />
-                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">Active Roster</h2>
+                <Users className="h-5 w-5 text-primary" />
+                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-foreground">Active Roster</h2>
               </div>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+              <span className="rounded-full border border-border bg-muted/40 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                 {activeMembers.length} / 5
               </span>
             </div>
@@ -216,10 +216,10 @@ export default async function TeamDetailPage({
               {activeMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="group flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 transition-all hover:border-cyan-300/20 hover:bg-white/[0.04]"
+                  className="group flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3 transition-all hover:border-primary/20 hover:bg-muted"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#081225] text-sm font-black text-primary transition-all group-hover:border-cyan-300/30">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-border bg-background text-sm font-black text-primary transition-all group-hover:border-primary/30">
                       {member.user.image ? (
                         <img src={member.user.image} alt={member.user.name || "User"} className="h-full w-full object-cover" />
                       ) : (
@@ -227,8 +227,8 @@ export default async function TeamDetailPage({
                       )}
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-white">{member.user.name || "Unknown User"}</div>
-                      <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                      <div className="text-sm font-bold text-foreground">{member.user.name || "Unknown User"}</div>
+                      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         {member.role === "CAPTAIN" && <Trophy className="h-2.5 w-2.5 text-yellow-400" />}
                         <span className="uppercase tracking-wider">{member.role}</span>
                         <span>·</span>
@@ -254,7 +254,7 @@ export default async function TeamDetailPage({
               {!isFull && isCaptain && (
                 <Link
                   href={`/teams/${team.id}/recruit`}
-                  className="flex min-h-[60px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-white/10 bg-white/[0.01] text-slate-500 transition-all hover:border-cyan-300/30 hover:text-cyan-300"
+                  className="flex min-h-[60px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border bg-muted/40 text-muted-foreground transition-all hover:border-primary/30 hover:text-primary"
                 >
                   <UserPlus className="h-5 w-5" />
                   <span className="text-xs font-bold uppercase tracking-wider">Recruit Member</span>
@@ -268,7 +268,7 @@ export default async function TeamDetailPage({
             <SurfaceCard tone="gold">
               <div className="mb-5 flex items-center gap-3">
                 <Clock className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">
+                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-foreground">
                   Pending Requests
                 </h2>
                 <span className="ml-auto rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary border border-primary/20">
@@ -279,10 +279,10 @@ export default async function TeamDetailPage({
                 {pendingMembers.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3"
+                    className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#081225] text-sm font-bold text-white">
+                      <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-border bg-background text-sm font-bold text-foreground">
                         {member.user.image ? (
                           <img src={member.user.image} alt={member.user.name || "User"} className="h-full w-full object-cover" />
                         ) : (
@@ -290,15 +290,15 @@ export default async function TeamDetailPage({
                         )}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-white">{member.user.name}</div>
-                        <div className="text-[10px] text-slate-500">{member.user.rank || "Unranked"}</div>
+                        <div className="text-sm font-bold text-foreground">{member.user.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{member.user.rank || "Unranked"}</div>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <form action={approveMember}>
                         <input type="hidden" name="membershipId" value={member.id} />
                         <input type="hidden" name="teamId" value={team.id} />
-                        <button className="rounded-lg p-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors" title="Approve">
+                        <button className="rounded-lg p-2 bg-primary/10 text-primary hover:bg-primary/20 transition-colors" title="Approve">
                           <Check className="h-4 w-4" />
                         </button>
                       </form>
@@ -323,18 +323,18 @@ export default async function TeamDetailPage({
           <SurfaceCard>
             <div className="mb-5 flex items-center gap-3">
               <History className="h-5 w-5 text-primary" />
-              <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">Recent Matches</h2>
+              <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-foreground">Recent Matches</h2>
             </div>
             {matches.length > 0 ? (
-              <div className="divide-y divide-white/[0.04]">
+              <div className="divide-y divide-border">
                 {matches.map((match) => (
                   <div key={match.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                     <div>
-                      <div className="text-sm font-bold text-white">vs {match.opponent}</div>
-                      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-slate-500">{match.date}</div>
+                      <div className="text-sm font-bold text-foreground">vs {match.opponent}</div>
+                      <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">{match.date}</div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-sm font-bold text-slate-300">{match.score}</span>
+                      <span className="font-mono text-sm font-bold text-muted-foreground">{match.score}</span>
                       <span
                         className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${
                           match.result === "Win"
@@ -349,19 +349,19 @@ export default async function TeamDetailPage({
                 ))}
               </div>
             ) : (
-              <div className="rounded-[1.4rem] border border-dashed border-white/10 bg-white/[0.02] px-6 py-10 text-center">
-                <Swords className="mx-auto mb-3 h-8 w-8 text-slate-600" />
-                <div className="text-sm text-slate-500">No matches played yet. Challenge a team to a scrim!</div>
+              <div className="rounded-[1.4rem] border border-dashed border-border bg-muted/40 px-6 py-10 text-center">
+                <Swords className="mx-auto mb-3 h-8 w-8 text-muted-foreground/60" />
+                <div className="text-sm text-muted-foreground">No matches played yet. Challenge a team to a scrim!</div>
               </div>
             )}
           </SurfaceCard>
 
           {/* Team Chat - Members Only */}
           {isMember ? (
-            <SurfaceCard tone="blue">
+            <SurfaceCard tone="gold">
               <div className="mb-4 flex items-center gap-3">
-                <MessageSquare className="h-5 w-5 text-cyan-300" />
-                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-white">Team Chat</h2>
+                <MessageSquare className="h-5 w-5 text-primary" />
+                <h2 className="font-display text-xl font-black uppercase tracking-[0.06em] text-foreground">Team Chat</h2>
               </div>
               <div className="h-56 overflow-y-auto space-y-3 pr-1 custom-scrollbar mb-4">
                 {team.messages.length > 0 ? (
@@ -369,7 +369,7 @@ export default async function TeamDetailPage({
                     const isMe = msg.user.email === session?.user?.email;
                     return (
                       <div key={msg.id} className={`flex gap-2.5 ${isMe ? "flex-row-reverse" : ""}`}>
-                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#081225] text-xs font-black text-primary">
+                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-background text-xs font-black text-primary">
                           {msg.user.image ? (
                             <img src={msg.user.image} alt="User" className="h-full w-full object-cover rounded-lg" />
                           ) : (
@@ -377,14 +377,14 @@ export default async function TeamDetailPage({
                           )}
                         </div>
                         <div className={`flex flex-col max-w-[80%] ${isMe ? "items-end" : "items-start"}`}>
-                          <span className="mb-1 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                          <span className="mb-1 text-[9px] font-black uppercase tracking-wider text-muted-foreground">
                             {msg.user.name} · {msg.createdAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
                           <div
                             className={`rounded-xl px-3 py-2 text-sm leading-relaxed ${
                               isMe
                                 ? "bg-primary text-black rounded-tr-none"
-                                : "bg-white/5 text-slate-200 border border-white/5 rounded-tl-none"
+                                : "bg-background text-foreground/90 border border-border rounded-tl-none"
                             }`}
                           >
                             {msg.content}
@@ -394,7 +394,7 @@ export default async function TeamDetailPage({
                     );
                   })
                 ) : (
-                  <div className="flex h-full items-center justify-center text-xs text-slate-500">
+                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
                     No messages yet — say hello to your squad!
                   </div>
                 )}
@@ -405,7 +405,7 @@ export default async function TeamDetailPage({
                   type="text"
                   name="content"
                   placeholder="Message your team..."
-                  className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-primary/50 transition-colors"
+                  className="flex-1 rounded-xl border border-border bg-background px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/60 outline-none focus:border-primary/50 transition-colors"
                   required
                 />
                 <button

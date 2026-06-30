@@ -24,6 +24,12 @@ export async function joinTournament(prevState: any, formData: FormData) {
     include: { participants: true }
   });
   if (!tournament) return { ok: false, message: "Tournament not found." };
+  const isCreatorAdmin = await prisma.tournamentAdmin.findFirst({
+    where: { tournamentId, userId: user.id, role: "ADMIN" }
+  });
+  if (isCreatorAdmin) {
+    return { ok: false, message: "Tournament hosts are restricted from registering for their own tournaments." };
+  }
   
   // 🛡️ Region-Lock Gatekeeper
   if ((tournament as any).locationRestriction) {
@@ -120,6 +126,7 @@ export async function joinTournament(prevState: any, formData: FormData) {
   }
 
   revalidatePath(`/tournaments/${tournamentId}`);
+  revalidatePath(`/t/${tournamentId}`);
   revalidatePath(`/admin`);
   
   return { ok: true, message: "Successfully registered! Welcome to the arena." };

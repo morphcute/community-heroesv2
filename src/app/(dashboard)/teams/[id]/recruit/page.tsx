@@ -5,7 +5,7 @@ import { PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
 import { Users, Search, Target, Shield, ChevronLeft, ChevronRight } from "lucide-react";
 import RoleDisplay from "@/components/RoleDisplay";
 import { inviteMember } from "../../actions";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 export default async function TeamRecruitPage({
   params,
@@ -18,7 +18,7 @@ export default async function TeamRecruitPage({
   const resolvedSearchParams = await searchParams;
   const session = await auth();
 
-  if (!session?.user?.email) return null;
+  if (!session?.user?.email) redirect("/login");
 
   const team = await prisma.team.findUnique({
     where: { id },
@@ -69,7 +69,7 @@ export default async function TeamRecruitPage({
   });
 
   return (
-    <PageShell size="wide" tone="blue">
+    <PageShell size="wide" tone="gold">
       <Link href={`/teams/${id}`} className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors mb-4">
         <ChevronLeft className="h-4 w-4" /> Back to {team.name}
       </Link>

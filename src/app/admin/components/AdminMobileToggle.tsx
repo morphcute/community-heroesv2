@@ -8,7 +8,7 @@ export function AdminMobileToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all active:scale-95"
+      className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-all active:scale-95"
       aria-label="Toggle sidebar"
     >
       <Menu className="w-6 h-6" />

@@ -11,6 +11,7 @@ import {
   CheckCheck, Camera,
 } from "lucide-react";
 import { createPost, addComment, toggleReaction } from "./actions";
+import { sendFriendRequest } from "@/app/(dashboard)/chat/actions";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,11 @@ type Post = {
 interface FeedClientProps {
   initialPosts: Post[];
   currentUserId: string;
+  trendingTags: { tag: string; count: string }[];
+  suggestedPlayers: { id: string; name: string; rank: string; mutual: number }[];
+  activePlayers: number;
+  scrimsToday: number;
+  tournamentsLive: number;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -99,7 +105,7 @@ const getInitials = (name: string | null): string => {
 // ─── Reaction Config ──────────────────────────────────────────────────────────
 
 const reactionConfig = [
-  { type: "LIKE",   label: "Like",      emoji: "👍", icon: ThumbsUp, color: "text-blue-400",   bg: "bg-blue-500/10 border-blue-500/30",   glow: "shadow-blue-500/20" },
+  { type: "LIKE",   label: "Like",      emoji: "👍", icon: ThumbsUp, color: "text-primary", bg: "bg-primary/10 border-primary/30", glow: "shadow-primary/20" },
   { type: "LOVE",   label: "Love",      emoji: "❤️", icon: Heart,    color: "text-rose-400",   bg: "bg-rose-500/10 border-rose-500/30",   glow: "shadow-rose-500/20" },
   { type: "FIRE",   label: "Fire",      emoji: "🔥", icon: Flame,    color: "text-amber-400",  bg: "bg-amber-500/10 border-amber-500/30", glow: "shadow-amber-500/20" },
   { type: "TROPHY", label: "Champion",  emoji: "🏆", icon: Trophy,   color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-yellow-500/20" },
@@ -151,60 +157,6 @@ function Avatar({
   );
 }
 
-// ─── Story Card ───────────────────────────────────────────────────────────────
-
-const storyColors = [
-  "from-violet-600 to-purple-900",
-  "from-amber-500 to-orange-900",
-  "from-rose-500 to-red-900",
-  "from-cyan-500 to-blue-900",
-  "from-emerald-500 to-green-900",
-];
-
-function StoriesRow({ userId }: { userId: string }) {
-  const stories = [
-    { id: "a", label: "Your Story", isOwn: true, icon: <Camera className="w-5 h-5" /> },
-    { id: "b", label: "ShadowBlade", gradient: storyColors[0], tag: "MVP Play" },
-    { id: "c", label: "NightHunter", gradient: storyColors[1], tag: "Tournament W" },
-    { id: "d", label: "IronClaw", gradient: storyColors[2], tag: "5-Star Scrim" },
-    { id: "e", label: "StarViper", gradient: storyColors[3], tag: "Rank Up!" },
-    { id: "f", label: "BlazePeak", gradient: storyColors[4], tag: "New Build" },
-  ];
-
-  return (
-    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
-      {stories.map((story) => (
-        <button
-          key={story.id}
-          className="flex-shrink-0 w-[90px] sm:w-[100px] rounded-2xl overflow-hidden relative group cursor-pointer"
-          style={{ aspectRatio: "9/14" }}
-        >
-          {story.isOwn ? (
-            <div className="absolute inset-0 bg-[#0e0e0e] border border-primary/20 flex flex-col items-center justify-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-primary/10 border-2 border-primary/40 flex items-center justify-center text-primary">
-                <Camera className="w-4 h-4" />
-              </div>
-              <span className="text-[10px] font-bold text-gray-400">Add Story</span>
-            </div>
-          ) : (
-            <>
-              <div className={`absolute inset-0 bg-gradient-to-b ${story.gradient} opacity-70`} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <div className="absolute top-2.5 left-2.5 w-8 h-8 rounded-full bg-white/20 border-2 border-primary/60 flex items-center justify-center text-[11px] font-black text-white">
-                {story.label.charAt(0)}
-              </div>
-              <div className="absolute bottom-2 left-0 right-0 px-2 text-center">
-                <div className="text-[9px] font-bold text-primary/80 uppercase tracking-wider">{story.tag}</div>
-                <div className="text-[8px] text-gray-300 truncate">{story.label}</div>
-              </div>
-            </>
-          )}
-          <div className="absolute inset-0 ring-2 ring-primary/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-        </button>
-      ))}
-    </div>
-  );
-}
 
 // ─── Publisher Box ────────────────────────────────────────────────────────────
 
@@ -245,7 +197,7 @@ function PublisherBox({
   };
 
   return (
-    <div className="bg-[#0d0d0f] border border-white/8 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-white/12">
+    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-border/80">
       {/* Top strip accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
@@ -264,7 +216,7 @@ function PublisherBox({
               onFocus={() => setFocused(true)}
               placeholder="What's happening in the arena? Share a highlight, scrim result, or team update..."
               rows={focused ? 3 : 1}
-              className="w-full bg-transparent text-[13px] sm:text-sm text-white placeholder:text-gray-600 outline-none resize-none leading-relaxed transition-all duration-200 min-h-[36px]"
+              className="w-full bg-transparent text-[13px] sm:text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed transition-all duration-200 min-h-[36px]"
               maxLength={2000}
               style={{ overflow: "hidden" }}
             />
@@ -282,7 +234,7 @@ function PublisherBox({
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
                       placeholder="Paste image URL (Imgur, Unsplash, etc.)..."
-                      className="w-full bg-black/40 border border-white/10 focus:border-primary/40 rounded-xl px-4 py-2.5 text-[12px] text-white placeholder:text-gray-600 outline-none transition-all pr-10"
+                      className="w-full bg-background/40 border border-border focus:border-primary/40 rounded-xl px-4 py-2.5 text-[12px] text-foreground placeholder:text-muted-foreground outline-none transition-all pr-10"
                     />
                     <button
                       onClick={() => { setImageUrl(""); setShowImageInput(false); }}
@@ -299,7 +251,7 @@ function PublisherBox({
                     <img src={imageUrl} className="w-full object-cover max-h-56" alt="Preview" />
                     <button
                       onClick={() => setImageUrl("")}
-                      className="absolute top-2 right-2 bg-black/70 hover:bg-black p-1.5 rounded-full text-white border border-white/10 transition-colors"
+                      className="absolute top-2 right-2 bg-black/70 hover:bg-black p-1.5 rounded-full text-white border border-border transition-colors"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -321,31 +273,31 @@ function PublisherBox({
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
                         showImageInput || imageUrl
                           ? "bg-primary/10 border border-primary/25 text-primary"
-                          : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
                       }`}
                     >
                       <ImageIcon className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Photo</span>
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
                       <Swords className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Scrim</span>
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
                       <Hash className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">Tag</span>
                     </button>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-gray-600 border border-white/5 rounded-lg px-2.5 py-1">
+                    <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground border border-border rounded-lg px-2.5 py-1">
                       <Globe className="w-3 h-3" />
                       <span>Public</span>
                     </div>
                     <button
                       onClick={handlePublish}
                       disabled={!content.trim() || publishing}
-                      className="px-5 py-2 bg-primary hover:bg-yellow-400 disabled:bg-white/5 disabled:text-gray-600 text-black text-[12px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center gap-2 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(250,204,21,0.15)]"
+                      className="px-5 py-2 bg-primary hover:bg-yellow-400 disabled:bg-muted disabled:text-muted-foreground text-black text-[12px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center gap-2 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(250,204,21,0.15)]"
                     >
                       {publishing ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Posting...</>
@@ -400,7 +352,7 @@ function ReactionBar({
         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-95 w-full justify-center ${
           userReaction
             ? `${userReaction.color} ${userReaction.bg} border`
-            : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted"
         }`}
       >
         {userReaction ? (
@@ -413,7 +365,7 @@ function ReactionBar({
 
       {/* Emoji picker popover */}
       {showPicker && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 flex items-center gap-1 bg-[#141418] border border-white/15 px-2 py-2 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 flex items-center gap-1 bg-popover border border-border px-2 py-2 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
           {reactionConfig.map((r) => {
             const active = hasUserReacted(r.type);
             return (
@@ -422,11 +374,11 @@ function ReactionBar({
                 onClick={() => { onReact(r.type); setShowPicker(false); }}
                 title={r.label}
                 className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-xl transition-all hover:scale-125 active:scale-95 ${
-                  active ? `${r.bg} border ${r.color} shadow-lg` : "hover:bg-white/5"
+                  active ? `${r.bg} border ${r.color} shadow-lg` : "hover:bg-muted"
                 }`}
               >
                 <span className="text-xl leading-none">{r.emoji}</span>
-                <span className={`text-[8px] font-bold ${active ? r.color : "text-gray-600"}`}>{r.label}</span>
+                <span className={`text-[8px] font-bold ${active ? r.color : "text-muted-foreground"}`}>{r.label}</span>
               </button>
             );
           })}
@@ -499,7 +451,7 @@ function PostCard({
   return (
     <article
       id={`post-${post.id}`}
-      className="bg-[#0d0d0f] border border-white/8 rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-white/12"
+      className="bg-card border border-border rounded-2xl overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-border/80"
     >
       {/* Post Header */}
       <div className="p-4 sm:p-5 pb-0">
@@ -508,7 +460,7 @@ function PostCard({
             <Avatar user={post.user} size="md" showStatus />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-black text-white text-[13px] sm:text-sm hover:text-primary transition-colors cursor-pointer truncate">
+                <span className="font-black text-foreground text-[13px] sm:text-sm hover:text-primary transition-colors cursor-pointer truncate">
                   {post.user.name || "Unknown"}
                 </span>
                 {post.user.rank && (
@@ -520,19 +472,19 @@ function PostCard({
                 )}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
-                <Globe className="w-3 h-3 text-gray-600" />
-                <span className="text-[11px] text-gray-600">{getRelativeTime(post.createdAt)}</span>
+                <Globe className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[11px] text-muted-foreground">{getRelativeTime(post.createdAt)}</span>
               </div>
             </div>
           </div>
-          <button className="flex-shrink-0 p-2 rounded-xl text-gray-600 hover:text-white hover:bg-white/5 transition-all">
+          <button className="flex-shrink-0 p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all">
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
 
         {/* Post Body */}
         <div className="mt-4 space-y-3">
-          <p className="text-[13px] sm:text-sm leading-relaxed text-gray-200 whitespace-pre-wrap break-words">
+          <p className="text-[13px] sm:text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap break-words">
             {post.content}
           </p>
         </div>
@@ -540,7 +492,7 @@ function PostCard({
 
       {/* Image */}
       {post.imageUrl && (
-        <div className="mt-4 mx-0 bg-black/40 border-y border-white/5 overflow-hidden max-h-[420px]">
+        <div className="mt-4 mx-0 bg-background/40 border-y border-border overflow-hidden max-h-[420px]">
           <img
             src={post.imageUrl}
             className="w-full object-cover max-h-[420px]"
@@ -560,20 +512,20 @@ function PostCard({
                   {reactionSummary.slice(0, 3).map((r) => (
                     <div
                       key={r.type}
-                      className={`w-5 h-5 rounded-full flex items-center justify-center text-xs border border-[#0d0d0f] leading-none ${r.bg}`}
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-xs border border-card leading-none ${r.bg}`}
                     >
                       {r.emoji}
                     </div>
                   ))}
                 </div>
-                <span className="text-[11px] text-gray-500 font-medium">{totalReactions}</span>
+                <span className="text-[11px] text-muted-foreground font-medium">{totalReactions}</span>
               </>
             )}
           </div>
           {totalComments > 0 && (
             <button
               onClick={() => setCommentsOpen(!commentsOpen)}
-              className="text-[11px] text-gray-500 hover:text-gray-300 font-medium transition-colors"
+              className="text-[11px] text-muted-foreground hover:text-foreground font-medium transition-colors"
             >
               {totalComments} {totalComments === 1 ? "comment" : "comments"}
             </button>
@@ -582,7 +534,7 @@ function PostCard({
       )}
 
       {/* Divider */}
-      <div className="mx-4 sm:mx-5 h-px bg-white/5" />
+      <div className="mx-4 sm:mx-5 h-px bg-border" />
 
       {/* Action Buttons */}
       <div className="px-2 sm:px-4 py-1 grid grid-cols-3 gap-1">
@@ -593,7 +545,7 @@ function PostCard({
           className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold transition-all justify-center ${
             commentsOpen
               ? "text-primary bg-primary/10 border border-primary/20"
-              : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
           }`}
         >
           <MessageSquare className="w-4 h-4" />
@@ -605,7 +557,7 @@ function PostCard({
           className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-bold transition-all justify-center ${
             shareState === "copied"
               ? "text-green-400 bg-green-500/10 border border-green-500/20"
-              : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
           }`}
         >
           {shareState === "copied" ? (
@@ -618,7 +570,7 @@ function PostCard({
 
       {/* Comments Drawer */}
       {commentsOpen && (
-        <div className="border-t border-white/5">
+        <div className="border-t border-border">
           {/* Existing comments */}
           {post.comments.length > 0 && (
             <div className="px-4 sm:px-5 pt-4 space-y-3 max-h-72 overflow-y-auto custom-scrollbar">
@@ -626,16 +578,16 @@ function PostCard({
                 <div key={c.id} className="flex gap-2.5 items-start group">
                   <Avatar user={c.user} size="sm" />
                   <div className="flex-1 min-w-0">
-                    <div className="bg-[#141418] border border-white/5 rounded-2xl rounded-tl-sm px-3.5 py-2.5 inline-block max-w-full">
+                    <div className="bg-muted border border-border rounded-2xl rounded-tl-sm px-3.5 py-2.5 inline-block max-w-full">
                       <div className="flex items-baseline gap-2 flex-wrap mb-1">
-                        <span className="font-black text-white text-[11px]">{c.user.name || "User"}</span>
+                        <span className="font-black text-foreground text-[11px]">{c.user.name || "User"}</span>
                         {c.user.rank && (
                           <span className={`text-[9px] font-bold ${getRankColor(c.user.rank)}`}>{c.user.rank}</span>
                         )}
                       </div>
-                      <p className="text-[12px] text-gray-300 leading-relaxed break-words">{c.content}</p>
+                      <p className="text-[12px] text-foreground/80 leading-relaxed break-words">{c.content}</p>
                     </div>
-                    <div className="mt-1 ml-2 text-[10px] text-gray-700">{getRelativeTime(c.createdAt)}</div>
+                    <div className="mt-1 ml-2 text-[10px] text-muted-foreground">{getRelativeTime(c.createdAt)}</div>
                   </div>
                 </div>
               ))}
@@ -645,7 +597,7 @@ function PostCard({
           {/* Comment input */}
           <div className="p-4 sm:p-5 pt-3 flex gap-2.5 items-center">
             <Avatar user={{ name: "Me", image: null }} size="sm" />
-            <div className="flex-1 flex items-center gap-2 bg-[#141418] border border-white/8 focus-within:border-primary/30 focus-within:shadow-[0_0_12px_rgba(250,204,21,0.06)] rounded-2xl px-4 py-2 transition-all">
+            <div className="flex-1 flex items-center gap-2 bg-muted border border-border focus-within:border-primary/30 focus-within:shadow-[0_0_12px_rgba(250,204,21,0.06)] rounded-2xl px-4 py-2 transition-all">
               <input
                 ref={commentInputRef}
                 type="text"
@@ -658,7 +610,7 @@ function PostCard({
                   }
                 }}
                 placeholder="Write a comment..."
-                className="flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-gray-600 min-w-0"
+                className="flex-1 bg-transparent text-[12px] text-foreground outline-none placeholder:text-muted-foreground min-w-0"
               />
               <button
                 onClick={handleComment}
@@ -666,7 +618,7 @@ function PostCard({
                 className={`p-1.5 rounded-lg transition-all flex-shrink-0 ${
                   commentText.trim() && !commenting
                     ? "text-primary hover:bg-primary/10 cursor-pointer"
-                    : "text-gray-700 cursor-not-allowed"
+                    : "text-muted-foreground/50 cursor-not-allowed"
                 }`}
               >
                 {commenting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -681,78 +633,106 @@ function PostCard({
 
 // ─── Right Sidebar ────────────────────────────────────────────────────────────
 
-const trendingTags = [
-  { tag: "MLBB_Scrim", count: "1.2k" },
-  { tag: "TournamentSZN", count: "987" },
-  { tag: "MythicPush", count: "743" },
-  { tag: "CH_Ranked", count: "612" },
-  { tag: "SoloCarry", count: "451" },
-];
+function RightSidebar({
+  trendingTags,
+  suggestedPlayers,
+  activePlayers,
+  scrimsToday,
+  tournamentsLive,
+}: {
+  trendingTags: { tag: string; count: string }[];
+  suggestedPlayers: { id: string; name: string; rank: string; mutual: number }[];
+  activePlayers: number;
+  scrimsToday: number;
+  tournamentsLive: number;
+}) {
+  const [friendStatus, setFriendStatus] = useState<Record<string, string>>({});
 
-const suggestedPlayers = [
-  { name: "ShadowVeil", rank: "Mythic", mutual: 4 },
-  { name: "BladeRunner", rank: "Legend", mutual: 2 },
-  { name: "NightStrike", rank: "Grandmaster", mutual: 7 },
-];
+  const handleFollow = async (id: string) => {
+    setFriendStatus((prev) => ({ ...prev, [id]: "sending" }));
+    try {
+      const res = await sendFriendRequest(id);
+      if (res.ok) {
+        setFriendStatus((prev) => ({ ...prev, [id]: "sent" }));
+      } else {
+        alert(res.message);
+        setFriendStatus((prev) => ({ ...prev, [id]: "" }));
+      }
+    } catch (err) {
+      console.error(err);
+      setFriendStatus((prev) => ({ ...prev, [id]: "" }));
+    }
+  };
 
-function RightSidebar() {
   return (
     <div className="space-y-5">
       {/* Trending Section */}
-      <div className="bg-[#0d0d0f] border border-white/8 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="px-4 pt-4 pb-2 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" />
-          <span className="text-[11px] font-black text-white uppercase tracking-wider">Trending in CH</span>
+          <span className="text-[11px] font-black text-foreground uppercase tracking-wider">Trending in CH</span>
         </div>
         <div className="px-2 pb-2">
-          {trendingTags.map((item, i) => (
-            <button
-              key={item.tag}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors text-left group"
-            >
-              <div>
-                <div className="text-[10px] text-gray-600 font-medium">#{i + 1} · Esports</div>
-                <div className="text-[12px] font-black text-white group-hover:text-primary transition-colors">
-                  #{item.tag}
+          {trendingTags.length === 0 ? (
+            <div className="px-4 py-6 text-center text-xs text-muted-foreground">No trending hashtags yet.</div>
+          ) : (
+            trendingTags.map((item, i) => (
+              <button
+                key={item.tag}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-muted transition-colors text-left group"
+              >
+                <div>
+                  <div className="text-[10px] text-muted-foreground font-medium">#{i + 1} · Esports</div>
+                  <div className="text-[12px] font-black text-foreground group-hover:text-primary transition-colors">
+                    #{item.tag}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">{item.count}</div>
                 </div>
-                <div className="text-[10px] text-gray-600">{item.count} posts</div>
-              </div>
-              <Hash className="w-4 h-4 text-gray-700 group-hover:text-primary/60 transition-colors" />
-            </button>
-          ))}
+                <Hash className="w-4 h-4 text-muted-foreground group-hover:text-primary/60 transition-colors" />
+              </button>
+            ))
+          )}
         </div>
       </div>
 
       {/* Suggested Players */}
-      <div className="bg-[#0d0d0f] border border-white/8 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden">
         <div className="px-4 pt-4 pb-2 flex items-center gap-2">
           <UserPlus className="w-4 h-4 text-primary" />
-          <span className="text-[11px] font-black text-white uppercase tracking-wider">Players to Follow</span>
+          <span className="text-[11px] font-black text-foreground uppercase tracking-wider">Players to Follow</span>
         </div>
         <div className="px-2 pb-3">
-          {suggestedPlayers.map((p) => (
-            <div
-              key={p.name}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
-            >
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-amber-900/40 border border-primary/20 flex items-center justify-center text-[11px] font-black text-primary flex-shrink-0">
-                {p.name.charAt(0)}
+          {suggestedPlayers.length === 0 ? (
+            <div className="px-4 py-6 text-center text-xs text-muted-foreground">No suggested players.</div>
+          ) : (
+            suggestedPlayers.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted transition-colors"
+              >
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-amber-900/40 border border-primary/20 flex items-center justify-center text-[11px] font-black text-primary flex-shrink-0">
+                  {p.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12px] font-black text-foreground truncate">{p.name}</div>
+                  <div className={`text-[10px] font-bold ${getRankColor(p.rank)}`}>{p.rank}</div>
+                  <div className="text-[10px] text-muted-foreground">{p.mutual} mutual friends</div>
+                </div>
+                <button
+                  disabled={friendStatus[p.id] === "sending" || friendStatus[p.id] === "sent"}
+                  onClick={() => handleFollow(p.id)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/25 text-primary text-[10px] font-black uppercase tracking-wide hover:bg-primary/20 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {friendStatus[p.id] === "sending" ? "..." : friendStatus[p.id] === "sent" ? "Sent" : "Add"}
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-black text-white truncate">{p.name}</div>
-                <div className={`text-[10px] font-bold ${getRankColor(p.rank)}`}>{p.rank}</div>
-                <div className="text-[10px] text-gray-600">{p.mutual} mutual friends</div>
-              </div>
-              <button className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/25 text-primary text-[10px] font-black uppercase tracking-wide hover:bg-primary/20 transition-colors">
-                Follow
-              </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
       {/* Arena Status widget */}
-      <div className="bg-[#0d0d0f] border border-primary/15 rounded-2xl overflow-hidden">
+      <div className="bg-card border border-primary/15 rounded-2xl overflow-hidden">
         <div className="h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
         <div className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -761,16 +741,16 @@ function RightSidebar() {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-500">Active Players</span>
-              <span className="text-white font-bold">142</span>
+              <span className="text-muted-foreground">Active Players</span>
+              <span className="text-foreground font-bold">{activePlayers}</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-500">Scrims Today</span>
-              <span className="text-primary font-bold">23</span>
+              <span className="text-muted-foreground">Scrims Today</span>
+              <span className="text-primary font-bold">{scrimsToday}</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-gray-500">Tournaments Live</span>
-              <span className="text-green-400 font-bold">3</span>
+              <span className="text-muted-foreground">Tournaments Live</span>
+              <span className="text-green-400 font-bold">{tournamentsLive}</span>
             </div>
           </div>
         </div>
@@ -779,9 +759,15 @@ function RightSidebar() {
   );
 }
 
-// ─── Main Feed Client ─────────────────────────────────────────────────────────
-
-export default function FeedClient({ initialPosts, currentUserId }: FeedClientProps) {
+export default function FeedClient({
+  initialPosts,
+  currentUserId,
+  suggestedPlayers,
+  trendingTags,
+  activePlayers,
+  scrimsToday,
+  tournamentsLive,
+}: FeedClientProps) {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<"all" | "mine">("all");
 
@@ -798,12 +784,11 @@ export default function FeedClient({ initialPosts, currentUserId }: FeedClientPr
   return (
     <div className="min-h-screen w-full">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden border-b border-white/5 bg-[#08080a]">
+      <div className="relative overflow-hidden border-b border-border bg-card/40">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(250,204,21,0.07)_0%,transparent_60%)] pointer-events-none" />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
         <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex items-center gap-3 mb-3">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-[11px] font-black uppercase tracking-[0.2em]">
+            <div className="inline-flex items-center gap-2 text-primary text-[11px] font-black uppercase tracking-[0.2em]">
               <Sparkles className="w-3.5 h-3.5" />
               Arena Hub
             </div>
@@ -812,25 +797,12 @@ export default function FeedClient({ initialPosts, currentUserId }: FeedClientPr
               Live
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white mb-2">
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-foreground mb-2">
             Arena <span className="text-gradient-primary">Feed</span>
           </h1>
-          <p className="text-sm text-gray-500 max-w-xl">
+          <p className="text-sm text-muted-foreground max-w-xl">
             Share tournament highlights, scrim results, and team updates with the Community Heroes network.
           </p>
-          {/* Quick stats */}
-          <div className="flex flex-wrap gap-4 mt-5">
-            {[
-              { label: "Posts", value: initialPosts.length },
-              { label: "Reactions", value: initialPosts.reduce((a, p) => a + p.reactions.length, 0) },
-              { label: "Comments", value: initialPosts.reduce((a, p) => a + p.comments.length, 0) },
-            ].map((s) => (
-              <div key={s.label} className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-white">{s.value}</span>
-                <span className="text-[11px] text-gray-600 uppercase tracking-wider font-bold">{s.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -840,11 +812,6 @@ export default function FeedClient({ initialPosts, currentUserId }: FeedClientPr
 
           {/* CENTER COLUMN: Feed */}
           <div className="flex-1 min-w-0 space-y-4">
-
-            {/* Stories Row */}
-            <div className="bg-[#0d0d0f] border border-white/8 rounded-2xl p-4 shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
-              <StoriesRow userId={currentUserId} />
-            </div>
 
             {/* Publisher Box */}
             <PublisherBox onPublished={handleUpdate} currentUser={currentUser} />
@@ -858,13 +825,13 @@ export default function FeedClient({ initialPosts, currentUserId }: FeedClientPr
                   className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all ${
                     activeFilter === f
                       ? "bg-primary text-black shadow-[0_0_15px_rgba(250,204,21,0.2)]"
-                      : "text-gray-500 hover:text-white bg-[#0d0d0f] border border-white/8"
+                      : "text-muted-foreground hover:text-foreground bg-card border border-border"
                   }`}
                 >
                   {f === "all" ? "All Posts" : "My Posts"}
                 </button>
               ))}
-              <div className="ml-auto flex items-center gap-2 text-[10px] text-gray-600 font-bold">
+              <div className="ml-auto flex items-center gap-2 text-[10px] text-muted-foreground font-bold">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" />
                 {filteredPosts.length} posts
               </div>
@@ -872,12 +839,12 @@ export default function FeedClient({ initialPosts, currentUserId }: FeedClientPr
 
             {/* Posts */}
             {filteredPosts.length === 0 ? (
-              <div className="bg-[#0d0d0f] border border-white/8 rounded-2xl p-12 text-center">
-                <Sparkles className="w-10 h-10 text-gray-700 mx-auto mb-4" />
-                <div className="text-sm font-black text-gray-500 uppercase tracking-wider mb-2">
+              <div className="bg-card border border-border rounded-2xl p-12 text-center">
+                <Sparkles className="w-10 h-10 text-muted-foreground/60 mx-auto mb-4" />
+                <div className="text-sm font-black text-muted-foreground uppercase tracking-wider mb-2">
                   {activeFilter === "mine" ? "You haven't posted yet" : "No posts yet"}
                 </div>
-                <div className="text-[12px] text-gray-700">
+                <div className="text-[12px] text-muted-foreground/80">
                   Be the first to share an arena moment with the community!
                 </div>
               </div>
@@ -897,7 +864,7 @@ export default function FeedClient({ initialPosts, currentUserId }: FeedClientPr
             {/* Load more placeholder */}
             {filteredPosts.length > 0 && (
               <div className="text-center py-4">
-                <div className="text-[11px] text-gray-700 font-bold uppercase tracking-wider">
+                <div className="text-[11px] text-muted-foreground/60 font-bold uppercase tracking-wider">
                   · You're all caught up ·
                 </div>
               </div>
@@ -906,13 +873,25 @@ export default function FeedClient({ initialPosts, currentUserId }: FeedClientPr
 
           {/* RIGHT SIDEBAR: Only visible on xl+ */}
           <div className="hidden xl:block w-[320px] flex-shrink-0 sticky top-6">
-            <RightSidebar />
+            <RightSidebar
+              trendingTags={trendingTags}
+              suggestedPlayers={suggestedPlayers}
+              activePlayers={activePlayers}
+              scrimsToday={scrimsToday}
+              tournamentsLive={tournamentsLive}
+            />
           </div>
         </div>
 
         {/* Mobile-only Right Sidebar content (below feed) */}
         <div className="xl:hidden mt-6">
-          <RightSidebar />
+          <RightSidebar
+            trendingTags={trendingTags}
+            suggestedPlayers={suggestedPlayers}
+            activePlayers={activePlayers}
+            scrimsToday={scrimsToday}
+            tournamentsLive={tournamentsLive}
+          />
         </div>
       </div>
     </div>
