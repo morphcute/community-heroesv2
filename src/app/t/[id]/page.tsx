@@ -34,6 +34,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getSiteUrl } from "@/lib/site";
 import { updateMatchScore } from "../../(dashboard)/tournaments/actions";
+import StartTournamentButton from "@/components/StartTournamentButton";
 import JoinTournamentForm from "./JoinTournamentForm";
 import {
   getBattlefieldLabel,
@@ -374,9 +375,14 @@ export default async function TournamentDetailPage({
             <div className="flex items-center gap-4">
                 {isCreator ? (
                    <div className="flex flex-col gap-2">
-                      <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="px-8 py-3 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
-                         Manage Tournament &rarr;
-                      </Link>
+                      <div className="flex flex-wrap gap-2.5 items-center">
+                         <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="px-8 py-3 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
+                            Manage Tournament &rarr;
+                         </Link>
+                         {registrationIsOpen && (
+                            <StartTournamentButton tournamentId={tournamentData.id} />
+                         )}
+                      </div>
                       <span className="text-[10px] text-gray-400 font-medium">You are the host of this tournament</span>
                    </div>
                 ) : alreadyJoined ? (

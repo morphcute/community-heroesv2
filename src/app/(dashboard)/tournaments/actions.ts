@@ -309,3 +309,65 @@ export async function updateMatchScore(formData: FormData) {
 
   revalidatePath(`/tournaments/${tournamentId}`);
 }
+
+export async function startTournamentManual(prevState: any, formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.email) return { ok: false, message: "Unauthorized." };
+
+  const tournamentId = formData.get("tournamentId") as string;
+  if (!tournamentId) return { ok: false, message: "Tournament ID required." };
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email }
+  });
+  if (!user) return { ok: false, message: "User not found." };
+
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    include: { participants: true, admins: true }
+  });
+  if (!tournament) return { ok: false, message: "Tournament not found." };
+
+  // Verify creator/admin permission
+  const isAdmin = 
+    (session.user as any).role === "SUPERADMIN" || 
+    tournament.admins.some(a => a.userId === user.id);
+  if (!isAdmin) return { ok: false, message: "Only tournament hosts can start the tournament." };
+
+  if (tournament.status !== "REGISTRATION_OPEN" && tournament.status !== "UPCOMING") {
+    return { ok: false, message: "Tournament has already started or is completed." };
+  }
+
+  const numParticipants = tournament.participants.length;
+  if (numParticipants < 10) {
+    return { ok: false, message: `Cannot start. Minimum 10 teams required (currently ${numParticipants} registered).` };
+  }
+
+  // Update status to ONGOING
+  await prisma.tournament.update({
+    where: { id: tournamentId },
+    data: { status: "ONGOING" }
+  });
+
+  // Generate bracket
+  await generateBracket(tournamentId);
+
+  // Send notifications to all registered participants
+  const participantsWithUsers = tournament.participants.filter(p => p.userId);
+  if (participantsWithUsers.length > 0) {
+    await prisma.notification.createMany({
+      data: participantsWithUsers.map(p => ({
+        userId: p.userId!,
+        title: "Tournament Started!",
+        content: `${tournament.title} has been started by the host. Check the bracket!`,
+        link: `/tournaments/${tournament.id}?tab=bracket`
+      }))
+    });
+  }
+
+  revalidatePath(`/tournaments/${tournamentId}`);
+  revalidatePath(`/t/${tournamentId}`);
+  revalidatePath(`/admin`);
+
+  return { ok: true, message: "Tournament started successfully! Bracket generated." };
+}

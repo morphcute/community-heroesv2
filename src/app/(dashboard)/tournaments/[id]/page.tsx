@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import StartTournamentButton from "@/components/StartTournamentButton";
 import JoinTournamentForm from "./JoinTournamentForm";
 import TournamentChat from "@/components/TournamentChat";
 import { updateMatchScore } from "../actions";
@@ -264,9 +265,14 @@ export default async function TournamentDetailPage({
           <div className="flex items-center gap-4 relative">
             {isCreator ? (
               <div className="flex flex-col gap-2">
-                <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="h-12 px-8 bg-primary text-black font-black text-xs uppercase tracking-widest rounded hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
-                  Manage Tournament &rarr;
-                </Link>
+                <div className="flex flex-wrap gap-2.5 items-center">
+                  <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="h-12 px-8 bg-primary text-black font-black text-xs uppercase tracking-widest rounded hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
+                    Manage Tournament &rarr;
+                  </Link>
+                  {registrationIsOpen && (
+                    <StartTournamentButton tournamentId={tournamentData.id} />
+                  )}
+                </div>
                 <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">You are the host of this tournament</span>
               </div>
             ) : alreadyJoined ? (
