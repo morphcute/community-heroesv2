@@ -100,12 +100,13 @@
 
   html {
     scroll-behavior: smooth;
+    background: var(--background);
   }
 
   body {
     min-height: 100vh;
     overflow-x: hidden;
-    background: var(--background);
+    background: transparent;
     color: var(--foreground);
     /* Outfit for body — clean, modern, highly legible */
     font-family: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
