@@ -19,6 +19,13 @@ export async function joinTournament(prevState: any, formData: FormData) {
   });
   if (!user) return { ok: false, message: "User not found." };
 
+  if (!user.mlbbId || !user.server) {
+    return {
+      ok: false,
+      message: "Profile Incomplete: You must set your MLBB ID and Server in your Profile before joining a tournament."
+    };
+  }
+
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
     include: { participants: true }

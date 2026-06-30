@@ -47,6 +47,10 @@ export async function createTeam(formData: FormData) {
 
   if (!user) throw new Error("User not found");
   
+  if (!user.mlbbId || !user.server) {
+    throw new Error("Profile Incomplete: You must set your MLBB ID and Server in your Profile before creating a team.");
+  }
+  
   if (user.teamMembers.length > 0) {
     throw new Error("You are already in a team");
   }
@@ -85,6 +89,10 @@ export async function joinTeam(formData: FormData) {
   });
 
   if (!user) throw new Error("User not found");
+
+  if (!user.mlbbId || !user.server) {
+    throw new Error("Profile Incomplete: You must set your MLBB ID and Server in your Profile before joining a team.");
+  }
 
   if (user.teamMembers.length > 0) {
     throw new Error("You are already in a team");
