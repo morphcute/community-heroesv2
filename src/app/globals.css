@@ -895,7 +895,7 @@
      Horizontal scroll rail of filter pills for tabs (tournaments / events /
      leaderboard). Scrolls on overflow, hides scrollbar, gaps evenly. */
   .mobile-pill-rail {
-    @apply flex w-full gap-2 overflow-x-auto pb-1;
+    @apply flex w-full gap-2 overflow-x-auto sm:flex-wrap sm:overflow-visible pb-1;
     scrollbar-width: none;
   }
   .mobile-pill-rail::-webkit-scrollbar {
