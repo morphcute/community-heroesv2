@@ -65,18 +65,7 @@ import { acceptInvite, declineInvite } from "../actions";
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.3fr)_360px]">
-        <SurfaceCard>
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-muted text-primary">
-              <User className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-slate-500">Player Roles</div>
-              <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">Preferred lanes</h2>
-            </div>
-          </div>
-          <RoleDisplay roles={user?.roles as string[] || []} />
-        </SurfaceCard>
+        <RoleDisplay roles={user?.roles as string[] || []} />
 
         <div className="space-y-6">
           {invitedMemberships.length > 0 && (

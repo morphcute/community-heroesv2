@@ -330,10 +330,10 @@
     font-size: 0.85rem;
   }
   .page-hero__title {
-    @apply text-[2rem] leading-[1.1] font-black uppercase tracking-tight text-foreground sm:text-[2.8rem] lg:text-[3.6rem];
+    @apply text-[1.65rem] leading-[1.15] font-black uppercase tracking-tight text-foreground sm:text-[2.8rem] lg:text-[3.6rem];
   }
   .page-hero__description {
-    @apply max-w-2xl text-[0.95rem] leading-relaxed;
+    @apply max-w-2xl text-[0.9rem] sm:text-[0.95rem] leading-relaxed;
     color: var(--text-secondary);
   }
   .page-hero__stats {

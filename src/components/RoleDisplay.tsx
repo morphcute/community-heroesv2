@@ -43,22 +43,22 @@ export default function RoleDisplay({ roles }: { roles: string[] }) {
   const [showEdit, setShowEdit] = useState(false);
 
   return (
-    <div className="hud-panel mb-6">
-      <div className="flex items-start justify-between gap-4">
+    <div className="hud-panel">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <div className="text-[0.58rem] font-black uppercase tracking-[0.2em] text-slate-500">
+          <div className="text-[0.58rem] font-black uppercase tracking-[0.25em] text-slate-500">
             Selected Lanes
           </div>
-          <h3 className="mt-2 font-display text-xl font-black uppercase tracking-[0.06em] text-foreground">
+          <h3 className="mt-1.5 font-display text-lg sm:text-xl font-black uppercase tracking-[0.06em] text-foreground">
             Your comfort picks
           </h3>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground">
             Show teammates where you perform best before queue or tournament registration.
           </p>
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-2 text-[0.62rem] font-black uppercase tracking-[0.16em] text-primary transition-all hover:border-primary/35 hover:bg-primary/14"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2.5 text-[0.62rem] font-black uppercase tracking-[0.16em] text-primary transition-all hover:border-primary/35 hover:bg-primary/14 w-full sm:w-auto"
           onClick={() => setShowEdit((v) => !v)}
         >
           <PencilLine className="h-3.5 w-3.5" />
@@ -67,7 +67,7 @@ export default function RoleDisplay({ roles }: { roles: string[] }) {
         </button>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3">
         {roles.map((r) => {
           const Icon = roleIcons[r] || (() => null);
           const meta = roleMeta[r] || {
@@ -79,17 +79,17 @@ export default function RoleDisplay({ roles }: { roles: string[] }) {
           return (
             <div
               key={r}
-              className={`rounded-[1.1rem] border px-3 py-3 shadow-[0_18px_40px_-32px_rgba(0,0,0,0.8)] ${meta.tone}`}
+              className={`rounded-xl border px-2.5 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.05)] ${meta.tone}`}
             >
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background">
-                  <Icon className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <div className="flex h-7.5 w-7.5 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-background">
+                  <Icon className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0">
-                  <div className="font-display text-base font-black uppercase tracking-[0.05em]">
+                  <div className="font-display text-xs font-black uppercase tracking-[0.05em] truncate">
                     {meta.label}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="hidden sm:block text-[9px] text-muted-foreground truncate">
                     {meta.subtitle}
                   </div>
                 </div>

@@ -163,7 +163,7 @@ export default async function TeamDetailPage({
                   )}
                 </div>
                 <div>
-                  <div className="font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">{team.name}</div>
+                  <div className="font-display text-xl sm:text-2xl font-black uppercase tracking-[0.08em] text-foreground break-words max-w-[280px]">{team.name}</div>
                   <div className="mt-1 text-xs text-muted-foreground">Est. {new Date(team.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</div>
                 </div>
               </div>
