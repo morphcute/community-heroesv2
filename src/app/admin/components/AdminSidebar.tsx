@@ -107,7 +107,7 @@ export function AdminSidebar({ user, logoUrl = "/ch-logo.png" }: AdminSidebarPro
               </div>
               <div className="h-1 bg-background rounded-full overflow-hidden border border-border shadow-inner">
                 <div
-                  className="h-full bg-gradient-to-r from-yellow-500 to-amber-600 shadow-[0_0_5px_rgba(250,204,21,0.5)] rounded-full transition-all duration-700 ease-out"
+                  className="h-full bg-gradient-to-r from-amber-500 to-amber-600 shadow-[0_0_5px_rgba(242,193,78,0.5)] rounded-full transition-all duration-700 ease-out"
                   style={{ width: user.xpPercentage != null ? `${Math.round(user.xpPercentage)}%` : "0%" }}
                 />
               </div>

@@ -1,19 +1,18 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Calendar,
-  Clock,
+  ChevronRight,
+  Gem,
   MessageSquare,
   Swords,
-  Target,
   Trophy,
   Users,
   UserPlus,
-  FileText,
+  Activity,
 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { EmptyState, PageShell, SurfaceCard } from "@/components/ui/PageShell";
+import { PageShell, SurfaceCard } from "@/components/ui/PageShell";
 import { calculateUserXP } from "@/lib/xp";
 import TournamentCarousel from "@/components/TournamentCarousel";
 
@@ -37,6 +36,7 @@ export default async function Dashboard() {
     where: { status: { in: ["REGISTRATION_OPEN", "ONGOING", "UPCOMING"] } },
     orderBy: { createdAt: "desc" },
     include: {
+      _count: { select: { participants: true } },
       admins: {
         where: { role: "ADMIN" },
         include: { user: { select: { name: true, image: true } } }
@@ -86,263 +86,232 @@ export default async function Dashboard() {
     include: { _count: { select: { participants: true } } },
   });
 
+  const firstName = session?.user?.name?.split(" ")[0] || "Player";
+
+  const quickLinks = [
+    { title: "Tournaments", description: "Live brackets & open slots", href: "/tournaments", icon: Trophy },
+    { title: "Scrimmage", description: "Book practice matches", href: "/scrims", icon: Swords },
+    { title: "My Squad", description: "Roster, roles & recruits", href: "/teams/my-team", icon: Users },
+    { title: "Comms", description: "Chat with your team", href: "/chat", icon: MessageSquare },
+  ];
+
+  const statusTone: Record<string, string> = {
+    ONGOING: "text-red-400",
+    REGISTRATION_OPEN: "text-primary",
+    UPCOMING: "text-slate-300",
+    COMPLETED: "text-muted-foreground",
+    REGISTRATION_CLOSED: "text-muted-foreground",
+  };
+
   return (
     <PageShell size="wide">
-      {/* Top Banner Row — Tournament Banner (left) + Player Profile (right) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_1fr]">
-        {/* Tournament Slideshow */}
+      {/* Greeting */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Command Center</div>
+          <h1 className="mt-1 font-display text-3xl font-bold uppercase leading-none text-foreground sm:text-4xl">
+            Welcome back, <span className="text-gradient-primary">{firstName}</span>
+          </h1>
+        </div>
+        <Link href="/tournaments" className="action-button-secondary hidden sm:inline-flex">
+          Browse events
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {/* Featured + Player ID */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.65fr_1fr] lg:gap-5">
         <TournamentCarousel tournaments={activeTournaments} />
 
-        {/* Player Profile Card */}
-        <SurfaceCard tone="gold" className="gamer-id-card h-full min-h-[200px] p-4 sm:min-h-[260px] sm:p-5">
-          <div className="relative z-10 flex h-full flex-col justify-between">
-            <div>
-              <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Player Profile</div>
-              <div className="mt-3 flex items-center gap-3 sm:mt-4 sm:gap-4">
-                <div className="rounded-xl bg-[linear-gradient(135deg,#fef08a,#f59e0b)] p-[2px]">
-                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl bg-[#050816] text-lg font-black text-primary sm:h-16 sm:w-16 sm:text-xl">
-                    {session?.user?.image ? (
-                      <img src={session.user.image} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      session?.user?.name?.charAt(0) || "?"
-                    )}
-                  </div>
+        <SurfaceCard className="gamer-id-card hud-corners flex flex-col p-5 sm:p-6">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Player ID</span>
+            <span className="hud-tag">{user?.rank || "Unranked"}</span>
+          </div>
+
+          <div className="mt-5 flex items-center gap-4">
+            <div className="relative">
+              <div className="rounded-xl bg-[image:var(--gradient-primary)] p-[2px] shadow-[0_0_24px_-4px_rgba(242,193,78,0.5)]">
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[10px] bg-[#0b0b0f] font-display text-2xl font-bold text-primary">
+                  {session?.user?.image ? (
+                    <img src={session.user.image} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    session?.user?.name?.charAt(0) || "?"
+                  )}
                 </div>
-                <div className="min-w-0">
-                  <div className="truncate font-display text-lg font-black uppercase tracking-[0.06em] text-white sm:text-xl sm:tracking-[0.08em]">
-                    {session?.user?.name || "Guest Player"}
-                  </div>
-                  <div className="mt-1 text-xs text-slate-400 sm:text-sm">
-                    {user?.mlbbId ? `MLBB ID ${user.mlbbId}` : "Community Heroes member"}
-                  </div>
-                </div>
+              </div>
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-sm bg-primary px-1.5 py-px font-display text-[10px] font-bold leading-tight text-primary-foreground">
+                LV {xpData.level}
               </div>
             </div>
-
-            <div className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar sm:mt-4 sm:space-y-2.5 sm:pr-2">
-              <div className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-2.5">
-                <div className="mb-1.5 text-[0.58rem] font-black uppercase tracking-[0.24em] text-white">Winnings</div>
-                <div className="text-xs font-bold text-slate-300">
-                  Total: <span className="text-primary">{totalDiamonds.toLocaleString()} 💎</span>
-                  {totalCash > 0 ? ` / $${totalCash.toLocaleString()}` : ""}
-                </div>
+            <div className="min-w-0">
+              <div className="truncate font-display text-2xl font-bold uppercase leading-tight text-foreground">
+                {session?.user?.name || "Guest Player"}
               </div>
-              {[
-                { label: "Level", value: `Lvl ${xpData.level}` },
-                { label: "Rank", value: user?.rank || "Rookie" },
-                { label: "Server", value: user?.server || "Unset" },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/4 px-3 py-1.5 sm:px-4">
-                  <span className="text-[0.58rem] font-black uppercase tracking-[0.24em] text-slate-500">{item.label}</span>
-                  <span className="text-xs font-bold text-white sm:text-sm">{item.value}</span>
-                </div>
-              ))}
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {user?.mlbbId ? `MLBB ID · ${user.mlbbId}` : "Link your MLBB ID in profile"}
+                {user?.server ? ` · ${user.server}` : ""}
+              </div>
             </div>
+          </div>
 
-            <div className="mt-2.5 sm:mt-3">
-              <div className="mb-1.5 flex items-center justify-between text-[0.58rem] font-bold uppercase tracking-[0.18em] text-slate-400">
-                <span>Season XP</span>
-                <span className="text-primary">{xpData.xpInCurrentLevel} / {xpData.xpNeededForNextLevel}</span>
+          <div className="mt-6 grid grid-cols-3 gap-px overflow-hidden rounded-[var(--radius-control)] border border-[var(--edge)] bg-[var(--edge)]">
+            {[
+              { label: "Winnings", value: totalDiamonds.toLocaleString(), icon: <Gem className="h-3 w-3 text-sky-300" /> },
+              { label: "Events", value: user?._count?.participations ?? 0 },
+              { label: "Awards", value: user?._count?.awards ?? 0 },
+            ].map((s) => (
+              <div key={s.label} className="stat-chip px-3 py-3">
+                <span className="stat-chip__label">{s.label}</span>
+                <span className="stat-chip__value flex items-center gap-1 text-[1.25rem] sm:text-[1.35rem]">
+                  {s.value}
+                  {s.icon}
+                </span>
               </div>
-              <div className="stat-bar h-1">
-                <div className="stat-bar-fill" style={{ width: `${xpData.xpPercentage}%` }} />
-              </div>
+            ))}
+          </div>
+          {totalCash > 0 ? (
+            <div className="mt-2 text-right text-[11px] text-muted-foreground">+ ${totalCash.toLocaleString()} cash prizes</div>
+          ) : null}
+
+          <div className="mt-auto pt-6">
+            <div className="mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <span>Season XP</span>
+              <span className="font-display text-xs tabular-nums text-primary">
+                {xpData.xpInCurrentLevel} / {xpData.xpNeededForNextLevel}
+              </span>
+            </div>
+            <div className="stat-bar h-1.5">
+              <div className="stat-bar-fill shadow-[0_0_10px_rgba(242,193,78,0.6)]" style={{ width: `${xpData.xpPercentage}%` }} />
             </div>
           </div>
         </SurfaceCard>
       </div>
 
-      {/* Activity Feed */}
-      <SurfaceCard>
-        <div className="mb-4 flex items-center justify-between gap-4 sm:mb-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
-              <Clock className="h-4 w-4" />
+      {/* Quick deploy */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        {quickLinks.map((card) => (
+          <Link key={card.title} href={card.href} className="group esports-card flex items-center gap-3 p-4 sm:gap-4 sm:p-5">
+            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/[0.08] text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+              <card.icon className="h-5 w-5" />
             </div>
-            <div>
-              <h2 className="font-display text-lg font-black uppercase tracking-[0.06em] text-foreground sm:text-xl">Recent Activity</h2>
+            <div className="min-w-0 flex-1">
+              <div className="font-display text-lg font-bold uppercase leading-tight text-foreground">{card.title}</div>
+              <div className="hidden truncate text-xs text-muted-foreground sm:block">{card.description}</div>
             </div>
-          </div>
-          <Link href="/feed" className="text-xs font-bold text-muted-foreground transition-colors hover:text-primary">
-            View feed
+            <ChevronRight className="hidden h-4 w-4 flex-shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary sm:block" />
           </Link>
-        </div>
+        ))}
+      </div>
 
-        <div className="space-y-3">
-          {/* Recent Posts */}
-          {recentPosts.map((post: any) => (
-            <Link key={post.id} href="/feed" className="flex items-start gap-3 rounded-xl border border-border bg-card/50 p-3 transition-colors hover:bg-card">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-                {post.user?.image ? (
-                  <img src={post.user.image} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-foreground">{post.user?.name || "Unknown"}</span>
-                  <span className="text-[0.6rem] text-muted-foreground">shared a post</span>
-                </div>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{post.content}</p>
-                <div className="mt-1.5 flex items-center gap-3 text-[0.6rem] text-muted-foreground">
-                  <span>{post._count?.reactions || 0} reactions</span>
-                  <span>{post._count?.comments || 0} comments</span>
-                  <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.5fr)_1fr] xl:gap-5">
+        {/* Activity timeline */}
+        <SurfaceCard className="p-5 sm:p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <h2 className="flex items-center gap-2.5 font-display text-xl font-bold uppercase text-foreground">
+              <Activity className="h-4 w-4 text-primary" />
+              Recent Activity
+            </h2>
+            <Link href="/feed" className="text-xs font-semibold text-muted-foreground transition-colors hover:text-primary">
+              Open feed →
             </Link>
-          ))}
+          </div>
 
-          {/* Recent Friend Connections */}
-          {recentFriendships.map((f: any) => {
-            const friendName = f.userId === user?.id ? f.friend?.name : f.user?.name;
-            const friendImage = f.userId === user?.id ? f.friend?.image : f.user?.image;
-            return (
-              <div key={f.id} className="flex items-center gap-3 rounded-xl border border-border bg-card/50 p-3">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-500/15">
-                  {friendImage ? (
-                    <img src={friendImage} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <UserPlus className="h-3.5 w-3.5 text-green-400" />
-                  )}
+          <ol className="relative space-y-1 before:absolute before:bottom-3 before:left-[15px] before:top-3 before:w-px before:bg-gradient-to-b before:from-primary/40 before:via-white/10 before:to-transparent">
+            {recentPosts.map((post: any) => (
+              <li key={post.id}>
+                <Link href="/feed" className="group relative flex items-start gap-3.5 rounded-lg p-2 transition-colors hover:bg-white/[0.03]">
+                  <div className="relative z-10 flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-[#111117] text-[11px] font-bold text-muted-foreground">
+                    {post.user?.image ? <img src={post.user.image} alt="" className="h-full w-full object-cover" /> : post.user?.name?.charAt(0) || "?"}
+                  </div>
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <div className="text-[13px] text-muted-foreground">
+                      <span className="font-semibold text-foreground">{post.user?.name || "Unknown"}</span> posted in the feed
+                    </div>
+                    <p className="mt-0.5 truncate text-[13px] text-slate-300">{post.content}</p>
+                    <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <span>{post._count?.reactions || 0} reactions</span>
+                      <span>{post._count?.comments || 0} comments</span>
+                      <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            ))}
+
+            {recentFriendships.map((f: any) => {
+              const friendName = f.userId === user?.id ? f.friend?.name : f.user?.name;
+              const friendImage = f.userId === user?.id ? f.friend?.image : f.user?.image;
+              return (
+                <li key={f.id} className="relative flex items-center gap-3.5 rounded-lg p-2">
+                  <div className="relative z-10 flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-emerald-500/30 bg-emerald-500/10">
+                    {friendImage ? <img src={friendImage} alt="" className="h-full w-full object-cover" /> : <UserPlus className="h-3.5 w-3.5 text-emerald-400" />}
+                  </div>
+                  <div className="text-[13px] text-muted-foreground">
+                    <span className="font-semibold text-foreground">{friendName || "A player"}</span> is now your friend
+                  </div>
+                </li>
+              );
+            })}
+
+            {recentPosts.length === 0 && recentFriendships.length === 0 && (
+              <li className="py-8 text-center text-sm text-muted-foreground">
+                Quiet in the arena. Join a tournament or post in the feed to get things moving.
+              </li>
+            )}
+          </ol>
+        </SurfaceCard>
+
+        {/* Latest tournaments */}
+        <SurfaceCard className="flex flex-col p-5 sm:p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2.5 font-display text-xl font-bold uppercase text-foreground">
+              <Trophy className="h-4 w-4 text-primary" />
+              Latest Events
+            </h2>
+            <Link href="/tournaments" className="text-xs font-semibold text-muted-foreground transition-colors hover:text-primary">
+              All →
+            </Link>
+          </div>
+
+          <div className="divide-y divide-[var(--edge)]">
+            {recentTournaments.map((t: any) => (
+              <Link key={t.id} href={`/tournaments/${t.id}`} className="group flex items-center gap-3 py-3 first:pt-0">
+                <div className="flex h-11 w-11 flex-shrink-0 flex-col items-center justify-center rounded-lg border border-border bg-white/[0.03] leading-none">
+                  <span className="text-[9px] font-semibold uppercase text-muted-foreground">
+                    {new Date(t.startDate).toLocaleDateString(undefined, { month: "short" })}
+                  </span>
+                  <span className="font-display text-lg font-bold text-foreground">{new Date(t.startDate).getDate()}</span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-foreground">{friendName || "A player"}</span>
-                    <span className="text-[0.6rem] text-muted-foreground">is now your friend</span>
+                  <div className="truncate text-[13.5px] font-semibold text-foreground transition-colors group-hover:text-primary">{t.title}</div>
+                  <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <span className={`font-semibold uppercase tracking-wider ${statusTone[t.status] || ""}`}>{t.status?.replaceAll("_", " ").toLowerCase()}</span>
+                    <span>·</span>
+                    <span>{t._count?.participants || 0} teams</span>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-
-          {/* Recent Tournaments */}
-          {recentTournaments.map((t: any) => (
-            <Link key={t.id} href={`/tournaments/${t.id}`} className="flex items-center gap-3 rounded-xl border border-border bg-card/50 p-3 transition-colors hover:bg-card">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/15">
-                <Trophy className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-foreground truncate">{t.title}</span>
-                  <span className="flex-shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[0.55rem] font-bold uppercase text-primary">
-                    {t.status?.replaceAll("_", " ")}
-                  </span>
-                </div>
-                <div className="mt-0.5 text-[0.6rem] text-muted-foreground">
-                  {t._count?.participants || 0} participants · {new Date(t.startDate).toLocaleDateString()}
-                </div>
-              </div>
-            </Link>
-          ))}
-
-          {recentPosts.length === 0 && recentFriendships.length === 0 && recentTournaments.length === 0 && (
-            <div className="py-6 text-center text-sm text-muted-foreground">
-              No recent activity yet. Start by joining a tournament or posting in the feed!
-            </div>
-          )}
-        </div>
-      </SurfaceCard>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_1fr]">
-        <SurfaceCard>
-          <div className="mb-5 flex items-center justify-between gap-4 sm:mb-6">
-            <div>
-              <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Explore Matches</div>
-              <h2 className="mt-2 font-display text-xl font-black uppercase tracking-[0.06em] text-white sm:text-2xl sm:tracking-[0.08em]">Choose your next game</h2>
-            </div>
-            <Link href="/events" className="text-sm font-bold text-slate-400 transition-colors hover:text-primary">
-              View all
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[
-              {
-                title: "Tournaments",
-                description: "Join live brackets, track slots, and lock in your entry before registration closes.",
-                href: "/tournaments",
-                icon: <Trophy className="h-5 w-5" />,
-                tone: "from-amber-300/18 to-orange-400/10",
-              },
-              {
-                title: "Events",
-                description: "See the community calendar, launches, and official match-day broadcasts.",
-                href: "/events",
-                icon: <Calendar className="h-5 w-5" />,
-                tone: "from-amber-300/18 to-yellow-400/10",
-              },
-              {
-                title: "Squads",
-                description: "Recruit players, organize roles, and keep your roster tournament-ready.",
-                href: "/teams/my-team",
-                icon: <Users className="h-5 w-5" />,
-                tone: "from-fuchsia-300/18 to-violet-400/10",
-              },
-              {
-                title: "Chat",
-                description: "Use community chat to find teammates, scrims, and last-minute replacements.",
-                href: "/chat",
-                icon: <MessageSquare className="h-5 w-5" />,
-                tone: "from-yellow-300/18 to-amber-400/10",
-              },
-            ].map((card) => (
-              <Link
-                key={card.title}
-                href={card.href}
-                className="group esports-card p-4 transition-all duration-300 hover:-translate-y-1 sm:p-5"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.tone} opacity-80`} />
-                <div className="relative z-10 flex h-full flex-col">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/12 bg-[#081120]/80 text-white sm:h-12 sm:w-12 sm:rounded-xl">
-                    {card.icon}
-                  </div>
-                  <h3 className="mt-4 font-display text-xl font-black uppercase tracking-[0.06em] text-white sm:mt-5 sm:text-2xl sm:tracking-[0.08em]">{card.title}</h3>
-                  <p className="mt-2.5 flex-1 text-sm leading-6 text-slate-300 sm:mt-3 sm:leading-7">{card.description}</p>
-                  <div className="mt-4 flex items-center gap-2 text-sm font-bold text-primary sm:mt-5">
-                    Open page
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </div>
-                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
               </Link>
             ))}
           </div>
+
+          <div className="mt-auto pt-5">
+            <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/[0.08] to-transparent p-4">
+              <div className="font-display text-lg font-bold uppercase text-foreground">Ready your squad</div>
+              <p className="mt-1 text-xs text-muted-foreground">Lock in a roster before registration closes.</p>
+              <div className="mt-3 flex gap-2">
+                <Link href="/teams/my-team" className="action-button-primary flex-1 text-[0.72rem]">
+                  My Team
+                </Link>
+                <Link href="/chat" className="action-button-secondary flex-1 text-[0.72rem]">
+                  Find Players
+                </Link>
+              </div>
+            </div>
+          </div>
         </SurfaceCard>
-
-        <div className="space-y-6">
-          <SurfaceCard tone="gold">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl border bg-primary/15 border-primary/15 bg-primary/10 text-primary/80">
-                <Target className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Quick Access</div>
-                <div className="mt-1 font-display text-xl font-black uppercase tracking-[0.06em] text-white sm:text-2xl sm:tracking-[0.08em]">Ready your team</div>
-              </div>
-            </div>
-            <div className="mt-5 space-y-3">
-              <Link href="/tournaments" className="action-button-primary w-full justify-between text-[11px]">
-                View Tournaments
-                <Swords className="h-4 w-4" />
-              </Link>
-              <Link href="/chat" className="action-button-secondary w-full justify-between text-[11px]">
-                Find a Team
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </SurfaceCard>
-        </div>
       </div>
-
-      {activeTournaments.length === 0 ? (
-        <EmptyState
-          icon={<Trophy className="h-8 w-8" />}
-          title="No featured tournament yet"
-          description="The arena is still warming up. When admins publish the next event, it will appear here with the new visual treatment."
-          action={<Link href="/events" className="action-button-secondary text-[11px]">Check events</Link>}
-        />
-      ) : null}
     </PageShell>
   );
 }

@@ -155,7 +155,7 @@ export default async function TeamDetailPage({
             <div className="relative z-10 flex h-full flex-col items-center justify-between text-center">
               <div className="flex flex-col items-center gap-4">
                 {/* Team Logo */}
-                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-primary/30 bg-card shadow-[0_0_24px_-10px_rgba(250,204,21,0.4)]">
+                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-primary/30 bg-card shadow-[0_0_24px_-10px_rgba(242,193,78,0.4)]">
                   {team.logo ? (
                     <img src={team.logo} alt={team.name} className="h-full w-full object-cover" />
                   ) : (
@@ -229,7 +229,7 @@ export default async function TeamDetailPage({
                     <div>
                       <div className="text-sm font-bold text-foreground">{member.user.name || "Unknown User"}</div>
                       <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                        {member.role === "CAPTAIN" && <Trophy className="h-2.5 w-2.5 text-yellow-400" />}
+                        {member.role === "CAPTAIN" && <Trophy className="h-2.5 w-2.5 text-amber-400" />}
                         <span className="uppercase tracking-wider">{member.role}</span>
                         <span>·</span>
                         <span>{member.user.rank || "Unranked"}</span>
@@ -410,7 +410,7 @@ export default async function TeamDetailPage({
                 />
                 <button
                   type="submit"
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-black hover:bg-yellow-400 transition-colors"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-black hover:bg-amber-400 transition-colors"
                 >
                   <Send className="h-4 w-4" />
                 </button>

@@ -23,7 +23,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Generic admin authentication: lookup user by email and ensure they have an admin role
         if (credentials?.email) {
           const user = await prisma.user.findUnique({ where: { email: credentials.email as string } });
-          if (user && ((user as any).role === "SUPERADMIN" || (user as any).role === "MODERATOR")) {
+          // Local development only: let seeded @dev.local test players sign in too.
+          const isLocalTestPlayer =
+            process.env.NODE_ENV === "development" && (credentials.email as string).endsWith("@dev.local");
+          if (user && (isLocalTestPlayer || (user as any).role === "SUPERADMIN" || (user as any).role === "MODERATOR")) {
             // TODO: Add proper password verification if password field exists
             return user;
           }

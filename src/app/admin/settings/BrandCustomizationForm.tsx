@@ -122,30 +122,30 @@ export default function BrandCustomizationForm({
           {/* Preset 1 */}
           <button
             type="button"
-            onClick={() => selectPreset("radial-gradient(circle at 50% 30%, #1e1b06 0%, #03050c 100%)")}
+            onClick={() => selectPreset("radial-gradient(circle at 50% 30%, #1e1b06 0%, #060608 100%)")}
             className="bg-black/40 border border-white/10 hover:border-primary/50 text-left p-3 rounded-xl transition-all hover:scale-[1.02] flex flex-col gap-2 shrink-0 cursor-pointer"
           >
-            <div className="h-12 w-full rounded-lg" style={{ background: "radial-gradient(circle at 50% 30%, #1e1b06 0%, #03050c 100%)" }} />
+            <div className="h-12 w-full rounded-lg" style={{ background: "radial-gradient(circle at 50% 30%, #1e1b06 0%, #060608 100%)" }} />
             <div className="text-[10px] font-black text-white">Pomelli Gold Aura</div>
           </button>
 
           {/* Preset 2 */}
           <button
             type="button"
-            onClick={() => selectPreset("radial-gradient(circle at 50% 30%, #0c1020 0%, #03050c 100%)")}
+            onClick={() => selectPreset("radial-gradient(circle at 50% 30%, #0c1020 0%, #060608 100%)")}
             className="bg-black/40 border border-white/10 hover:border-primary/50 text-left p-3 rounded-xl transition-all hover:scale-[1.02] flex flex-col gap-2 shrink-0 cursor-pointer"
           >
-            <div className="h-12 w-full rounded-lg" style={{ background: "radial-gradient(circle at 50% 30%, #0c1020 0%, #03050c 100%)" }} />
+            <div className="h-12 w-full rounded-lg" style={{ background: "radial-gradient(circle at 50% 30%, #0c1020 0%, #060608 100%)" }} />
             <div className="text-[10px] font-black text-white">Midnight Blue Glow</div>
           </button>
 
           {/* Preset 3 */}
           <button
             type="button"
-            onClick={() => selectPreset("#03050c")}
+            onClick={() => selectPreset("#060608")}
             className="bg-black/40 border border-white/10 hover:border-primary/50 text-left p-3 rounded-xl transition-all hover:scale-[1.02] flex flex-col gap-2 shrink-0 cursor-pointer"
           >
-            <div className="h-12 w-full rounded-lg bg-[#03050c] border border-white/5" />
+            <div className="h-12 w-full rounded-lg bg-[#060608] border border-white/5" />
             <div className="text-[10px] font-black text-white">Deep Matte Black</div>
           </button>
 

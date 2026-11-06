@@ -3,7 +3,7 @@
 import { Calendar, ChevronRight, Search, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
+import { EmptyState, PageHero, PageShell, SurfaceCard } from "@/components/ui/PageShell";
 
 const tabs = ["Featured", "Live", "Open", "Upcoming", "Completed"];
 
@@ -45,164 +45,196 @@ export default function TournamentsClient({ initialTournaments }: { initialTourn
     );
   })();
 
+  const counts: Record<string, number> = {
+    Featured: initialTournaments.length,
+    Live: initialTournaments.filter((t) => t.status === "Live").length,
+    Open: initialTournaments.filter((t) => t.status === "Open").length,
+    Upcoming: initialTournaments.filter((t) => t.status === "Upcoming").length,
+    Completed: initialTournaments.filter((t) => t.status === "Completed").length,
+  };
+
+  const statusStyle: Record<string, { dot: string; text: string; pulse: boolean }> = {
+    Live: { dot: "bg-red-500", text: "text-red-300", pulse: true },
+    Open: { dot: "bg-emerald-400", text: "text-emerald-300", pulse: true },
+    Upcoming: { dot: "bg-slate-300", text: "text-slate-200", pulse: false },
+    Completed: { dot: "bg-slate-500", text: "text-slate-400", pulse: false },
+  };
+
+  const modeFromGame = (game: string) => (game.match(/\d+V\d+/i)?.[0] || "").toUpperCase();
+
   return (
     <PageShell size="wide">
       <PageHero
-        eyebrow="Tournament Feed"
-        icon={<Trophy className="h-4 w-4" />}
+        eyebrow="Tournament Board"
         title={
           <>
             Explore the
             <span className="text-gradient-primary"> tournament board</span>
           </>
         }
-        description="Check live brackets, open registrations, and upcoming tournament schedules from the Community Heroes circuit."
+        description="Live brackets, open registrations, and upcoming schedules from the Community Heroes circuit."
         stats={[
           { label: "Listed", value: initialTournaments.length },
-          { label: "Live", value: initialTournaments.filter((t) => t.status === "Live").length },
-          { label: "Open", value: initialTournaments.filter((t) => t.status === "Open").length },
+          { label: "Live", value: counts.Live },
+          { label: "Open", value: counts.Open },
         ]}
         aside={
-          <SurfaceCard tone="gold" className="h-full p-3 sm:p-5 lg:p-6">
-            <div className="relative z-10 space-y-3 sm:space-y-4">
-              <div className="text-[0.56rem] font-black uppercase tracking-[0.2em] text-primary sm:text-[0.62rem] sm:tracking-[0.24em]">Tournament Filters</div>
-              <div className="rounded-[1rem] border border-border bg-muted/40 p-2.5 sm:rounded-[1.4rem] sm:p-4">
-                <div className="flex items-center gap-2.5 sm:gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-border bg-muted text-primary sm:h-10 sm:w-10 sm:rounded-2xl">
-                    <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[0.44rem] font-black uppercase tracking-[0.16em] text-slate-500 sm:text-[0.58rem] sm:tracking-[0.22em]">Quick Search</div>
-                    <input
-                      type="text"
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                      placeholder="Find title, host, or mode..."
-                      className="mt-0.5 w-full bg-transparent text-[0.88rem] text-foreground outline-none placeholder:text-slate-500 sm:mt-1 sm:text-sm"
-                    />
-                  </div>
+          <SurfaceCard className="flex h-full flex-col justify-between gap-5 p-5 lg:p-6">
+            <div>
+              <label htmlFor="t-search" className="text-[10px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
+                Quick search
+              </label>
+              <div className="relative mt-2">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="t-search"
+                  type="text"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Title, host, or mode…"
+                  className="input-hud pl-10"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-control)] border border-[var(--edge)] bg-[var(--edge)]">
+              {[
+                { label: "Next up", value: initialTournaments[0]?.date || "TBA" },
+                { label: "Top prize", value: initialTournaments[0]?.prize || "TBA" },
+              ].map((item) => (
+                <div key={item.label} className="stat-chip px-4 py-3">
+                  <span className="stat-chip__label">{item.label}</span>
+                  <span className="stat-chip__value text-lg">{item.value}</span>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                {[
-                  { label: "Next Up", value: initialTournaments[0]?.date || "TBA" },
-                  { label: "Top Prize", value: initialTournaments[0]?.prize || "TBA" },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-[0.95rem] border border-border bg-muted/40 px-2.5 py-2 sm:rounded-2xl sm:px-4 sm:py-3">
-                    <div className="text-[0.44rem] font-black uppercase tracking-[0.16em] text-slate-500 sm:text-[0.58rem] sm:tracking-[0.22em]">{item.label}</div>
-                    <div className="mt-1 text-[0.88rem] font-bold text-foreground sm:mt-2 sm:text-sm">{item.value}</div>
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
           </SurfaceCard>
         }
       />
 
-      <SurfaceCard className="p-2.5 sm:p-5">
-        <div className="mobile-pill-rail">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`mobile-pill ${activeTab === tab
-                  ? "bg-primary text-black shadow-[0_14px_28px_-18px_rgba(250,204,21,0.9)]"
-                  : "border border-border bg-card text-muted-foreground hover:border-primary/20 hover:text-foreground"
+      {/* Segmented filter bar */}
+      <div className="flex items-center justify-between gap-4">
+        <div role="tablist" className="mobile-pill-rail w-auto rounded-[var(--radius-control)] border border-border bg-white/[0.02] p-1">
+          {tabs.map((tab) => {
+            const active = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveTab(tab)}
+                className={`inline-flex min-h-[38px] flex-shrink-0 items-center gap-2 rounded-md px-4 font-display text-[13px] font-bold uppercase tracking-[0.12em] transition-all ${
+                  active ? "bg-primary text-primary-foreground shadow-[0_6px_20px_-8px_rgba(242,193,78,0.8)]" : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
                 }`}
-            >
-              {tab}
-            </button>
-          ))}
+              >
+                {tab === "Featured" ? "All" : tab}
+                <span className={`rounded px-1.5 text-[10px] tabular-nums ${active ? "bg-black/15" : "bg-white/[0.06]"}`}>{counts[tab]}</span>
+              </button>
+            );
+          })}
         </div>
-      </SurfaceCard>
+        <div className="hidden text-xs text-muted-foreground md:block">
+          Showing <span className="font-semibold text-foreground">{filteredTournaments.length}</span> events
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {filteredTournaments.length === 0 ? (
-          <SurfaceCard className="md:col-span-2 xl:col-span-3 2xl:col-span-4">
-            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-border bg-muted text-primary">
-                <Trophy className="h-8 w-8" />
-              </div>
-              <div>
-                <h2 className="font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground">No tournaments found</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Try a different tab or search query to discover more events.</p>
-              </div>
-            </div>
-          </SurfaceCard>
+          <EmptyState
+            className="md:col-span-2 xl:col-span-3 2xl:col-span-4"
+            icon={<Trophy className="h-7 w-7" />}
+            title="No tournaments found"
+            description="Try a different tab or search to discover more events."
+          />
         ) : (
-          filteredTournaments.map((tournament) => (
-            <Link
-              key={tournament.id}
-              href={`/tournaments/${tournament.id}`}
-              className="group relative overflow-hidden rounded-[1.8rem] border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/22 hover:shadow-[0_28px_60px_-34px_rgba(250,204,21,0.42)]"
-            >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.14),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(250,204,21,0.08),transparent_20%)] opacity-80" />
-              <div className="relative h-56 overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br ${tournament.color}`} />
-                {tournament.banner ? (
-                  <img
-                    src={tournament.banner}
-                    alt={tournament.name}
-                    className="absolute inset-0 h-full w-full object-cover opacity-70 transition-transform duration-700 group-hover:scale-105"
-                  />
-                ) : null}
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/35 to-transparent" />
-                <div className="absolute left-4 right-4 top-4 flex items-start justify-between gap-3">
-                  <div className="rounded-full border border-border bg-muted/50 px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.22em] text-foreground backdrop-blur-md">
-                    {tournament.game}
-                  </div>
-                  <div
-                    className={`rounded-full px-3 py-1.5 text-[0.62rem] font-black uppercase tracking-[0.22em] ${tournament.status === "Live"
-                        ? "bg-rose-400/18 text-rose-200"
-                        : tournament.status === "Open"
-                          ? "bg-emerald-400/18 text-emerald-200"
-                          : "bg-primary/16 text-primary"
-                      }`}
-                  >
-                    {tournament.status}
-                  </div>
-                </div>
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-primary/80">Prize pool</div>
-                  <div className="mt-2 font-display text-3xl font-black uppercase tracking-[0.08em] text-foreground">{tournament.prize}</div>
-                </div>
-              </div>
+          filteredTournaments.map((tournament) => {
+            const st = statusStyle[tournament.status] || statusStyle.Upcoming;
+            const mode = modeFromGame(tournament.game);
+            const fill = tournament.maxParticipants ? Math.min(100, Math.round((tournament.participants / tournament.maxParticipants) * 100)) : 0;
+            return (
+              <Link key={tournament.id} href={`/tournaments/${tournament.id}`} className="esports-card group flex flex-col">
+                {/* Key art */}
+                <div className="relative h-48 overflow-hidden bg-[#0a0a0d]">
+                  {tournament.banner ? (
+                    <img
+                      src={tournament.banner}
+                      alt=""
+                      className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-[radial-gradient(100%_120%_at_100%_0%,rgba(242,193,78,0.2),transparent_55%)]" />
+                      <div className="absolute -right-6 top-0 h-full w-1/2 skew-x-[-18deg] bg-gradient-to-b from-primary/[0.09] to-transparent" />
+                      <div className="absolute right-[30%] top-0 h-full w-[2px] skew-x-[-18deg] bg-gradient-to-b from-primary/60 to-transparent transition-all duration-500 group-hover:right-[34%]" />
+                      {mode ? (
+                        <div
+                          className="pointer-events-none absolute -bottom-5 right-2 select-none font-display text-[7.5rem] font-bold leading-none text-transparent transition-transform duration-500 group-hover:-translate-x-2"
+                          style={{ WebkitTextStroke: "1.5px rgba(242,193,78,0.25)" }}
+                          aria-hidden
+                        >
+                          {mode}
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-[#0b0b0f]/40 to-transparent" />
 
-              <div className="relative z-10 p-5">
-                <div className="mb-4 flex items-center justify-between gap-3 text-[0.62rem] font-black uppercase tracking-[0.22em] text-slate-500">
-                  <span>{tournament.host}</span>
-                  <span>{tournament.platform}</span>
-                </div>
-                <h2 className="font-display text-2xl font-black uppercase tracking-[0.08em] text-foreground transition-colors group-hover:text-primary">
-                  {tournament.name}
-                </h2>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {[tournament.format, tournament.type, tournament.fee].map((chip) => (
-                    <span key={chip} className="rounded-full border border-border bg-muted/30 px-3 py-1.5 text-[0.58rem] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                      {chip}
+                  <div className="absolute left-4 right-4 top-4 flex items-center justify-between gap-3">
+                    <span className="hud-tag bg-black/55 text-slate-200 backdrop-blur">{tournament.game}</span>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] backdrop-blur ${st.text}`}>
+                      <span className="relative flex h-1.5 w-1.5">
+                        {st.pulse ? <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${st.dot} opacity-70`} /> : null}
+                        <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${st.dot}`} />
+                      </span>
+                      {tournament.status}
                     </span>
-                  ))}
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary/80">Prize pool</div>
+                    <div className="mt-0.5 font-display text-[2rem] font-bold leading-none text-white">{tournament.prize}</div>
+                  </div>
                 </div>
-                <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span>{tournament.date}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-primary" />
-                      <span>
-                        {tournament.participants}/{tournament.maxParticipants} players
+
+                <div className="relative z-10 flex flex-1 flex-col p-5">
+                  <h2 className="font-display text-[1.4rem] font-bold uppercase leading-tight text-foreground transition-colors group-hover:text-primary">
+                    {tournament.name}
+                  </h2>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Hosted by <span className="text-slate-300">{tournament.host}</span> · {tournament.platform}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {[tournament.format, tournament.type, tournament.fee].map((chip) => (
+                      <span key={chip} className="rounded-md border border-border bg-white/[0.03] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto pt-5">
+                    <div className="mb-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5" />
+                        <span className="tabular-nums text-foreground">{tournament.participants}</span>/{tournament.maxParticipants} slots
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {tournament.date}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground transition-all group-hover:border-primary/25 group-hover:bg-primary group-hover:text-black">
-                    <ChevronRight className="h-5 w-5" />
+                    <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
+                      <div className="h-full rounded-full bg-[image:var(--gradient-primary)]" style={{ width: `${fill}%` }} />
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))
+
+                <div className="flex items-center justify-between border-t border-border px-5 py-3 text-[12px] font-semibold text-muted-foreground transition-colors group-hover:text-primary">
+                  View bracket
+                  <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </Link>
+            );
+          })
         )}
       </div>
     </PageShell>

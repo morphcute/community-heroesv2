@@ -106,7 +106,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                   href={`/leaderboard?mode=${f.value}`}
                   className={`mobile-pill flex items-center gap-1.5 sm:gap-2 ${
                     mode === f.value
-                      ? "bg-primary text-black shadow-[0_14px_28px_-18px_rgba(250,204,21,0.9)]"
+                      ? "bg-primary text-black shadow-[0_14px_28px_-18px_rgba(242,193,78,0.9)]"
                       : "border border-border bg-card text-muted-foreground hover:border-primary/25 hover:text-foreground"
                   }`}
                 >
@@ -134,14 +134,14 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                   const isGold = player.rank === 1;
                   const isSilver = player.rank === 2;
                   const podiumClass = isGold ? "podium-gold z-10 sm:scale-110" : isSilver ? "podium-silver" : "podium-bronze";
-                  const crownColor = isGold ? "text-yellow-400" : isSilver ? "text-gray-300" : "text-amber-600";
+                  const crownColor = isGold ? "text-amber-400" : isSilver ? "text-gray-300" : "text-amber-600";
                   const avatarGlow = isGold
                      ? "shadow-[0_0_30px_-5px_rgba(234,179,8,0.5)]"
                      : isSilver
                      ? "shadow-[0_0_30px_-5px_rgba(148,163,184,0.5)]"
                      : "shadow-[0_0_30px_-5px_rgba(180,83,9,0.5)]";
                   const bgGradient = isGold
-                     ? "from-yellow-500/10 to-transparent"
+                     ? "from-amber-500/10 to-transparent"
                      : isSilver
                      ? "from-gray-300/10 to-transparent"
                      : "from-amber-700/10 to-transparent";
@@ -196,7 +196,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                      >
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-3">
-                              {player.rank === 1 && <Crown className="w-5 h-5 text-primary fill-primary drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" />}
+                              {player.rank === 1 && <Crown className="w-5 h-5 text-primary fill-primary drop-shadow-[0_0_10px_rgba(242,193,78,0.5)]" />}
                               {player.rank === 2 && <Medal className="w-5 h-5 text-gray-300 fill-gray-300" />}
                               {player.rank === 3 && <Medal className="w-5 h-5 text-amber-600 fill-amber-600" />}
                               {player.rank > 3 && <span className="w-5 h-5 flex items-center justify-center text-sm font-bold text-muted-foreground">{player.rank}</span>}

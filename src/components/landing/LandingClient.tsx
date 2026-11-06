@@ -1,23 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 import {
   ArrowRight,
-  Calendar,
-  Menu,
   Swords,
   Trophy,
   Users,
-  MessageSquare,
-  BarChart3,
   Shield,
-  Sparkles,
   ChevronRight,
+  Crown,
+  BarChart3,
+  Flame,
+  LayoutDashboard,
+  Calendar,
+  Sparkles,
+  Gamepad2,
+  Award,
+  Star,
   Zap,
 } from "lucide-react";
+import MarketingShell from "./MarketingShell";
+import CoverflowHero, { type HeroSlide } from "./CoverflowHero";
+import { CountUp, Rail, RevealObserver, TiltCard } from "./fx";
+import LoginArena from "@/components/LoginArena";
+import TileArt from "./TileArt";
+import dynamic from "next/dynamic";
+import { useSyncExternalStore } from "react";
 
-type FeaturedTournament = {
+const Landing3D = dynamic(() => import("@/components/three/Landing3D"), { ssr: false });
+
+/** WebGL available? false during server render, real value in the browser. */
+let webglCache: boolean | null = null;
+function detectWebGL() {
+  if (webglCache === null) {
+    try {
+      const c = document.createElement("canvas");
+      webglCache = !!(c.getContext("webgl2") || c.getContext("webgl"));
+    } catch {
+      webglCache = false;
+    }
+  }
+  return webglCache;
+}
+const noopSubscribe = () => () => {};
+function useWebGL() {
+  return useSyncExternalStore(noopSubscribe, detectWebGL, () => false);
+}
+
+type TournamentItem = {
   id: string;
   title: string;
   format?: string | null;
@@ -25,479 +56,400 @@ type FeaturedTournament = {
   prize?: string;
   starts?: string;
   status?: string;
+  banner?: string | null;
+  filled?: number;
+  maxTeams?: number;
 };
+
+type Stats = { tournaments: number; teams: number; players: number; scrims: number };
+
+const d = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
+
+const modeShort: Record<string, string> = { SOLO_1V1: "1V1", DUO_2V2: "2V2", TRIO_3V3: "3V3", TEAM_5V5: "5V5" };
+const statusLabel: Record<string, { t: string; c: string; live?: boolean }> = {
+  ONGOING: { t: "Live now", c: "text-red-300", live: true },
+  REGISTRATION_OPEN: { t: "Registration open", c: "text-emerald-300", live: true },
+  UPCOMING: { t: "Upcoming", c: "text-slate-200" },
+  REGISTRATION_CLOSED: { t: "Closed", c: "text-slate-400" },
+  COMPLETED: { t: "Completed", c: "text-slate-400" },
+};
+
+const marqueeA = ["Solo 1v1", "Duo 2v2", "Trio 3v3", "Full 5v5", "Draft Pick", "Best of 3", "Grand Finals", "Free Entry"];
+const marqueeB = ["Single Elimination", "Double Elimination", "Round Robin", "Swiss System", "League", "Gauntlet", "Group Stage", "Custom Bracket"];
+
+const categories: Array<{ title: string; sub: string; href: string; icon: typeof Trophy; art: string; tint: string }> = [
+  { title: "Tournaments", sub: "Join & win free brackets", href: "/features#tournaments", icon: Trophy, art: "tournaments", tint: "from-[#5c410c]/70" },
+  { title: "Scrimmages", sub: "Daily practice matches", href: "/features#scrims", icon: Swords, art: "scrims", tint: "from-[#4a2a10]/70" },
+  { title: "Squads", sub: "Build your five-stack", href: "/features#squads", icon: Users, art: "squads", tint: "from-[#3d3313]/70" },
+  { title: "Leaderboard", sub: "Climb the circuit", href: "/features#ranks", icon: BarChart3, art: "leaderboard", tint: "from-[#5a4210]/70" },
+  { title: "Arena Feed", sub: "Highlights & community", href: "/features#comms", icon: Flame, art: "feed", tint: "from-[#4b1f12]/70" },
+  { title: "Team Dashboard", sub: "Roster & results", href: "/features#organizers", icon: LayoutDashboard, art: "dashboard", tint: "from-[#2e2a22]/80" },
+];
+
+function Marquee({ items, reverse = false }: { items: string[]; reverse?: boolean }) {
+  const row = [...items, ...items, ...items];
+  return (
+    <div className="relative overflow-hidden py-3 [mask-image:linear-gradient(90deg,transparent,black_10%,black_90%,transparent)]">
+      <div className={`flex w-max gap-4 motion-reduce:animate-none ${reverse ? "animate-[ch-marquee_45s_linear_infinite_reverse]" : "animate-[ch-marquee_40s_linear_infinite]"}`}>
+        {row.map((w, i) => (
+          <span key={i} className="flex items-center gap-3 rounded-full border border-white/[0.08] bg-white/[0.02] px-5 py-2.5 font-display text-lg font-bold uppercase tracking-[0.12em] text-slate-300">
+            <Star className="h-3.5 w-3.5 text-primary" fill="currentColor" />
+            {w}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function LandingClient({
   featured,
+  tournaments = [],
+  stats = { tournaments: 0, teams: 0, players: 0, scrims: 0 },
 }: {
-  featured: FeaturedTournament | null;
+  featured: TournamentItem | null;
+  tournaments?: TournamentItem[];
+  stats?: Stats;
 }) {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileNav, setMobileNav] = useState(false);
+  const webgl = useWebGL();
+  const live = tournaments.filter((t) => ["ONGOING", "REGISTRATION_OPEN", "UPCOMING"].includes(t.status || "")).slice(0, 3);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const features = [
+  const slides: HeroSlide[] = [
     {
-      icon: Trophy,
-      title: "Tournaments",
-      desc: "Join free community brackets, track live slots, and lock in your entry before registration closes.",
-      tone: "from-amber-300/16 to-amber-500/6",
+      key: "brand",
+      eyebrow: "Free MLBB tournament platform",
+      lead: "Dominate the",
+      highlight: "Arena",
+      desc: "Free Mobile Legends tournaments, scrimmages and squad tools — one competitive home for Southeast Asia.",
+      href: "/login",
+      cta: "Join the Arena",
+      image: "/gaming-hero.png",
+    },
+    ...live.map<HeroSlide>((t) => ({
+      key: t.id,
+      eyebrow: statusLabel[t.status || ""]?.t || "Featured",
+      lead: t.title.split(" ").slice(0, -1).join(" ") || "Join",
+      highlight: t.title.split(" ").slice(-1)[0],
+      desc: `${t.format?.replaceAll("_", " ").toLowerCase() || "Tournament"}${t.gameMode ? ` · ${modeShort[t.gameMode] ?? ""}` : ""} — lock in your slot before registration closes.`,
+      href: `/t/${t.id}`,
+      cta: "View tournament",
+      image: t.banner,
+      mode: t.gameMode ? modeShort[t.gameMode] : null,
+      live: statusLabel[t.status || ""]?.live,
+      meta: { prize: t.prize, date: t.starts, slots: t.maxTeams ? `${t.filled ?? 0}/${t.maxTeams} slots` : undefined },
+    })),
+    {
+      key: "scrims",
+      eyebrow: "Scrimmages",
+      lead: "Practice that",
+      highlight: "Counts",
+      desc: "Post open scrim slots, accept challengers and report official results — every match builds your record.",
+      href: "/features#scrims",
+      cta: "Explore scrims",
+      image: "/scrimmages.png",
     },
     {
-      icon: Swords,
-      title: "Scrimmages",
-      desc: "Challenge active squads, negotiate terms, and keep your team sharp between official matches.",
-      tone: "from-orange-300/16 to-red-400/6",
-    },
-    {
-      icon: Users,
-      title: "Squads",
-      desc: "Build a roster, assign roles, and recruit the right players to complete your five-stack.",
-      tone: "from-yellow-300/16 to-amber-400/6",
-    },
-    {
-      icon: BarChart3,
-      title: "Leaderboard",
-      desc: "Earn points from completed matches and climb the global ranked circuit across every game mode.",
-      tone: "from-amber-200/16 to-yellow-400/6",
-    },
-  ];
-
-  const steps = [
-    {
-      n: "01",
-      title: "Create your player profile",
-      desc: "Sign in, set your MLBB ID, rank, and preferred roles so teams can find you.",
-    },
-    {
-      n: "02",
-      title: "Join or build a squad",
-      desc: "Recruit teammates, organize your roster, and stay tournament-ready as a unit.",
-    },
-    {
-      n: "03",
-      title: "Compete & win",
-      desc: "Register for tournaments, play scrims, and stack achievements on your profile.",
+      key: "squads",
+      eyebrow: "Squad builder",
+      lead: "Build your",
+      highlight: "Squad",
+      desc: "Recruit by role, manage your roster and enter every bracket as one team.",
+      href: "/features#squads",
+      cta: "See squad tools",
+      image: "/squad-building.png",
     },
   ];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#03050c] text-foreground">
-      {/* ── Ambient background ─────────────────────────────────────────── */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_-10%,rgba(255,201,0,0.12),transparent_55%),radial-gradient(ellipse_at_15%_80%,rgba(7,11,26,0.95),transparent_70%),radial-gradient(ellipse_at_85%_60%,rgba(255,215,0,0.04),transparent_50%)]" />
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,201,0,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,201,0,0.4) 1px, transparent 1px)",
-            backgroundSize: "64px 64px",
-            maskImage:
-              "radial-gradient(ellipse at center top, black 30%, transparent 80%)",
-          }}
-        />
-      </div>
+    <MarketingShell>
+      <RevealObserver />
 
-      {/* ── Navbar ─────────────────────────────────────────────────────── */}
-      <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "border-b border-white/5 bg-[#03050c]/90 backdrop-blur-xl"
-            : "border-b border-transparent"
-        }`}
-      >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02]">
-            <span className="text-[#FFD700] font-black text-xl font-display">/</span>
-            <span className="font-display text-sm font-black uppercase tracking-[0.2em] text-white">
-              Community Heroes
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-8 md:flex">
-            {[
-              { label: "About", href: "#about" },
-              { label: "Features", href: "#features" },
-              { label: "Tournaments", href: "#featured" },
-            ].map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400 transition-colors hover:text-primary"
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="hidden text-xs font-bold uppercase tracking-wider text-slate-300 transition-colors hover:text-primary sm:block"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/login"
-              className="action-button-primary text-[10px]"
-            >
-              Join the Arena
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-            <button
-              onClick={() => setMobileNav((v) => !v)}
-              className="rounded-xl border border-white/10 bg-[#070a14] p-2 text-muted-foreground md:hidden"
-              aria-label="Toggle menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {mobileNav && (
-          <div className="border-t border-white/10 bg-[#03050c]/95 px-4 py-4 backdrop-blur-xl md:hidden">
-            {[
-              { label: "About", href: "#about" },
-              { label: "Features", href: "#features" },
-              { label: "Tournaments", href: "#featured" },
-            ].map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={() => setMobileNav(false)}
-                className="block rounded-xl px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-400 transition-colors hover:bg-white/5 hover:text-primary"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        )}
-      </header>
-
-      {/* ── Hero ───────────────────────────────────────────────────────── */}
-      <section className="relative flex min-h-screen items-center justify-center pt-24 pb-20 overflow-hidden">
-        {/* Glowing background details specifically for hero */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,201,0,0.06),transparent_60%)]" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: "linear-gradient(rgba(255,201,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,201,0,0.3) 1px, transparent 1px)",
-          backgroundSize: "32px 32px"
-        }} />
-
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/8 px-4 py-1.5 backdrop-blur-sm mb-8">
-              <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse-slow" />
-              <span className="text-[0.62rem] font-bold uppercase tracking-[0.22em] text-primary">
-                Free MLBB Tournament Platform
-              </span>
-            </div>
-
-            <h1 className="font-display text-[3.2rem] font-black uppercase leading-[0.92] tracking-tight text-white animate-in fade-in slide-in-from-bottom-8 duration-700 sm:text-6xl lg:text-[5.5rem]">
-              Dominate the
-              <span className="block text-[#FFD700] drop-shadow-[0_0_20px_rgba(255,215,0,0.2)]">
-                Arena
-              </span>
-            </h1>
-
-            <p className="mx-auto mt-8 max-w-xl text-sm leading-relaxed text-slate-400 animate-in fade-in slide-in-from-bottom-8 duration-700 sm:text-base">
-              Discover free tournaments, post scrimmages, and build a stronger Mobile Legends squad.
-            </p>
-
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 sm:flex-row">
-              <Link
-                href="/login"
-                className="action-button-primary w-full justify-center sm:w-auto"
-              >
-                Join the Arena
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            {/* trust row */}
-            <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 animate-in fade-in duration-1000">
-              <span className="flex items-center gap-2">
-                <Shield className="h-3.5 w-3.5 text-primary/70" /> No entry fees
-              </span>
-              <span className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 text-primary/70" /> Built for SEA
-              </span>
-              <span className="flex items-center gap-2">
-                <Zap className="h-3.5 w-3.5 text-primary/70" /> Real brackets
-              </span>
-            </div>
-          </div>
+      {/* ── Coverflow hero ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-24 pb-10 sm:pt-28 lg:pt-32">
+        <div className="pointer-events-none absolute left-1/2 top-0 h-[620px] w-[1100px] -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(242,193,78,0.16),transparent_65%)]" />
+        <div className="relative mx-auto max-w-[1400px] px-2 sm:px-4">
+          <CoverflowHero slides={slides} />
         </div>
       </section>
 
-      {/* ── Slanted Yellow Divider Banner ──────────────────────────────── */}
-      <div className="relative z-20 w-full bg-[#FFD700] py-6 slanted-banner shadow-[0_4px_30px_rgba(255,215,0,0.3)]">
-        <div className="slanted-banner-inner flex flex-wrap justify-center gap-x-12 gap-y-2 text-center text-black font-display text-xs md:text-sm font-black tracking-[0.25em]">
-          <span>◆ COMMUNITY</span>
-          <span>◆ COMPETITIVENESS</span>
-          <span>◆ ACCESSIBILITY</span>
-        </div>
-      </div>
-
-      {/* ── Central Hub (About) ────────────────────────────────────────── */}
-      <section id="about" className="relative py-24 md:py-32 overflow-hidden">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
-            {/* Left Side: Copy */}
-            <div className="space-y-6 text-left">
-              <h2 className="font-display text-3xl font-black uppercase tracking-wider text-white md:text-4xl">
-                The Central Hub
-              </h2>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-lg">
-                Community Heroes serves as a practical, free-to-use competitive hub for the MLBB community, focusing on providing essential tools for team growth and tournament participation.
-              </p>
-              <p className="text-sm text-slate-400 leading-relaxed max-w-lg">
-                We are a competitive platform dedicated to Mobile Legends: Bang Bang players in Southeast Asia. The platform provides a centralized hub for discovering free tournaments, organizing scrimmages, and building squads to improve competitive play.
-              </p>
-              <div className="text-[#FFD700] font-display text-sm font-black uppercase tracking-[0.2em] pt-4">
-                Direct. Competitive. Accessible.
-              </div>
+      {/* ── Enter the arena ────────────────────────────────────────────── */}
+      <section className="relative pt-10 pb-6 text-center">
+        <div className="mx-auto max-w-3xl px-4">
+          {webgl ? (
+            <div data-reveal="zoom" className="relative mx-auto mb-4 h-[240px] w-[240px] sm:h-[300px] sm:w-[300px]">
+              <div className="absolute inset-[18%] rounded-full bg-primary/20 blur-3xl" />
+              <Landing3D kind="medallion" />
             </div>
-
-            {/* Right Side: Image/Logo container styled with cyber borders */}
-            <div className="flex justify-center">
-              <div className="relative p-2 rounded-xl border border-white/10 bg-black/40 backdrop-blur-md max-w-md w-full overflow-hidden shadow-[0_0_50px_rgba(255,215,0,0.06)]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.08),transparent_70%)]" />
-                <div className="absolute inset-0 opacity-[0.05]" style={{
-                  backgroundImage: "linear-gradient(rgba(255,215,0,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,215,0,0.3) 1px, transparent 1px)",
-                  backgroundSize: "24px 24px"
-                }} />
-                <img
-                  src="/ch-logo.png"
-                  alt="Community Heroes Championship Logo"
-                  className="relative z-10 mx-auto max-h-[300px] w-auto object-contain p-8 drop-shadow-[0_0_35px_rgba(250,204,21,0.25)]"
-                />
-              </div>
-            </div>
+          ) : null}
+          <div data-reveal className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/[0.07] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.26em] text-primary">
+            <Sparkles className="h-3.5 w-3.5" /> The ultimate MLBB platform
           </div>
+          <h1 data-reveal style={d(100)} className="mt-6 font-display text-5xl font-bold uppercase leading-[0.9] text-white sm:text-7xl">
+            Enter the <span className="text-gradient-primary">Arena</span>
+          </h1>
+          <p data-reveal style={d(200)} className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg">
+            Compete, connect and conquer. Community Heroes is your all-in-one home for MLBB tournaments, scrims, squads and rankings.
+          </p>
         </div>
       </section>
 
-      {/* ── Competitive Arsenal (Features Grid) ────────────────────────── */}
-      <section id="features" className="relative py-24 md:py-32 bg-[#040714]/40 border-t border-b border-white/[0.03]">
-        <div className="absolute inset-0 opacity-[0.02]" style={{
-          backgroundImage: "linear-gradient(rgba(255,201,0,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,201,0,0.5) 1px, transparent 1px)",
-          backgroundSize: "48px 48px"
-        }} />
-
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="font-display text-3xl font-black uppercase tracking-wider text-white md:text-4xl esports-underline">
-              Competitive Arsenal
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                title: "MLBB Tournaments",
-                desc: "Access to free community brackets and competitive tournaments for Mobile Legends: Bang Bang.",
-                img: "/mlbb-tournaments.png"
-              },
-              {
-                title: "Scrimmages",
-                desc: "A platform to post and challenge active squads for practice matches and competitive play.",
-                img: "/scrimmages.png"
-              },
-              {
-                title: "Squad Building",
-                desc: "Services to help players find teammates quickly and build a stronger competitive squad.",
-                img: "/squad-building.png"
-              },
-              {
-                title: "Team Dashboard",
-                desc: "A personalized dashboard for tracking scrimmage results and managing team rosters.",
-                img: "/team-dashboard.png"
-              }
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="esports-card overflow-hidden group flex flex-col h-full"
-              >
-                <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-white/5">
-                  <img
-                    src={item.img}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                </div>
-                <div className="p-6 flex flex-col flex-1 text-left">
-                  <h3 className="font-display text-base font-black uppercase tracking-wide text-white group-hover:text-primary transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2.5 text-[11px] leading-relaxed text-slate-400 flex-1">
-                    {item.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Featured tournament ────────────────────────────────────────── */}
-      <section id="featured" className="relative py-24 sm:py-32">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-12">
-            <div className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-primary">
-              Live now
-            </div>
-            <h2 className="font-display mt-3 text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
-              Step into the arena
-            </h2>
-          </div>
-
-          <div className="mx-auto max-w-4xl">
-            {featured ? (
-              <Link
-                href={`/t/${featured.id}`}
-                className="esports-card group block overflow-hidden p-0"
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.12),transparent_35%)]" />
-                <div className="relative z-10 grid gap-6 p-8 sm:grid-cols-[1.4fr_1fr] sm:p-10 text-left">
-                  <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[0.58rem] font-bold uppercase tracking-[0.18em] text-primary">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                      {featured.status?.replaceAll("_", " ") || "Featured"}
-                    </div>
-                    <h3 className="font-display mt-4 text-2xl font-black uppercase tracking-wide text-white sm:text-3xl">
-                      {featured.title}
-                    </h3>
-                    <p className="mt-3 text-xs text-slate-400">
-                      {featured.format?.replaceAll("_", " ") || "Single Elim"}
-                      {featured.gameMode
-                        ? ` · ${featured.gameMode.replaceAll("_", " ")}`
-                        : ""}
-                    </p>
-                    <div className="mt-6 flex items-center gap-2 text-xs font-bold text-primary">
-                      View tournament
-                      <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+      {/* ── Category tiles (pop-out art) ───────────────────────────────── */}
+      <section className="relative py-14">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-x-6 gap-y-10 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 lg:px-8">
+          {categories.map((c, i) => (
+            <div key={c.title} data-reveal style={d((i % 3) * 110)}>
+              <TiltCard className="rounded-[18px]">
+                <Link href={c.href} className="pop-tile group">
+                  <div className="pop-tile__art">
+                    {webgl ? (
+                      <div className="relative h-full w-full bg-[radial-gradient(80%_80%_at_50%_40%,#2a1f08,#09090c_70%)]">
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(242,193,78,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(242,193,78,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+                        <Landing3D kind={c.art} />
+                      </div>
+                    ) : (
+                      <div className="relative h-full w-full">
+                        <TileArt variant={c.art as "tournaments"} />
+                      </div>
+                    )}
+                  </div>
+                  <div className={`pop-tile__body bg-gradient-to-t ${c.tint} to-[#0d0d12]`}>
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                          <c.icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="font-display text-2xl font-bold uppercase leading-none text-white">{c.title}</div>
+                          <div className="mt-1 text-[12.5px] text-slate-400">{c.sub}</div>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-slate-500 transition-all group-hover:translate-x-1 group-hover:text-primary" />
                     </div>
                   </div>
-                  <div className="flex flex-col justify-center gap-3">
-                    <div className="rounded-xl border border-white/5 bg-black/40 px-4 py-3">
-                      <div className="text-[0.58rem] font-bold uppercase tracking-[0.2em] text-slate-500">
-                        Prize Pool
-                      </div>
-                      <div className="font-display mt-1 text-xl font-black text-primary">
-                        {featured.prize || "TBA"}
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-white/5 bg-black/40 px-4 py-3">
-                      <div className="flex items-center gap-2 text-[0.58rem] font-bold uppercase tracking-[0.2em] text-slate-500">
-                        <Calendar className="h-3 w-3" />
-                        Starts
-                      </div>
-                      <div className="mt-1 text-xs font-bold text-white">
-                        {featured.starts || "Soon"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ) : (
-              <div className="esports-card p-10 text-center">
-                <Trophy className="mx-auto h-10 w-10 text-primary/60" />
-                <h3 className="font-display mt-4 text-2xl font-black uppercase tracking-wide text-white">
-                  The arena is warming up
-                </h3>
-                <p className="mx-auto mt-3 max-w-md text-xs text-slate-400">
-                  No tournament is live right now. Sign in to be the first to
-                  know when the next bracket opens.
-                </p>
-                <Link
-                  href="/login"
-                  className="action-button-primary mx-auto mt-6"
-                >
-                  Join the Arena
-                  <ArrowRight className="h-4 w-4" />
                 </Link>
-              </div>
+              </TiltCard>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Dual marquee ───────────────────────────────────────────────── */}
+      <section className="relative border-y border-white/[0.05] bg-black/25 py-6">
+        <Marquee items={marqueeA} />
+        <Marquee items={marqueeB} reverse />
+      </section>
+
+      {/* ── Tournament rail ────────────────────────────────────────────── */}
+      <section id="featured" className="relative scroll-mt-24 py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" data-reveal>
+          <Rail
+            eyebrow="Featured tournaments"
+            title={<>Step into the <span className="text-gradient-primary">arena</span></>}
+            action={
+              <Link href="/login" className="mr-2 hidden text-[13px] font-semibold text-primary hover:underline sm:block">
+                View all →
+              </Link>
+            }
+          >
+            {tournaments.length === 0 ? (
+              <div className="hud-panel w-full text-center text-slate-400">No tournaments yet — check back soon.</div>
+            ) : (
+              tournaments.map((t) => {
+                const st = statusLabel[t.status || ""] || { t: t.status, c: "text-slate-300" };
+                const mode = t.gameMode ? modeShort[t.gameMode] : "";
+                const fill = t.maxTeams ? Math.min(100, Math.round(((t.filled ?? 0) / t.maxTeams) * 100)) : 0;
+                return (
+                  <TiltCard key={t.id} max={6} className="w-[290px] flex-shrink-0 snap-start rounded-[var(--radius-card)] sm:w-[320px]">
+                    <Link href={`/t/${t.id}`} className="esports-card group flex h-full flex-col">
+                      <div className="relative h-44 overflow-hidden bg-[#0a0a0d]">
+                        {t.banner ? (
+                          <img src={t.banner} alt="" className="absolute inset-0 h-full w-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-110" />
+                        ) : (
+                          <>
+                            <div className="absolute inset-0 bg-[radial-gradient(100%_120%_at_100%_0%,rgba(242,193,78,0.22),transparent_55%)]" />
+                            <div className="absolute right-[28%] top-0 h-full w-[2px] skew-x-[-18deg] bg-gradient-to-b from-primary/70 to-transparent transition-all duration-500 group-hover:right-[36%]" />
+                            {mode ? (
+                              <div className="pointer-events-none absolute -bottom-4 right-2 select-none font-display text-[7rem] font-bold leading-none text-transparent transition-transform duration-500 group-hover:-translate-x-3" style={{ WebkitTextStroke: "1.5px rgba(242,193,78,0.28)" }} aria-hidden>
+                                {mode}
+                              </div>
+                            ) : null}
+                          </>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-transparent to-transparent" />
+                        <span className={`absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] backdrop-blur ${st.c}`}>
+                          {st.live ? <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" /> : null}
+                          {st.t}
+                        </span>
+                        <div className="absolute bottom-3 left-4">
+                          <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/80">Prize pool</div>
+                          <div className="font-display text-2xl font-bold leading-none text-white">{t.prize || "TBA"}</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-1 flex-col p-5">
+                        <div className="font-display text-xl font-bold uppercase leading-tight text-white transition-colors group-hover:text-primary">{t.title}</div>
+                        <div className="mt-1 text-xs capitalize text-slate-500">
+                          {t.format?.replaceAll("_", " ").toLowerCase()} {mode ? `· ${mode}` : ""}
+                        </div>
+                        <div className="mt-auto pt-5">
+                          <div className="mb-1.5 flex justify-between text-[11px] text-slate-400">
+                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{t.starts}</span>
+                            <span className="tabular-nums">{t.filled ?? 0}/{t.maxTeams} slots</span>
+                          </div>
+                          <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
+                            <div className="h-full rounded-full bg-[image:var(--gradient-primary)]" style={{ width: `${fill}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </TiltCard>
+                );
+              })
             )}
+          </Rail>
+        </div>
+      </section>
+
+      {/* ── Live stats + XP ────────────────────────────────────────────── */}
+      <section className="relative border-y border-white/[0.05] bg-black/25 py-24">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(242,193,78,0.10),transparent_70%)]" />
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center" data-reveal>
+            <div className="page-hero__eyebrow mx-auto">Season 4 in numbers</div>
+            <h2 className="mt-4 font-display text-4xl font-bold uppercase leading-[0.95] text-white md:text-5xl">
+              The arena is <span className="gold-block">live</span>
+            </h2>
+          </div>
+
+          <div className="mt-12 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {[
+              { v: stats.tournaments, l: "Tournaments hosted", icon: Trophy },
+              { v: stats.teams, l: "Registered squads", icon: Users },
+              { v: stats.players, l: "Players", icon: Gamepad2 },
+              { v: stats.scrims, l: "Scrims posted", icon: Swords },
+            ].map((s, i) => (
+              <div key={s.l} data-reveal="zoom" style={d(i * 100)} className="esports-card hud-corners p-6 text-center">
+                <s.icon className="mx-auto h-6 w-6 text-primary" />
+                <div className="mt-4 font-display text-5xl font-bold leading-none text-white">
+                  <CountUp value={s.v} />
+                </div>
+                <div className="mt-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div data-reveal="left">
+              <h3 className="flex items-center gap-2 font-display text-xl font-bold uppercase tracking-wider text-primary">
+                <Zap className="h-5 w-5" /> How to earn XP
+              </h3>
+              <div className="mt-4 space-y-2.5">
+                {[
+                  { icon: Shield, t: "Create your player profile", v: "+350 XP" },
+                  { icon: Trophy, t: "Register for a tournament", v: "+200 XP" },
+                  { icon: Award, t: "Earn an award or prize", v: "+150 XP" },
+                ].map((r) => (
+                  <div key={r.t} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3.5 transition-colors hover:border-primary/30">
+                    <span className="flex items-center gap-3 text-[14px] text-slate-200">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/12 text-primary"><r.icon className="h-4 w-4" /></span>
+                      {r.t}
+                    </span>
+                    <span className="font-display text-lg font-bold text-primary">{r.v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div data-reveal="right">
+              <h3 className="flex items-center gap-2 font-display text-xl font-bold uppercase tracking-wider text-slate-200">
+                <Crown className="h-5 w-5 text-primary" /> What it unlocks
+              </h3>
+              <div className="mt-4 space-y-2.5">
+                {[
+                  { t: "A new level every 1,000 XP", v: "Level badge" },
+                  { t: "Season XP bar on your Player ID", v: "Progress" },
+                  { t: "Awards & winnings on your profile", v: "Trophy case" },
+                ].map((r) => (
+                  <div key={r.t} className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3.5 transition-colors hover:border-primary/30">
+                    <span className="text-[14px] text-slate-200">{r.t}</span>
+                    <span className="text-[12px] font-semibold uppercase tracking-wider text-slate-400">{r.v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 text-center" data-reveal>
+            <Link href="/login" className="action-button-primary px-10">
+              Start earning XP <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ── How it works ───────────────────────────────────────────────── */}
-      <section id="how" className="relative py-24 sm:py-32 border-t border-white/[0.03]">
+      <section id="how" className="relative scroll-mt-24 py-24">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-12">
-            <div className="text-[0.62rem] font-bold uppercase tracking-[0.24em] text-primary">
-              Get started in minutes
-            </div>
-            <h2 className="font-display mt-3 text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
-              Your path to the podium
+          <div className="mb-14 text-center" data-reveal>
+            <div className="page-hero__eyebrow mx-auto">Get started in minutes</div>
+            <h2 className="mt-4 font-display text-4xl font-bold uppercase text-white sm:text-5xl">
+              Your path to the <span className="gold-block">podium</span>
             </h2>
           </div>
-
-          <div className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-3 text-left">
-            {steps.map((s) => (
-              <div key={s.n} className="relative p-6 rounded-xl border border-white/5 bg-[#060914]/40 backdrop-blur-sm">
-                <div className="font-display text-4xl font-black text-primary/20">
-                  {s.n}
-                </div>
-                <h3 className="font-display mt-4 text-lg font-black uppercase tracking-wide text-white">
-                  {s.title}
-                </h3>
-                <p className="mt-2.5 text-xs leading-relaxed text-slate-400">
-                  {s.desc}
-                </p>
+          <div className="relative grid grid-cols-1 gap-5 md:grid-cols-3">
+            <div className="pointer-events-none absolute left-[16%] right-[16%] top-[52px] hidden h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent md:block" />
+            {[
+              { n: "01", icon: Shield, title: "Create your player profile", desc: "Sign in, set your MLBB ID, rank, and preferred roles so teams can find you." },
+              { n: "02", icon: Users, title: "Join or build a squad", desc: "Recruit teammates, organize your roster, and stay tournament-ready as a unit." },
+              { n: "03", icon: Crown, title: "Compete & win", desc: "Register for tournaments, play scrims, and stack achievements on your profile." },
+            ].map((s, i) => (
+              <div key={s.n} data-reveal style={d(i * 140)}>
+                <TiltCard className="h-full rounded-[var(--radius-card)]">
+                  <div className="esports-card relative h-full p-7">
+                    <div className="flex items-center justify-between">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-primary/30 bg-[#0b0b0f] text-primary">
+                        <s.icon className="h-5 w-5" />
+                      </div>
+                      <div className="font-display text-5xl font-bold leading-none text-transparent" style={{ WebkitTextStroke: "1px rgba(242,193,78,0.35)" }}>
+                        {s.n}
+                      </div>
+                    </div>
+                    <h3 className="mt-6 font-display text-xl font-bold uppercase text-white">{s.title}</h3>
+                    <p className="mt-2 text-[13px] leading-relaxed text-slate-400">{s.desc}</p>
+                  </div>
+                </TiltCard>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA band ───────────────────────────────────────────────────── */}
-      <section className="relative py-24 sm:py-32">
-        <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="gamer-id-card relative overflow-hidden p-10 text-center sm:p-16">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.12),transparent_60%)]" />
-            <div className="relative z-10">
-              <h2 className="font-display text-3xl font-black uppercase tracking-tight text-white sm:text-5xl">
-                Ready to make your mark?
+      {/* ── CTA ────────────────────────────────────────────────────────── */}
+      <section className="relative pb-24">
+        <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8" data-reveal="zoom">
+          <div className="relative overflow-hidden rounded-[var(--radius-hero)] border border-primary/30">
+            <LoginArena className="absolute inset-0 opacity-60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/70 to-[#060608]/30" />
+            <div className="relative z-10 px-6 py-20 text-center sm:py-28">
+              <h2 className="font-display text-5xl font-bold uppercase leading-[0.9] text-white sm:text-7xl">
+                Ready to <span className="gold-block">compete?</span>
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-xs text-slate-400 leading-relaxed sm:text-sm">
-                Join hundreds of Mobile Legends players competing on Community
-                Heroes. It's free to sign up and free to compete.
+              <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                {featured ? <>Next up: <span className="font-semibold text-primary">{featured.title}</span> — {featured.starts}. </> : null}
+                Free to sign up, free to compete.
               </p>
-              <Link
-                href="/login"
-                className="action-button-primary mx-auto mt-8"
-              >
-                Create your free account
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <Link href="/login" className="action-button-primary w-full px-10 sm:w-auto">
+                  Create your free account <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/features" className="action-button-secondary w-full px-8 sm:w-auto">
+                  See all features
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* ── Footer ─────────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/5 py-12 bg-black/20">
-        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <span className="text-[#FFD700] font-black text-lg font-display">/</span>
-            <span className="font-display text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-              Community Heroes
-            </span>
-          </div>
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">
-            © 2026 Community Heroes. Built for Mobile Legends competitors.
-          </p>
-        </div>
-      </footer>
-    </div>
+      {webgl ? <Landing3D kind="canvas" /> : null}
+    </MarketingShell>
   );
 }

@@ -8,10 +8,10 @@ export default async function AdminLoginPage() {
   if (session?.user) redirect("/home");
 
   return (
-    <div className="flex min-h-screen bg-[#04040a]">
+    <div className="flex min-h-screen bg-[#060608]">
       {/* Left abstract decoration */}
-      <div className="relative hidden w-[45%] flex-col justify-between overflow-hidden border-r border-white/5 bg-[#080812] p-12 lg:flex">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(239,68,68,0.06),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(250,204,21,0.04),transparent_40%)]" />
+      <div className="relative hidden w-[45%] flex-col justify-between overflow-hidden border-r border-white/5 bg-[#0d0d12] p-12 lg:flex">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(239,68,68,0.06),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(242,193,78,0.04),transparent_40%)]" />
         
         <div className="relative z-10 flex items-center gap-3 text-red-500">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10">

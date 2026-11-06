@@ -103,8 +103,8 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
     <div className="pb-24">
       <div className="mb-10 animate-in fade-in slide-in-from-top-4 duration-700 flex flex-col md:flex-row md:items-start justify-between gap-6">
         <div>
-           <h1 className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200 mb-3 flex items-center gap-4 tracking-tight drop-shadow-lg">
-             <Settings className="w-10 h-10 text-primary drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+           <h1 className="text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-200 mb-3 flex items-center gap-4 tracking-tight drop-shadow-lg">
+             <Settings className="w-10 h-10 text-primary drop-shadow-[0_0_15px_rgba(242,193,78,0.5)]" />
              Edit Tournament
            </h1>
            <p className="text-gray-400 font-bold text-lg max-w-2xl">Modify bracket metrics, prize distributions, and logistic parameters.</p>
@@ -250,7 +250,7 @@ export default async function EditTournamentPage({ params }: { params: Promise<{
         {/* Actions */}
         <div className="flex justify-end gap-4 pt-6">
            <a href={`/admin/tournaments`} className="px-6 py-4 bg-white/5 hover:bg-white/10 hover:shadow-lg text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all">Cancel</a>
-           <button type="submit" className="px-10 py-4 bg-primary hover:bg-yellow-400 text-black rounded-2xl text-sm font-black uppercase tracking-wider transition-all shadow-[0_0_30px_-5px_rgba(250,204,21,0.5)] flex items-center gap-3 hover:-translate-y-1 relative z-20">
+           <button type="submit" className="px-10 py-4 bg-primary hover:bg-amber-400 text-black rounded-2xl text-sm font-black uppercase tracking-wider transition-all shadow-[0_0_30px_-5px_rgba(242,193,78,0.5)] flex items-center gap-3 hover:-translate-y-1 relative z-20">
              <Settings className="w-6 h-6" /> Save Changes
            </button>
         </div>

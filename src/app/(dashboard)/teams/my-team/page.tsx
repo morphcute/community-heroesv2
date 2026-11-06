@@ -71,7 +71,7 @@ import { acceptInvite, declineInvite } from "../actions";
           {invitedMemberships.length > 0 && (
             <SurfaceCard tone="gold">
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-500">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                   <Bell className="h-5 w-5 animate-pulse" />
                 </div>
                 <div>

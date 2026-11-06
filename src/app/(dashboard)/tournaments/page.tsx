@@ -19,7 +19,7 @@ export default async function TournamentsPage() {
     const gradients = [
       "from-slate-600/40 to-zinc-500/20",
       "from-red-600/40 to-orange-500/20",
-      "from-amber-600/40 to-yellow-500/20",
+      "from-amber-600/40 to-amber-500/20",
       "from-purple-600/40 to-fuchsia-500/20",
       "from-green-600/40 to-emerald-500/20"
     ];
@@ -53,7 +53,7 @@ export default async function TournamentsPage() {
       type: t.locationRestriction ? t.locationRestriction.toUpperCase() : getBattlefieldLabel((t as any).battlefield || "ONLINE"),
       platform: (t as any).matchMode || "Draft Pick",
       color: generateGradient(t.id),
-      banner: t.banner || "/ch-logo.png",
+      banner: t.banner || "",
       fee: t.entryFee || "Free",
       locationRestriction: (t as any).locationRestriction || null
     };

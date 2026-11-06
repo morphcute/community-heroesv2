@@ -101,7 +101,7 @@ export function PrizeDistribution({ initialPrizes }: { initialPrizes?: string })
               type="number"
               value={prize.amount}
               onChange={(e) => updatePrize(index, "amount", e.target.value)}
-              className="w-1/3 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-black text-[#FFD700] outline-none focus:border-primary/50"
+              className="w-1/3 rounded-xl border border-white/10 bg-black/50 px-4 py-3 text-sm font-black text-primary outline-none focus:border-primary/50"
               placeholder="Amount (e.g. 4000)"
             />
             <AppSelect

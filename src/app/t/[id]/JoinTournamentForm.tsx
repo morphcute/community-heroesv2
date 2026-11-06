@@ -40,7 +40,7 @@ function SubmitButton({ alreadyJoined }: { alreadyJoined: boolean }) {
     <button
       type="submit"
       disabled={disabled}
-      className="h-14 px-8 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] hover:shadow-[0_0_45px_-8px_rgba(250,204,21,0.85)] flex items-center justify-center gap-2 group btn-animate-premium disabled:opacity-70 disabled:cursor-not-allowed"
+      className="h-14 px-8 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-amber-400 transition-all shadow-[0_0_30px_-10px_rgba(242,193,78,0.6)] hover:shadow-[0_0_45px_-8px_rgba(242,193,78,0.85)] flex items-center justify-center gap-2 group btn-animate-premium disabled:opacity-70 disabled:cursor-not-allowed"
     >
       {pending ? (
         <>

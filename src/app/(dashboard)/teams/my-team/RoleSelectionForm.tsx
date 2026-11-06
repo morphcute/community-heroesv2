@@ -100,7 +100,7 @@ export default function RoleSelectionForm({ initialRoles }: RoleSelectionFormPro
         })}
       </div>
 
-      <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-black uppercase tracking-[0.16em] text-black shadow-lg shadow-primary/20 transition-all hover:bg-yellow-400 btn-animate">
+      <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-black uppercase tracking-[0.16em] text-black shadow-lg shadow-primary/20 transition-all hover:bg-amber-400 btn-animate">
          {isSuccess ? (
             <>
                <CheckCircle2 className="w-4 h-4" /> Saved Successfully

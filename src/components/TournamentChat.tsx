@@ -28,7 +28,7 @@ const ROLE_BADGES: Record<string, RoleBadgeConfig> = {
   "FIGHTER": { label: "EXP Laner", color: "text-orange-400 bg-orange-400/10 border-orange-400/30 shadow-[0_0_10px_rgba(251,146,60,0.15)]", icon: Swords },
   "JUNGLER": { label: "Jungler", color: "text-purple-400 bg-purple-400/10 border-purple-400/30 shadow-[0_0_10px_rgba(192,132,252,0.15)]", icon: Axe },
   "MAGE": { label: "Mid Laner", color: "text-slate-400 bg-slate-400/10 border-slate-400/30 shadow-[0_0_10px_rgba(148,163,184,0.15)]", icon: Flame },
-  "MARKSMAN": { label: "Gold Laner", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30 shadow-[0_0_10px_rgba(250,204,21,0.15)]", icon: Target },
+  "MARKSMAN": { label: "Gold Laner", color: "text-amber-400 bg-amber-400/10 border-amber-400/30 shadow-[0_0_10px_rgba(242,193,78,0.15)]", icon: Target },
 };
 
 const getRankShort = (rank: string) => {
@@ -195,7 +195,7 @@ export default function TournamentChat({ tournamentId, currentUserId }: Tourname
                   </div>
                   <div className={`rounded-xl px-3.5 py-2.5 text-sm leading-relaxed border transition-all ${
                     isMe
-                      ? "bg-primary text-black border-primary/20 shadow-[0_0_15px_rgba(250,204,21,0.1)] rounded-tr-none"
+                      ? "bg-primary text-black border-primary/20 shadow-[0_0_15px_rgba(242,193,78,0.1)] rounded-tr-none"
                       : "bg-white/5 text-slate-200 border-white/5 rounded-tl-none hover:border-white/10"
                   }`}>
                     {msg.content}
@@ -232,7 +232,7 @@ export default function TournamentChat({ tournamentId, currentUserId }: Tourname
             <button
               type="submit"
               disabled={!input.trim() || sending}
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-black hover:bg-yellow-400 transition-colors disabled:opacity-50 disabled:hover:bg-primary"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-black hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:hover:bg-primary"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>

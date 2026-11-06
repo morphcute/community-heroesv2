@@ -52,7 +52,7 @@ export default function EventsClient({ initialEvents }: { initialEvents: EventCa
               onClick={() => setActiveTab(tab)}
               className={`mobile-pill ${
                 activeTab === tab
-                  ? "bg-primary text-black shadow-[0_0_15px_rgba(250,204,21,0.25)]"
+                  ? "bg-primary text-black shadow-[0_0_15px_rgba(242,193,78,0.25)]"
                   : "border border-border bg-card text-muted-foreground hover:border-primary/20 hover:text-foreground"
               }`}
             >

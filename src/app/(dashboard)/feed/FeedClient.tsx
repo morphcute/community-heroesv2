@@ -108,7 +108,7 @@ const reactionConfig = [
   { type: "LIKE",   label: "Like",      emoji: "👍", icon: ThumbsUp, color: "text-primary", bg: "bg-primary/10 border-primary/30", glow: "shadow-primary/20" },
   { type: "LOVE",   label: "Love",      emoji: "❤️", icon: Heart,    color: "text-rose-400",   bg: "bg-rose-500/10 border-rose-500/30",   glow: "shadow-rose-500/20" },
   { type: "FIRE",   label: "Fire",      emoji: "🔥", icon: Flame,    color: "text-amber-400",  bg: "bg-amber-500/10 border-amber-500/30", glow: "shadow-amber-500/20" },
-  { type: "TROPHY", label: "Champion",  emoji: "🏆", icon: Trophy,   color: "text-yellow-400", bg: "bg-yellow-500/10 border-yellow-500/30", glow: "shadow-yellow-500/20" },
+  { type: "TROPHY", label: "Champion",  emoji: "🏆", icon: Trophy,   color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/30", glow: "shadow-amber-500/20" },
 ];
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -140,7 +140,7 @@ function Avatar({
   return (
     <div className="relative flex-shrink-0">
       <div
-        className={`${sizeMap[size]} rounded-full overflow-hidden bg-gradient-to-br from-yellow-500/20 to-amber-900/40 border border-primary/20 flex items-center justify-center font-black text-primary select-none`}
+        className={`${sizeMap[size]} rounded-full overflow-hidden bg-gradient-to-br from-amber-500/20 to-amber-900/40 border border-primary/20 flex items-center justify-center font-black text-primary select-none`}
       >
         {user.image ? (
           <img src={user.image} className="w-full h-full object-cover" alt="" />
@@ -297,7 +297,7 @@ function PublisherBox({
                     <button
                       onClick={handlePublish}
                       disabled={!content.trim() || publishing}
-                      className="px-5 py-2 bg-primary hover:bg-yellow-400 disabled:bg-muted disabled:text-muted-foreground text-black text-[12px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center gap-2 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(250,204,21,0.15)]"
+                      className="px-5 py-2 bg-primary hover:bg-amber-400 disabled:bg-muted disabled:text-muted-foreground text-black text-[12px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center gap-2 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(242,193,78,0.15)]"
                     >
                       {publishing ? (
                         <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Posting...</>
@@ -597,7 +597,7 @@ function PostCard({
           {/* Comment input */}
           <div className="p-4 sm:p-5 pt-3 flex gap-2.5 items-center">
             <Avatar user={{ name: "Me", image: null }} size="sm" />
-            <div className="flex-1 flex items-center gap-2 bg-muted border border-border focus-within:border-primary/30 focus-within:shadow-[0_0_12px_rgba(250,204,21,0.06)] rounded-2xl px-4 py-2 transition-all">
+            <div className="flex-1 flex items-center gap-2 bg-muted border border-border focus-within:border-primary/30 focus-within:shadow-[0_0_12px_rgba(242,193,78,0.06)] rounded-2xl px-4 py-2 transition-all">
               <input
                 ref={commentInputRef}
                 type="text"
@@ -785,7 +785,7 @@ export default function FeedClient({
     <div className="min-h-screen w-full">
       {/* Hero Banner */}
       <div className="relative overflow-hidden border-b border-border bg-card/40">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(250,204,21,0.07)_0%,transparent_60%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(242,193,78,0.07)_0%,transparent_60%)] pointer-events-none" />
         <div className="relative max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex items-center gap-3 mb-3">
             <div className="inline-flex items-center gap-2 text-primary text-[11px] font-black uppercase tracking-[0.2em]">
@@ -824,7 +824,7 @@ export default function FeedClient({
                   onClick={() => setActiveFilter(f)}
                   className={`px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all ${
                     activeFilter === f
-                      ? "bg-primary text-black shadow-[0_0_15px_rgba(250,204,21,0.2)]"
+                      ? "bg-primary text-black shadow-[0_0_15px_rgba(242,193,78,0.2)]"
                       : "text-muted-foreground hover:text-foreground bg-card border border-border"
                   }`}
                 >

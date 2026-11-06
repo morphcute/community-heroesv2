@@ -60,7 +60,7 @@ export default async function TeamsPage() {
               href={`/teams/${team.id}`}
               className="group esports-card p-5 transition-all duration-300 hover:-translate-y-1"
             >
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.16),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(250,204,21,0.14),transparent_20%)] opacity-85" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(242,193,78,0.16),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(242,193,78,0.14),transparent_20%)] opacity-85" />
               <div className="relative z-10">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">

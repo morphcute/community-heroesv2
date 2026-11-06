@@ -67,7 +67,7 @@ export default function RegionSelect({
             setScope(val);
             if (val === "PROVINCIAL" && !specificLocation) setSpecificLocation(HANDLED_AREAS[0]);
          }}
-         className="w-full bg-[#0c1320] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-orange-500/50 outline-none transition-colors appearance-none cursor-pointer"
+         className="w-full bg-[#0d0d12] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-orange-500/50 outline-none transition-colors appearance-none cursor-pointer"
       >
         <option value="NATIONWIDE">Nationwide (Open to All)</option>
         <option value="PROVINCIAL">Per Area (Select Assigned Area)</option>
@@ -77,7 +77,7 @@ export default function RegionSelect({
         <select 
            value={specificLocation} 
            onChange={(e) => setSpecificLocation(e.target.value)}
-           className="w-full bg-[#0c1320]/80 border border-primary/30 rounded-xl px-4 py-3 text-sm text-primary focus:border-primary/80 outline-none transition-colors appearance-none cursor-pointer animate-in fade-in slide-in-from-top-2"
+           className="w-full bg-[#0d0d12]/80 border border-primary/30 rounded-xl px-4 py-3 text-sm text-primary focus:border-primary/80 outline-none transition-colors appearance-none cursor-pointer animate-in fade-in slide-in-from-top-2"
         >
           {HANDLED_AREAS.map((p: string) => <option key={p} value={p}>{p}</option>)}
         </select>

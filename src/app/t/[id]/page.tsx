@@ -324,7 +324,7 @@ export default async function TournamentDetailPage({
     content: m.content,
     time: m.createdAt.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' }),
     avatar: (m.user.name || "U").charAt(0).toUpperCase(),
-    color: ['bg-amber-500', 'bg-yellow-500', 'bg-orange-500', 'bg-yellow-600'][m.user.id.charCodeAt(0) % 4],
+    color: ['bg-amber-500', 'bg-amber-500', 'bg-orange-500', 'bg-amber-600'][m.user.id.charCodeAt(0) % 4],
     isMe: false
   }));
 
@@ -363,7 +363,7 @@ export default async function TournamentDetailPage({
                   <Calendar className="w-4 h-4 text-gray-400" />
                   {tournament.startDate} {tournament.endDate ? `→ ${tournament.endDate}` : ''}
                </span>
-               <span className="text-[#FFC107] flex items-center gap-2 drop-shadow-[0_0_8px_rgba(255,193,7,0.3)]">
+               <span className="text-primary flex items-center gap-2 drop-shadow-[0_0_8px_rgba(255,193,7,0.3)]">
                   <Trophy className="w-4 h-4" /> {tournament.prize}
                </span>
                <span className="text-primary flex items-center gap-2">
@@ -376,7 +376,7 @@ export default async function TournamentDetailPage({
                 {isCreator ? (
                    <div className="flex flex-col gap-2">
                       <div className="flex flex-wrap gap-2.5 items-center">
-                         <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="px-8 py-3 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
+                         <Link href={`/admin/tournaments/${tournamentData.id}/edit`} className="px-8 py-3 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-amber-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(242,193,78,0.6)] group">
                             Manage Tournament &rarr;
                          </Link>
                          {registrationIsOpen && (
@@ -399,7 +399,7 @@ export default async function TournamentDetailPage({
                       </div>
                     ) : (
                       <div className="w-fit scale-90 origin-left">
-                        <Link href={`/login?callbackUrl=/t/${tournamentData.id}`} className="h-14 px-8 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(250,204,21,0.6)] group">
+                        <Link href={`/login?callbackUrl=/t/${tournamentData.id}`} className="h-14 px-8 bg-primary text-black font-black text-sm uppercase tracking-wider rounded-xl hover:bg-amber-400 transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_-10px_rgba(242,193,78,0.6)] group">
                           Login to Register &rarr;
                         </Link>
                       </div>
@@ -516,8 +516,8 @@ export default async function TournamentDetailPage({
                   </div>
 
                   {/* Prize Pool */}
-                  <div className="flex items-center gap-4 bg-card border border-primary/30 rounded-2xl p-4 shadow-[inset_0_0_20px_rgba(250,204,21,0.03)]">
-                     <div className="w-12 h-12 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">
+                  <div className="flex items-center gap-4 bg-card border border-primary/30 rounded-2xl p-4 shadow-[inset_0_0_20px_rgba(242,193,78,0.03)]">
+                     <div className="w-12 h-12 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary drop-shadow-[0_0_8px_rgba(242,193,78,0.5)]">
                         <Trophy className="w-6 h-6" />
                      </div>
                      <div>
@@ -554,7 +554,7 @@ export default async function TournamentDetailPage({
                   <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-8 flex items-start gap-3">
                      <Clock className="w-5 h-5 text-primary mt-0.5" />
                      <div>
-                    <div className="text-sm font-black text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] tracking-wide mb-1">{statusSteps[Math.max(activeStatusIndex, 0)]?.title || "Status"}</div>
+                    <div className="text-sm font-black text-primary drop-shadow-[0_0_8px_rgba(242,193,78,0.5)] tracking-wide mb-1">{statusSteps[Math.max(activeStatusIndex, 0)]?.title || "Status"}</div>
                     <div className="text-xs text-primary/80">{registrationMessage}</div>
                      </div>
                   </div>
@@ -584,7 +584,7 @@ export default async function TournamentDetailPage({
               <div className="mb-6">
                  <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-3">Phases</div>
                  <div className="flex items-center gap-2">
-                    <span className="px-5 py-2 bg-primary text-black text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]">
+                    <span className="px-5 py-2 bg-primary text-black text-xs font-black uppercase tracking-wider rounded-full shadow-[0_0_15px_-3px_rgba(242,193,78,0.4)]">
                       Knockout
                     </span>
                  </div>
@@ -613,11 +613,11 @@ export default async function TournamentDetailPage({
                              <div className="relative flex items-center justify-between px-5 py-4 border-b border-border bg-muted/10">
                                 <div className="flex-1 text-center">
                                    <div className="text-sm font-black text-muted-foreground tracking-wide gap-1 flex items-center justify-center">MATCH <span className="text-foreground">{idx + 1}</span></div>
-                                   <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${m.status === 'COMPLETED' ? 'text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : m.status === 'ONGOING' ? 'text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'text-gray-600'}`}>
+                                   <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${m.status === 'COMPLETED' ? 'text-primary drop-shadow-[0_0_8px_rgba(242,193,78,0.5)]' : m.status === 'ONGOING' ? 'text-amber-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]' : 'text-gray-600'}`}>
                                       {m.status}
                                    </div>
                                 </div>
-                                <Link href={`/t/${tournament.id}?tab=chat`} className="w-8 h-8 rounded-full bg-primary hover:bg-yellow-400 flex items-center justify-center transition-transform hover:scale-105 absolute right-5 shadow-[0_0_15px_-3px_rgba(250,204,21,0.4)]" title="Open tournament chat">
+                                <Link href={`/t/${tournament.id}?tab=chat`} className="w-8 h-8 rounded-full bg-primary hover:bg-amber-400 flex items-center justify-center transition-transform hover:scale-105 absolute right-5 shadow-[0_0_15px_-3px_rgba(242,193,78,0.4)]" title="Open tournament chat">
                                    <MessageSquare className="w-4 h-4 text-black" fill="currentColor" strokeWidth={0} />
                                 </Link>
                              </div>
@@ -655,7 +655,7 @@ export default async function TournamentDetailPage({
                                    {ava2 ? (
                                       <img src={ava2} alt={name2} className="w-16 h-16 rounded-full border border-border object-cover shadow-lg" />
                                    ) : (
-                                      <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 font-bold text-xl shadow-lg">
+                                      <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-xl shadow-lg">
                                          {name2.charAt(0)}
                                       </div>
                                    )}
@@ -673,23 +673,23 @@ export default async function TournamentDetailPage({
                                   <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1">
                                       <label className="text-[9px] font-bold text-muted-foreground uppercase truncate block">{name1}</label>
-                                      <input type="number" name="score1" defaultValue={m.score1 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-[#FFC107] outline-none" />
+                                      <input type="number" name="score1" defaultValue={m.score1 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-primary outline-none" />
                                     </div>
                                     <div className="space-y-1">
                                       <label className="text-[9px] font-bold text-muted-foreground uppercase truncate block">{name2}</label>
-                                      <input type="number" name="score2" defaultValue={m.score2 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-[#FFC107] outline-none" />
+                                      <input type="number" name="score2" defaultValue={m.score2 || 0} className="w-full bg-background border border-border rounded px-2 py-1 text-xs text-foreground focus:border-primary outline-none" />
                                     </div>
                                   </div>
                                   <div className="space-y-1">
                                     <label className="text-[9px] font-bold text-muted-foreground uppercase block">Select Winner</label>
-                                    <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-[#FFC107] outline-none">
+                                    <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-primary outline-none">
                                       <option value="">-- Draw / Ongoing --</option>
                                       {p1 && <option value={p1.id}>{name1}</option>}
                                       {p2 && <option value={p2.id}>{name2}</option>}
                                     </select>
                                   </div>
                                   <div className="flex gap-2 pt-1">
-                                    <button type="submit" className="flex-1 py-1.5 bg-[#FFC107] text-black font-black uppercase text-[10px] tracking-wider rounded hover:bg-yellow-400 transition-colors">
+                                    <button type="submit" className="flex-1 py-1.5 bg-primary text-black font-black uppercase text-[10px] tracking-wider rounded hover:bg-amber-400 transition-colors">
                                       Save
                                     </button>
                                     <Link href={`/t/${tournament.id}?tab=matches`} className="flex-1 py-1.5 bg-muted border border-border text-foreground font-black uppercase text-[10px] tracking-wider rounded hover:bg-muted/80 text-center">
@@ -702,7 +702,7 @@ export default async function TournamentDetailPage({
                                   <div className="border-t border-border/50 px-5 py-3 bg-muted/5 flex items-center justify-center">
                                     <Link 
                                       href={`/t/${tournament.id}?tab=matches&editMatch=${m.id}`} 
-                                      className="text-[10px] font-black uppercase tracking-wider text-primary hover:text-yellow-400 flex items-center gap-1.5"
+                                      className="text-[10px] font-black uppercase tracking-wider text-primary hover:text-amber-400 flex items-center gap-1.5"
                                     >
                                       <Settings className="w-3.5 h-3.5" /> Manage Result / Score
                                     </Link>
@@ -755,14 +755,14 @@ export default async function TournamentDetailPage({
                                return (
                                  <div key={m.id} className="relative group">
                                     <div className={`rounded-xl border transition-all duration-300 shadow-lg relative z-10 ${
-                                      m.status === 'ONGOING' ? 'bg-[#FFC107]/5 border-[#FFC107]/50 shadow-[0_0_15px_-3px_rgba(255,193,7,0.3)]' :
-                                      m.status === 'COMPLETED' ? 'bg-muted border-[#FFC107]/20 border-l-4 border-l-[#FFC107]' :
+                                      m.status === 'ONGOING' ? 'bg-primary/5 border-primary/50 shadow-[0_0_15px_-3px_rgba(255,193,7,0.3)]' :
+                                      m.status === 'COMPLETED' ? 'bg-muted border-primary/20 border-l-4 border-l-[#F2C14E]' :
                                       'bg-background border-border opacity-70'
                                     }`}>
                                       {userCanEditBracket && !isEditingThis && (p1 || p2) && (
                                         <Link
                                           href={`/t/${tournament.id}?tab=bracket&editMatch=${m.id}`}
-                                          className="absolute -top-3 -right-3 w-8 h-8 bg-background border-2 border-[#FFC107] rounded-full flex items-center justify-center shadow-lg text-[#FFC107] opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 hover:bg-muted z-10"
+                                          className="absolute -top-3 -right-3 w-8 h-8 bg-background border-2 border-primary rounded-full flex items-center justify-center shadow-lg text-primary opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110 hover:bg-muted z-10"
                                           title="Edit Match Score"
                                         >
                                           <Settings className="w-4 h-4" />
@@ -770,54 +770,54 @@ export default async function TournamentDetailPage({
                                       )}
 
                                       {isEditingThis ? (
-                                        <form action={updateMatchScore} className="p-3 bg-card border border-[#FFC107]/50 rounded-xl space-y-3 z-20 relative shadow-2xl shadow-[#FFC107]/20">
+                                        <form action={updateMatchScore} className="p-3 bg-card border border-primary/50 rounded-xl space-y-3 z-20 relative shadow-2xl shadow-[#F2C14E]/20">
                                           <input type="hidden" name="matchId" value={m.id} />
                                           <input type="hidden" name="tournamentId" value={tournament.id} />
                                           <div className="flex items-center justify-between gap-4">
                                             <span className="text-xs font-bold text-foreground/90 w-24 truncate">{name1}</span>
-                                            <input type="number" name="score1" defaultValue={m.score1} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-[#FFC107] outline-none" />
+                                            <input type="number" name="score1" defaultValue={m.score1} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-primary outline-none" />
                                           </div>
                                           <div className="flex items-center justify-between gap-4">
                                             <span className="text-xs font-bold text-foreground/90 w-24 truncate">{name2}</span>
-                                            <input type="number" name="score2" defaultValue={m.score2} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-[#FFC107] outline-none" />
+                                            <input type="number" name="score2" defaultValue={m.score2} className="w-14 bg-background border border-border rounded px-2 py-1 text-sm text-center text-foreground focus:border-primary outline-none" />
                                           </div>
                                           <div className="pt-2 border-t border-border flex flex-col gap-2">
-                                            <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-[#FFC107] outline-none">
+                                            <select name="winnerId" defaultValue={m.winnerId || ""} className="w-full bg-background border border-border rounded px-2 py-1.5 text-xs text-foreground focus:border-primary outline-none">
                                               <option value="">-- Set Winner (TBA) --</option>
                                               {p1 && <option value={p1.id}>{name1}</option>}
                                               {p2 && <option value={p2.id}>{name2}</option>}
                                             </select>
                                             <div className="flex gap-2">
                                               <Link href={`/t/${tournament.id}?tab=bracket`} className="flex-1 text-center py-1.5 bg-white/10 text-xs font-bold rounded hover:bg-white/20 transition-colors">Cancel</Link>
-                                              <button type="submit" className="flex-1 py-1.5 bg-[#FFC107] text-black font-black text-xs rounded hover:bg-[#FFC107]/90 transition-colors">Save</button>
+                                              <button type="submit" className="flex-1 py-1.5 bg-primary text-black font-black text-xs rounded hover:bg-primary/90 transition-colors">Save</button>
                                             </div>
                                           </div>
                                         </form>
                                       ) : (
                                         <div className="p-4">
                                           {/* P1 Node */}
-                                          <div className={`flex items-center justify-between p-2 rounded-lg mb-1 transition-colors ${isP1Winner ? 'bg-[#FFC107]/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-[#FFC107]/30' : 'hover:bg-muted'}`}>
+                                          <div className={`flex items-center justify-between p-2 rounded-lg mb-1 transition-colors ${isP1Winner ? 'bg-primary/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-primary/30' : 'hover:bg-muted'}`}>
                                              <div className="flex items-center gap-3 w-[70%]">
                                                 <div className="w-6 h-6 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground overflow-hidden shrink-0 border border-border">
                                                    {p1?.user?.image ? <img src={p1.user.image} className="w-full h-full object-cover" /> : name1.charAt(0)}
                                                 </div>
-                                                <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-[#FFC107]' : 'text-foreground/80'}`}>{name1}</span>
+                                                <span className={`text-sm font-bold truncate ${isP1Winner ? 'text-primary' : 'text-foreground/80'}`}>{name1}</span>
                                              </div>
-                                             <span className={`text-sm font-black ${isP1Winner ? 'text-[#FFC107]' : 'text-muted-foreground'}`}>{m.score1}</span>
+                                             <span className={`text-sm font-black ${isP1Winner ? 'text-primary' : 'text-muted-foreground'}`}>{m.score1}</span>
                                           </div>
                                           
                                           {/* Splitter */}
                                           <div className="h-px w-full bg-border my-1" />
                                           
                                           {/* P2 Node */}
-                                          <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isP2Winner ? 'bg-[#FFC107]/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-[#FFC107]/30' : 'hover:bg-muted'}`}>
+                                          <div className={`flex items-center justify-between p-2 rounded-lg transition-colors ${isP2Winner ? 'bg-primary/10 shadow-[inset_0_0_15px_rgba(255,193,7,0.1)] border border-primary/30' : 'hover:bg-muted'}`}>
                                              <div className="flex items-center gap-3 w-[70%]">
                                                 <div className="w-6 h-6 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground overflow-hidden shrink-0 border border-border">
                                                    {p2?.user?.image ? <img src={p2.user.image} className="w-full h-full object-cover" /> : name2.charAt(0)}
                                                 </div>
-                                                <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-[#FFC107]' : 'text-foreground/80'}`}>{name2}</span>
+                                                <span className={`text-sm font-bold truncate ${isP2Winner ? 'text-primary' : 'text-foreground/80'}`}>{name2}</span>
                                              </div>
-                                             <span className={`text-sm font-black ${isP2Winner ? 'text-[#FFC107]' : 'text-muted-foreground'}`}>{m.score2}</span>
+                                             <span className={`text-sm font-black ${isP2Winner ? 'text-primary' : 'text-muted-foreground'}`}>{m.score2}</span>
                                           </div>
                                         </div>
                                       )}
@@ -826,11 +826,11 @@ export default async function TournamentDetailPage({
                                     {/* CSS Bracketing Connectors */}
                                     {!isFinal && (
                                        <>
-                                         <div className="absolute top-1/2 -right-8 w-8 h-[2px] bg-[#FFC107]/40 group-hover:bg-[#FFC107] transition-colors z-0" />
+                                         <div className="absolute top-1/2 -right-8 w-8 h-[2px] bg-primary/40 group-hover:bg-primary transition-colors z-0" />
                                          {m.matchIndex % 2 === 0 ? (
-                                           <div className="absolute top-1/2 -right-8 w-[2px] h-[calc(50%+1.5rem)] bg-[#FFC107]/40 group-hover:bg-[#FFC107] transition-colors z-0" />
+                                           <div className="absolute top-1/2 -right-8 w-[2px] h-[calc(50%+1.5rem)] bg-primary/40 group-hover:bg-primary transition-colors z-0" />
                                          ) : (
-                                           <div className="absolute bottom-1/2 -right-8 w-[2px] h-[calc(50%+1.5rem)] bg-[#FFC107]/40 group-hover:bg-[#FFC107] transition-colors z-0" />
+                                           <div className="absolute bottom-1/2 -right-8 w-[2px] h-[calc(50%+1.5rem)] bg-primary/40 group-hover:bg-primary transition-colors z-0" />
                                          )}
                                        </>
                                     )}
@@ -855,7 +855,7 @@ export default async function TournamentDetailPage({
                   </div>
                   <h3 className="text-xl font-black text-foreground uppercase tracking-wider mb-2">Join the conversation</h3>
                   <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">Sign in to chat with other participants and follow the tournament action in real time.</p>
-                 <Link href={`/login?callbackUrl=/t/${tournamentData.id}?tab=chat`} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-wider text-black transition-colors hover:bg-yellow-400">
+                 <Link href={`/login?callbackUrl=/t/${tournamentData.id}?tab=chat`} className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-black uppercase tracking-wider text-black transition-colors hover:bg-amber-400">
                    Sign in to chat
                  </Link>
                </div>
@@ -902,7 +902,7 @@ export default async function TournamentDetailPage({
             <section className="animate-in fade-in slide-in-from-bottom-8 duration-500 max-w-5xl mx-auto pb-20">
                {/* Top Ribbon */}
                <div className="relative flex justify-center mb-16 mt-4">
-                  <div className="relative z-10 bg-primary px-12 py-4 shadow-2xl skew-x-[-10deg] border border-yellow-300">
+                  <div className="relative z-10 bg-primary px-12 py-4 shadow-2xl skew-x-[-10deg] border border-amber-300">
                      <div className="skew-x-[10deg] text-black font-black text-2xl tracking-tight drop-shadow-md">
                         Total Prize Pool: {prizeData ? `${Number(prizeData.total).toFixed(2)} ${prizeData.currency}` : tournament.prize}
                      </div>
@@ -921,7 +921,7 @@ export default async function TournamentDetailPage({
                         <Award className="w-10 h-10 text-white drop-shadow-md" />
                         <div className="font-black text-4xl text-white drop-shadow-lg font-serif">2</div>
                      </div>
-                     <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(2)}</div>
+                     <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(242,193,78,0.8)] tracking-wider">{getPrizeAmount(2)}</div>
                      <div className="mt-4 flex flex-col items-center gap-2 w-full">
                         <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
                            {runnerUpName ? runnerUpName.charAt(0) : "—"}
@@ -931,16 +931,16 @@ export default async function TournamentDetailPage({
                   </div>
 
                   {/* 1st Place (Gold) */}
-                  <div className="w-[240px] bg-gradient-to-b from-[#FFD700]/95 to-[#B8860B]/95 rounded-2xl p-6 text-center shadow-[0_15px_50px_-10px_rgba(255,215,0,0.5)] border-2 border-yellow-200/50 flex flex-col items-center justify-between h-[320px] relative z-10 hover:-translate-y-2 transition-transform">
+                  <div className="w-[240px] bg-gradient-to-b from-primary/95 to-[#B8860B]/95 rounded-2xl p-6 text-center shadow-[0_15px_50px_-10px_rgba(242,193,78,0.5)] border-2 border-amber-200/50 flex flex-col items-center justify-between h-[320px] relative z-10 hover:-translate-y-2 transition-transform">
                      <div className="absolute -top-6">
-                        <Crown className="w-14 h-14 text-yellow-100 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+                        <Crown className="w-14 h-14 text-amber-100 drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
                      </div>
                      <div className="flex flex-col items-center gap-2 mt-6">
                         <div className="font-black text-5xl text-white drop-shadow-lg font-serif">1</div>
                      </div>
-                     <div className="text-base font-black text-white drop-shadow-[0_0_10px_rgba(250,204,21,0.9)] tracking-wider">{getPrizeAmount(1)}</div>
+                     <div className="text-base font-black text-white drop-shadow-[0_0_10px_rgba(242,193,78,0.9)] tracking-wider">{getPrizeAmount(1)}</div>
                      <div className="mt-4 flex flex-col items-center gap-3 w-full">
-                        <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-yellow-100 flex items-center justify-center font-black text-2xl text-white shadow-inner">
+                        <div className="w-16 h-16 rounded-full bg-white/20 border-2 border-amber-100 flex items-center justify-center font-black text-2xl text-white shadow-inner">
                            {championName ? championName.charAt(0) : "—"}
                         </div>
                         <div className="text-base font-black text-white truncate w-full">{championName ? championName : "Champion TBD"}</div>
@@ -953,7 +953,7 @@ export default async function TournamentDetailPage({
                         <Award className="w-8 h-8 text-white drop-shadow-md" />
                         <div className="font-black text-4xl text-white drop-shadow-lg font-serif">3</div>
                      </div>
-                     <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] tracking-wider">{getPrizeAmount(3)}</div>
+                     <div className="text-sm font-black text-white drop-shadow-[0_0_8px_rgba(242,193,78,0.8)] tracking-wider">{getPrizeAmount(3)}</div>
                      <div className="mt-4 flex flex-col items-center gap-2 w-full">
                         <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center font-black text-xl text-white shadow-inner">
                            "—"
@@ -1025,7 +1025,7 @@ export default async function TournamentDetailPage({
                     <h3 className="text-3xl font-black text-foreground mb-8 tracking-tight">{tournament.title}</h3>
                     <div className="space-y-4">
                        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">GENERAL FORMAT</h4>
-                       <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-[#FFC107]">
+                       <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-primary">
                           <li><span className="text-foreground">Team Size:</span> {tournament.mode}</li>
                           <li><span className="text-foreground">Battlefield:</span> {tournament.battlefield}</li>
                           <li><span className="text-foreground">Tournament Format:</span> {tournament.bracketType}</li>
@@ -1039,7 +1039,7 @@ export default async function TournamentDetailPage({
                  <div>
                     <div className="space-y-4 mt-12">
                        <h4 className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-4">START TIME</h4>
-                       <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-[#FFC107]">
+                       <ul className="space-y-3 text-sm text-foreground/80 font-medium list-disc pl-5 marker:text-primary">
                           <li><span className="text-foreground">Local Time:</span> {tournament.startDate}</li>
                           <li><span className="text-foreground">Maximum Capacity:</span> {tournament.maxParticipants} slots</li>
                           <li><span className="text-foreground">Registration Status:</span> {registrationIsOpen ? "Open globally" : "Registration locked"}</li>
@@ -1068,7 +1068,7 @@ function TabLink({ children, active, href }: {
       >
         {children}
         {active && (
-          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FFC107] shadow-[0_0_10px_rgba(255,193,7,0.5)]" />
+          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_10px_rgba(255,193,7,0.5)]" />
         )}
       </Link>
    )
@@ -1089,14 +1089,14 @@ function TimelineStep({ status, label, state }: { status: string; label: string;
 function ParticipantCard({ participant, index }: { participant: { id: string; name: string; avatar: string; status: string; joinedAt: Date; mlbbId: string; inGameName: string }; index: number }) {
   const topColors = [
     "from-amber-600/60 to-amber-900/40",
-    "from-yellow-600/60 to-yellow-900/40",
+    "from-amber-600/60 to-amber-900/40",
     "from-orange-600/60 to-orange-900/40",
     "from-amber-500/60 to-amber-800/40",
-    "from-yellow-500/60 to-amber-700/40",
+    "from-amber-500/60 to-amber-700/40",
   ];
 
   return (
-    <div className="rounded-2xl border border-border overflow-hidden bg-card hover:border-[#FFC107]/50 hover:shadow-[0_0_20px_rgba(255,193,7,0.1)] transition-all shadow-lg flex flex-col group">
+    <div className="rounded-2xl border border-border overflow-hidden bg-card hover:border-primary/50 hover:shadow-[0_0_20px_rgba(255,193,7,0.1)] transition-all shadow-lg flex flex-col group">
       <div className={`h-16 bg-gradient-to-br ${topColors[index % topColors.length]} opacity-90`} />
       <div className="px-5 pb-5 -mt-8 text-center relative z-10 flex-1 flex flex-col">
         <div className="mx-auto w-16 h-16 rounded-full bg-background border-4 border-card overflow-hidden flex items-center justify-center font-bold text-foreground text-xl shadow-md transition-transform group-hover:scale-105">

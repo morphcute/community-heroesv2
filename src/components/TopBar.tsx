@@ -62,6 +62,18 @@ export default function TopBar({ user }: TopBarProps) {
   const notifRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -187,43 +199,45 @@ export default function TopBar({ user }: TopBarProps) {
   };
 
   return (
-    <div className="topbar-panel sticky top-0 z-30 border-b border-border px-3 py-2.5 backdrop-blur-2xl sm:px-4 sm:py-3 lg:px-6">
-      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3">
+    <div className="topbar-panel sticky top-0 z-30 border-b border-border px-3 backdrop-blur-2xl sm:px-4 lg:px-6">
+      <div className="mx-auto flex h-[64px] w-full max-w-[1600px] items-center justify-between gap-3 lg:h-[72px]">
         <div className="flex flex-1 items-center gap-3">
           <button
             onClick={toggle}
-            className="rounded-[1rem] border border-white/10 bg-white/6 p-2 text-slate-400 transition-all hover:border-primary/25 hover:text-primary lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-white/[0.03] text-muted-foreground transition-all hover:border-primary/30 hover:text-primary lg:hidden"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-[18px] w-[18px]" />
           </button>
 
           <div className="min-w-0 lg:hidden">
-            <div className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-primary">Community Heroes</div>
+            <div className="font-display text-[0.7rem] font-bold tracking-[0.2em] text-primary">Community Heroes</div>
             <div className="truncate text-sm font-semibold text-white">{user?.name ? `Welcome back, ${user.name.split(" ")[0]}` : "Player access"}</div>
           </div>
 
           {/* Interactive Facebook-Style Header Search */}
           <div className="relative hidden md:block md:min-w-[320px] md:max-w-xl md:flex-1" ref={searchRef}>
-            <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/6 px-4 py-3 shadow-[0_16px_40px_-32px_rgba(0,0,0,0.95)]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/6 text-primary">
-                {searching ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                ) : (
-                  <Search className="h-4 w-4" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-slate-500">Search Players & Events</div>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onFocus={() => { if (searchQuery.trim()) setDropdownOpen(true); }}
-                  placeholder="Find tournaments, teams, players, and events..."
-                  className="mt-1 w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
-                />
-              </div>
+            <div className="group flex h-11 items-center gap-3 rounded-[var(--radius-control)] border border-border bg-white/[0.03] px-3.5 transition-all focus-within:border-primary/60 focus-within:bg-white/[0.05] focus-within:shadow-[0_0_0_3px_var(--ring-soft)] hover:border-white/15">
+              {searching ? (
+                <Loader2 className="h-4 w-4 flex-shrink-0 animate-spin text-primary" />
+              ) : (
+                <Search className="h-4 w-4 flex-shrink-0 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              )}
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                onFocus={() => { if (searchQuery.trim()) setDropdownOpen(true); }}
+                placeholder="Search tournaments, teams, players…"
+                aria-label="Search tournaments, teams and players"
+                className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              />
+              {!searchQuery && (
+                <kbd className="hidden select-none items-center gap-0.5 rounded border border-border bg-white/[0.04] px-1.5 py-0.5 font-sans text-[10px] font-semibold text-muted-foreground lg:inline-flex">
+                  ⌘K
+                </kbd>
+              )}
               {searchQuery && (
                 <button 
                   onClick={clearSearch}
@@ -236,17 +250,17 @@ export default function TopBar({ user }: TopBarProps) {
 
             {/* Absolute Dropdown Results Portal */}
             {dropdownOpen && (
-              <div className="dropdown-panel absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-yellow-500/20 p-4 shadow-[0_20px_50px_rgba(0,0,0,0.9)] backdrop-blur-md max-h-[420px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="dropdown-panel absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-border p-3 shadow-[0_24px_60px_rgba(0,0,0,0.7)] backdrop-blur-md max-h-[420px] overflow-y-auto custom-scrollbar animate-in fade-in slide-in-from-top-2 duration-200">
                 {results.tournaments.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-2">// Tournaments</div>
+                    <div className="mb-1.5 px-2 text-[9.5px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Tournaments</div>
                     <div className="space-y-1">
                       {results.tournaments.map(t => (
                         <Link
                           key={t.id}
                           href={`/tournaments/${t.id}`}
                           onClick={clearSearch}
-                          className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-primary/5 transition-all hover:translate-x-1 border border-transparent hover:border-yellow-500/10"
+                          className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/[0.05] transition-colors"
                         >
                           <Trophy className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                           <div className="min-w-0 flex-1">
@@ -261,14 +275,14 @@ export default function TopBar({ user }: TopBarProps) {
 
                 {results.teams.length > 0 && (
                   <div className="mb-4">
-                    <div className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-2">// Teams</div>
+                    <div className="mb-1.5 px-2 text-[9.5px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Teams</div>
                     <div className="space-y-1">
                       {results.teams.map(team => (
                         <Link
                           key={team.id}
                           href={`/teams/${team.id}`}
                           onClick={clearSearch}
-                          className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-primary/5 transition-all hover:translate-x-1 border border-transparent hover:border-yellow-500/10"
+                          className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/[0.05] transition-colors"
                         >
                           <Users className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                           <div className="min-w-0 flex-1">
@@ -283,13 +297,13 @@ export default function TopBar({ user }: TopBarProps) {
 
                 {results.players.length > 0 && (
                   <div className="mb-2">
-                    <div className="text-[9px] font-black text-primary uppercase tracking-[0.2em] mb-2">// Players</div>
+                    <div className="mb-1.5 px-2 text-[9.5px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Players</div>
                     <div className="space-y-1">
                       {results.players.map(p => (
                         <button
                           key={p.id}
                           onClick={() => openPlayerCard(p)}
-                          className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-primary/5 transition-all hover:translate-x-1 border border-transparent hover:border-yellow-500/10 text-left cursor-pointer"
+                          className="w-full flex items-center gap-2.5 p-2 rounded-lg hover:bg-white/[0.05] transition-colors text-left cursor-pointer"
                         >
                           <div className="w-6 h-6 rounded-full overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-gray-400 font-bold flex-shrink-0">
                             {p.image ? <img src={p.image} className="w-full h-full object-cover" /> : p.name?.charAt(0)}
@@ -322,24 +336,24 @@ export default function TopBar({ user }: TopBarProps) {
             <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setNotifOpen((open) => !open)}
-                className={`relative rounded-[1rem] border px-2.5 py-2 transition-all sm:rounded-xl sm:px-3 ${
+                aria-label="Notifications"
+                className={`relative flex h-10 w-10 items-center justify-center rounded-lg border transition-all ${
                   notifOpen
-                    ? "border-primary/25 bg-primary/10 text-primary"
-                    : "border-white/10 bg-white/6 text-slate-400 hover:border-primary/20 hover:text-primary"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border bg-white/[0.03] text-muted-foreground hover:border-primary/30 hover:text-primary"
                 }`}
               >
                 <Bell className="h-[15px] w-[15px] sm:h-4 sm:w-4" />
                 {unreadCount > 0 ? (
-                  <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_12px_rgba(250,204,21,0.8)]" />
+                  <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground shadow-[0_0_12px_rgba(242,193,78,0.7)]">{unreadCount}</span>
                 ) : null}
               </button>
 
               {notifOpen ? (
                 <div className="dropdown-panel absolute right-0 top-full z-50 mt-3 w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-white/10 p-2 shadow-[0_26px_80px_-40px_rgba(0,0,0,0.98)] backdrop-blur-2xl sm:w-80 sm:rounded-xl">
-                  <div className="mb-1 flex items-center justify-between rounded-xl border border-white/8 bg-white/5 px-4 py-3">
+                  <div className="mb-1 flex items-center justify-between border-b border-border px-3 py-2.5">
                     <div>
-                      <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-primary">Pulse Feed</div>
-                      <div className="mt-1 text-sm font-bold text-white">Notifications</div>
+                      <div className="text-sm font-semibold text-foreground">Notifications</div>
                     </div>
                     <div className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[0.62rem] font-black uppercase tracking-[0.2em] text-primary">
                       {unreadCount}
@@ -395,17 +409,18 @@ export default function TopBar({ user }: TopBarProps) {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen((open) => !open)}
-                className="flex items-center gap-2 rounded-[1rem] border border-white/10 bg-white/6 px-2 py-1.5 transition-all hover:border-primary/20 hover:bg-white/8 sm:gap-3 sm:rounded-[1.5rem] sm:px-2.5 sm:py-2"
+                aria-label="Account menu"
+                className="flex items-center gap-3 rounded-lg border border-transparent py-1 pl-1 pr-1 transition-all hover:border-border hover:bg-white/[0.03] lg:pl-3"
               >
                 <div className="hidden text-right lg:block">
-                  <div className="text-[13px] font-black uppercase tracking-[0.08em] text-white">{user.name}</div>
-                  <div className="mt-1 flex items-center justify-end gap-1 text-[0.62rem] font-bold uppercase tracking-[0.2em] text-slate-500">
+                  <div className="text-[13px] font-semibold text-foreground">{user.name}</div>
+                  <div className="mt-0.5 flex items-center justify-end gap-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     {user.role === "SUPERADMIN" || user.role === "MODERATOR" ? <Shield className="h-3 w-3 text-primary" /> : <Gamepad2 className="h-3 w-3 text-primary" />}
                     <span>{roleLabel}</span>
                   </div>
                 </div>
-                <div className="rounded-full bg-[linear-gradient(135deg,#fef08a,#f59e0b)] p-[2px] shadow-[0_0_18px_rgba(250,204,21,0.22)]">
-                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-background text-sm font-black text-primary sm:h-10 sm:w-10">
+                <div className="rounded-full bg-[image:var(--gradient-primary)] p-[2px] ">
+                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-background font-display text-base font-bold text-primary">
                     {user.image ? (
                       <img src={user.image} alt="User" className="h-full w-full object-cover" />
                     ) : (
@@ -419,7 +434,7 @@ export default function TopBar({ user }: TopBarProps) {
                 <div className="dropdown-panel absolute right-0 top-full z-50 mt-3 w-[min(19rem,calc(100vw-1rem))] rounded-xl border border-border p-2 shadow-[0_26px_80px_-40px_rgba(0,0,0,0.98)] backdrop-blur-2xl sm:w-[19rem] sm:rounded-xl">
                   <div className="rounded-xl border border-border bg-card p-4">
                     <div className="flex items-center gap-3">
-                      <div className="rounded-full bg-[linear-gradient(135deg,#fef08a,#f59e0b)] p-[2px]">
+                      <div className="rounded-full bg-[image:var(--gradient-primary)] p-[2px]">
                         <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-background text-lg font-black text-primary">
                           {user.image ? (
                             <img src={user.image} alt="User" className="h-full w-full object-cover" />
@@ -493,7 +508,7 @@ export default function TopBar({ user }: TopBarProps) {
       {/* Global Modal: Player Profile Card */}
       {selectedUserCard && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-sm rounded-2xl shadow-[0_0_40px_-5px_rgba(250,204,21,0.3)] border border-primary/20 relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm rounded-2xl shadow-[0_0_40px_-5px_rgba(242,193,78,0.3)] border border-primary/20 relative animate-in zoom-in-95 duration-200">
             {socialLoading && (
               <div className="absolute inset-0 bg-black/60 rounded-2xl z-50 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />

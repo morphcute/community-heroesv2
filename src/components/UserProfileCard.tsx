@@ -34,7 +34,7 @@ export default function UserProfileCard({
   const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
 
   return (
-    <div className="gamer-id-card corner-accents p-0 relative" style={{ borderColor: "rgba(250, 204, 21, 0.15)" }}>
+    <div className="gamer-id-card corner-accents p-0 relative" style={{ borderColor: "rgba(242,193,78, 0.15)" }}>
       {onClose && (
         <button 
           onClick={onClose}
@@ -114,7 +114,7 @@ export default function UserProfileCard({
           {friendshipStatus === "NONE" && onAddFriend && (
             <button
               onClick={onAddFriend}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-black hover:bg-yellow-400 active:scale-95 transition-all text-xs font-black uppercase tracking-wider rounded-lg shadow-[0_0_15px_rgba(250,204,21,0.2)]"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-black hover:bg-amber-400 active:scale-95 transition-all text-xs font-black uppercase tracking-wider rounded-lg shadow-[0_0_15px_rgba(242,193,78,0.2)]"
             >
               <UserPlus className="w-3.5 h-3.5" />
               Add Friend

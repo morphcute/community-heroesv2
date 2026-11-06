@@ -8,7 +8,7 @@ export default function Loading() {
         <div className="xl:col-span-2">
           <SkeletonHero className="h-[300px] lg:h-[400px]" />
         </div>
-        <div className="xl:col-span-1 rounded-2xl border border-[#FFD700]/[0.06] bg-[#0d0d0d] p-6 space-y-6">
+        <div className="xl:col-span-1 rounded-2xl border border-primary/[0.06] bg-[#0d0d0d] p-6 space-y-6">
           <div className="flex items-center gap-4">
             <SkeletonCircle className="w-12 h-12" />
             <div className="flex-1 space-y-2">

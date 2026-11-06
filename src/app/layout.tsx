@@ -82,7 +82,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let iconUrl = "/ch-logo.png";
-  let backgroundUrl = "/bg-dark.jpg";
+  // Empty = use the built-in Obsidian atmosphere from globals.css
+  let backgroundUrl = "";
 
   try {
     const iconSetting = await prisma.systemSetting.findUnique({ where: { key: "icon_url" } });
@@ -105,7 +106,7 @@ export default async function RootLayout({
     <html lang="en" className="dark" data-theme="dark" suppressHydrationWarning>
       <head>
         <link rel="icon" href={iconUrl} />
-        <style dangerouslySetInnerHTML={{__html: `
+        {backgroundUrl ? <style dangerouslySetInnerHTML={{__html: `
           html.dark body {
             background-image: ${backgroundStyle} !important;
             background-size: cover !important;
@@ -113,7 +114,7 @@ export default async function RootLayout({
             background-repeat: no-repeat !important;
             background-attachment: fixed !important;
           }
-        `}} />
+        `}} /> : null}
       </head>
       <body
         suppressHydrationWarning

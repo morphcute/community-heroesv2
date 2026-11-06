@@ -32,9 +32,9 @@ The product uses a **unified Black + Gold** identity (championship/prestige). Ea
 The token values below are the source of truth and live in `src/app/globals.css` as CSS custom properties. Always use the tokens, never hardcode hex.
 
 ### Core Backgrounds (dark mode defaults)
-- **Page Void** `#050505` (`--background`): Deep page background
-- **Card** `#0d0d0f` (`--card`): Default card and hero base
-- **Surface Raised** `#18181c` (`--surface-raised`): Hovered or emphasized surfaces
+- **Page Void** `#060608` (`--background`): Obsidian page background with a warm gold crown glow, hairline texture and film grain (set in `globals.css`)
+- **Card** `#0b0b0f` → `#111117` top (`--card`, `--card-top`): Default card and hero base
+- **Surface Raised** `#15151c` (`--surface-raised`): Hovered or emphasized surfaces
 
 ### Text
 - **Primary Text** `#f0f0f0` (`--foreground` / `--text-primary`): Main heading and body emphasis
@@ -43,17 +43,29 @@ The token values below are the source of truth and live in `src/app/globals.css`
 - **Subtle Text** `#64748b`: Fine labels and dividers
 
 ### Brand & Accent
-- **Primary Gold** `#FFD700` (`--primary`): Single brand identity — CTAs, achievement, live states, active filters
+- **Primary Gold** `#F2C14E` (`--primary`), warm championship gold (replaces the old lemon `#FFD700`): Single brand identity — CTAs, achievement, live states, active filters
 - **Gold Glow** `#f59e0b`: Warm extension of the primary gradient
 - **Silver/White**: Neutral secondary tone for informational UI and cool contrast (no dedicated cyan token)
-- **Primary Gradient** `linear-gradient(135deg, #FFDF00 0%, #D4AF37 50%, #996515 100%)` (`--gradient-primary`)
+- **Primary Gradient** `linear-gradient(135deg, #FFE8A3 0%, #F2C14E 38%, #D9A12B 72%, #B07A17 100%)` (`--gradient-primary`)
 
 ### Status
 - **Success** `#10b981`
 - **Warning** `#f59e0b`
 - **Danger** `#ef4444`
 
-### Borders & Overlays
+### Edges (gradient hairline borders)
+- `--edge-soft` / `--edge` / `--edge-strong`: neutral white-alpha hairlines
+- `--edge-hot`: gold-tinted edge used at the top-left of surfaces and on secondary buttons
+- Surfaces paint their border with the padding-box / border-box gradient trick so radius and shadow survive
+
+### Signature components
+- **Chamfered buttons** (`.action-button-*`): cut top-left / bottom-right corners, light sweep on hover
+- **HUD corners** (`.hud-corners`): gold corner brackets, opt-in on hero and ID cards
+- **HUD tag** (`.hud-tag`): notched status label
+- **Stat band**: stats grouped in one hairline-divided strip, Rajdhani tabular numerals
+- Component classes live in `@layer components` so Tailwind utilities (`hidden`, `w-full`) always win
+
+### Borders & Overlays (legacy reference)
 - **Standard Border** `rgba(255,255,255,0.10)`
 - **Subtle Border** `rgba(255,255,255,0.06)`
 - **Strong Border** `rgba(255,255,255,0.16)`

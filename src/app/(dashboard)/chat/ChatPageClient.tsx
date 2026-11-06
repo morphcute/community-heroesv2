@@ -34,7 +34,7 @@ const ROLE_BADGES: Record<string, RoleBadgeConfig> = {
   "FIGHTER": { label: "EXP Laner", color: "text-orange-400 bg-orange-400/10 border-orange-400/30 shadow-[0_0_10px_rgba(251,146,60,0.15)]", icon: Swords },
   "JUNGLER": { label: "Jungler", color: "text-purple-400 bg-purple-400/10 border-purple-400/30 shadow-[0_0_10px_rgba(192,132,252,0.15)]", icon: Axe },
   "MAGE": { label: "Mid Laner", color: "text-slate-400 bg-slate-400/10 border-slate-400/30 shadow-[0_0_10px_rgba(148,163,184,0.15)]", icon: Flame },
-  "MARKSMAN": { label: "Gold Laner", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/30 shadow-[0_0_10px_rgba(250,204,21,0.15)]", icon: Target },
+  "MARKSMAN": { label: "Gold Laner", color: "text-amber-400 bg-amber-400/10 border-amber-400/30 shadow-[0_0_10px_rgba(242,193,78,0.15)]", icon: Target },
 };
 
 // External rank icon CDN removed to avoid broken images and external dependency.
@@ -406,7 +406,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
         <Link 
           key={match.index + teamId} 
           href={`/teams/${teamId}`}
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/25 rounded-md font-bold mx-1 transition-all hover:scale-105 active:scale-95 align-sub shadow-[0_0_15px_-3px_rgba(250,204,21,0.2)]"
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary/25 rounded-md font-bold mx-1 transition-all hover:scale-105 active:scale-95 align-sub shadow-[0_0_15px_-3px_rgba(242,193,78,0.2)]"
         >
           <Users className="w-3 h-3 flex-shrink-0" />
           Join {teamName}
@@ -509,7 +509,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                 }}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                   isFriendsTabOpen
-                    ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(250,204,21,0.3)]"
+                    ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(242,193,78,0.3)]"
                     : "bg-muted border-border text-foreground hover:border-primary/20"
                 }`}
               >
@@ -666,7 +666,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
               {/* Header */}
               <div className="flex items-center justify-between border-b border-border pb-4">
                 <div>
-                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-200 flex items-center gap-3">
+                  <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-200 flex items-center gap-3">
                     <FriendIcon className="w-6 h-6 text-primary" />
                     Friends Manager
                   </h2>
@@ -684,7 +684,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                 {/* Left side: Search & Requests */}
                 <div className="flex flex-col gap-5 overflow-y-auto pr-1 custom-scrollbar">
                   {/* Search Competitors */}
-                  <div className="hud-panel p-4 space-y-3 bg-muted border border-primary/20 rounded-2xl shadow-[0_0_20px_rgba(250,204,21,0.02)] transition-all hover:border-primary/35">
+                  <div className="hud-panel p-4 space-y-3 bg-muted border border-primary/20 rounded-2xl shadow-[0_0_20px_rgba(242,193,78,0.02)] transition-all hover:border-primary/35">
                     <h3 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center gap-2">
                       <Search className="w-3.5 h-3.5 text-primary" />
                       Add Competitors
@@ -695,7 +695,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                         value={searchQuery}
                         onChange={(e) => handlePlayerSearch(e.target.value)}
                         placeholder="Search by name, email, or MLBB ID..."
-                        className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground focus:border-primary/50 focus:shadow-[0_0_15px_rgba(250,204,21,0.1)] outline-none transition-all placeholder:text-muted-foreground/60"
+                        className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-xs text-foreground focus:border-primary/50 focus:shadow-[0_0_15px_rgba(242,193,78,0.1)] outline-none transition-all placeholder:text-muted-foreground/60"
                       />
                       {isSearchingServer ? (
                         <Loader2 className="absolute left-3.5 top-3.5 w-3.5 h-3.5 text-primary animate-spin" />
@@ -739,7 +739,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                             </div>
                             <button
                               onClick={() => openUserProfileModal(p)}
-                              className="px-3.5 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-black rounded-lg text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 cursor-pointer shadow-[0_0_10px_rgba(250,204,21,0.05)] hover:shadow-[0_0_15px_rgba(250,204,21,0.25)]"
+                              className="px-3.5 py-1.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-black rounded-lg text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 cursor-pointer shadow-[0_0_10px_rgba(242,193,78,0.05)] hover:shadow-[0_0_15px_rgba(242,193,78,0.25)]"
                             >
                               Profile
                             </button>
@@ -754,7 +754,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                   </div>
 
                   {/* Pending Requests */}
-                  <div className="hud-panel p-4 space-y-3 flex-1 flex flex-col min-h-[200px] bg-muted border border-primary/20 rounded-2xl shadow-[0_0_20px_rgba(250,204,21,0.02)] transition-all hover:border-primary/35">
+                  <div className="hud-panel p-4 space-y-3 flex-1 flex flex-col min-h-[200px] bg-muted border border-primary/20 rounded-2xl shadow-[0_0_20px_rgba(242,193,78,0.02)] transition-all hover:border-primary/35">
                     <h3 className="text-xs font-black text-foreground uppercase tracking-wider flex items-center justify-between">
                       <span className="flex items-center gap-2">
                         <Clock className="w-3.5 h-3.5 text-primary" />
@@ -850,7 +850,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                 </div>
 
                 {/* Right side: Friends list */}
-                <div className="hud-panel p-4 flex flex-col h-full overflow-hidden bg-muted border border-primary/20 rounded-2xl shadow-[0_0_20px_rgba(250,204,21,0.02)] transition-all hover:border-primary/35">
+                <div className="hud-panel p-4 flex flex-col h-full overflow-hidden bg-muted border border-primary/20 rounded-2xl shadow-[0_0_20px_rgba(242,193,78,0.02)] transition-all hover:border-primary/35">
                   <h3 className="text-xs font-black text-foreground uppercase tracking-wider mb-4 border-b border-border pb-2.5 flex items-center gap-2">
                     <FriendIcon className="w-4 h-4 text-primary" />
                     My Friends ({friendsData.friends.length})
@@ -903,7 +903,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                               await fetchRooms();
                               setActiveChannel(`room_${roomId}`);
                             }}
-                            className="p-2.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-black rounded-lg transition-all active:scale-95 cursor-pointer shadow-[0_0_10px_rgba(250,204,21,0.05)] hover:shadow-[0_0_15px_rgba(250,204,21,0.25)] flex-shrink-0"
+                            className="p-2.5 bg-primary/10 border border-primary/20 text-primary hover:bg-primary hover:text-black rounded-lg transition-all active:scale-95 cursor-pointer shadow-[0_0_10px_rgba(242,193,78,0.05)] hover:shadow-[0_0_15px_rgba(242,193,78,0.25)] flex-shrink-0"
                             title="Direct Message"
                           >
                             <MessageCircle className="w-4 h-4" />
@@ -939,7 +939,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5 ml-auto">
-                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse shadow-[0_0_10px_rgba(242,193,78,0.8)]" />
                   <span className="text-[11px] text-primary font-bold">Live</span>
                 </div>
               </div>
@@ -1097,7 +1097,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                         disabled={!input.trim() || sending}
                         className={`p-2 rounded-lg transition-all flex-shrink-0 ${
                           input.trim() && !sending
-                            ? "bg-primary text-black hover:bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.4)] active:scale-95 cursor-pointer"
+                            ? "bg-primary text-black hover:bg-amber-400 shadow-[0_0_15px_rgba(242,193,78,0.4)] active:scale-95 cursor-pointer"
                             : "bg-muted text-muted-foreground/60 cursor-not-allowed"
                         }`}
                       >
@@ -1126,7 +1126,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
       {/* Modal: Interactive Profiler Card */}
       {selectedUserModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-sm rounded-2xl shadow-[0_0_40px_-5px_rgba(250,204,21,0.3)] border border-primary/20 relative animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm rounded-2xl shadow-[0_0_40px_-5px_rgba(242,193,78,0.3)] border border-primary/20 relative animate-in zoom-in-95 duration-200">
             {socialLoading && (
               <div className="absolute inset-0 bg-black/60 rounded-2xl z-50 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -1222,7 +1222,7 @@ export default function ChatPageClient({ currentUserId, userTeams, userTournamen
                 <button
                   onClick={handleCreateGroup}
                   disabled={!groupName.trim() || selectedGroupFriends.length === 0}
-                  className="px-6 py-2 bg-primary text-black hover:bg-yellow-400 disabled:bg-muted disabled:text-muted-foreground/50 disabled:border-transparent rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-primary text-black hover:bg-amber-400 disabled:bg-muted disabled:text-muted-foreground/50 disabled:border-transparent rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 disabled:scale-100 cursor-pointer disabled:cursor-not-allowed"
                 >
                   Create Group
                 </button>
